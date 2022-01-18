@@ -59,7 +59,7 @@ void SignedDistanceField::drawGrid(float minDistance)
 	ofPopStyle();
 }
 
-glm::vec3& SignedDistanceField::getXYZFromIndex(int index)
+glm::vec3 SignedDistanceField::getXYZFromIndex(int index)
 {
 	int z = index / resolutionSq;
 	index = index % resolutionSq;
@@ -74,7 +74,7 @@ int SignedDistanceField::getIndexFromXYZ(int x, int y, int z)
 	return z*resolutionSq+y*resolution+x;
 }
 
-void SignedDistanceField::insertPoint(glm::vec3& point, glm::vec3& cameraOrigin, float minDotValueForBehind)
+void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, float minDotValueForBehind)
 {
 	if (point == glm::vec3(0, 0, 0))
 	{

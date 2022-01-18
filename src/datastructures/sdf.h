@@ -9,9 +9,9 @@ public:
 
 	void drawOutline();
 	void drawGrid(float minDistance);
-	glm::vec3& getXYZFromIndex(int index);
+    glm::vec3 getXYZFromIndex(int index);
 	int getIndexFromXYZ(int x, int y, int z);
-	void insertPoint(glm::vec3& point, glm::vec3& cameraOrigin, float dotBackgroundValue);
+    void insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, float dotBackgroundValue);
 
 private:
 	int resolution;
