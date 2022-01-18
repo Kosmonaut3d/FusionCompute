@@ -6,7 +6,7 @@ class PointCloud
 public: 
 	PointCloud();
 
-	void fillPointCloud(ofImage& depthImage, float maxDepth);
+	void fillPointCloud(ofImage& depthImage, float maxDepth, int downsample = 0);
 
 	void draw();
 

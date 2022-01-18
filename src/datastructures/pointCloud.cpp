@@ -7,13 +7,14 @@ PointCloud::PointCloud():
 	size = sizeof(points) / sizeof(points[0]);
 }
 
-void PointCloud::fillPointCloud(ofImage& depthImage, float maxDepth)
+void PointCloud::fillPointCloud(ofImage& depthImage, float maxDepth, int downsample)
 {
 	auto pixels = depthImage.getPixels();
 	auto bytes = pixels.getTotalBytes();
 	float width = pixels.getWidth();
 	float height = pixels.getHeight();
 	auto pixelData = pixels.getData();
+	int downsampleSq = (downsample+1);
 
 	int index = 0;
 	ofRectangle view;
@@ -22,15 +23,20 @@ void PointCloud::fillPointCloud(ofImage& depthImage, float maxDepth)
 	
 	mesh.setMode(OF_PRIMITIVE_POINTS);
 	mesh.clearVertices();
+	mesh.clearColors();
 
 	for (int y = 0; y < height; y++)
 	{
 		for (int x = 0; x < width; x++)
 		{
+
 			auto data = pixelData;
 			float linearDepth = (*data) / 255.0F;
 
-			if (linearDepth <= 0.0F || linearDepth >= 1.0F)
+			// downsample
+			bool skip = !(!downsample || x % downsampleSq == 0 && y % downsampleSq == 0);
+
+			if (linearDepth <= 0.0F || linearDepth >= 1.0F || skip)
 			{
 				points[index] = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 				index++;

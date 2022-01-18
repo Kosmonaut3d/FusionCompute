@@ -1,7 +1,7 @@
 #include "ofApp.h"
 
 ofApp::ofApp() : ofBaseApp(),
-	sdf(10, glm::vec3(-10,-10,-20), 20),
+	sdf(16, glm::vec3(-10,-10,-20), 20),
 	depthMultipy{2.0f},
 	minDepthGrid{2.0f},
 	renderMode{RenderMode::PointCloud},
@@ -27,16 +27,16 @@ void ofApp::setup(){
 	mainCamera.setFarClip(10000);
 	mainCamera.setTranslationKey(32); // space
 
-	pointCloud.fillPointCloud(img, depthMultipy);
+	pointCloud.fillPointCloud(img, depthMultipy,0);
 
 	//sdf.insertPoint(glm::vec3(0,0,-10), glm::vec3(0,0,0), 0.9f);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	static int i = 0;
 	if (computeSDF)
 	{
-		static int i = 0;
 		const int batchsize = 2000;
 		auto& mesh = pointCloud.getMesh();
 		const ofColor finishColor = ofColor::red;
@@ -122,6 +122,18 @@ void ofApp::keyPressed(int key){
 	if (key == OF_KEY_F2)
 	{
 		computeSDF = !computeSDF;
+	}
+
+	if (key == OF_KEY_F3)
+	{
+		static int downsample = 0;
+		downsample++;
+		if (downsample >= 3)
+		{
+			downsample = 0;
+		}
+
+		pointCloud.fillPointCloud(img, depthMultipy, downsample);
 	}
 
 	if (key == 43)
