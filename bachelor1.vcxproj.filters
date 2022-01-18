@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="src\ofApp.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\main.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\datastructures\pointCloud.cpp">
+      <Filter>src\datastructures</Filter>
+    </ClCompile>
+    <ClCompile Include="src\datastructures\sdf.cpp">
+      <Filter>src\datastructures</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="src">
+      <UniqueIdentifier>{d8376475-7454-4a24-b08a-aac121d3ad6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="resources">
+      <UniqueIdentifier>{75068030-a754-41be-bb55-2715940f760c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\datastructures">
+      <UniqueIdentifier>{5c0af0ce-738e-4890-acb2-158b2c51b645}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\ofApp.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\datastructures\pointCloud.h">
+      <Filter>src\datastructures</Filter>
+    </ClInclude>
+    <ClInclude Include="src\datastructures\sdf.h">
+      <Filter>src\datastructures</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="icon.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="resources\depth.png">
+      <Filter>resources</Filter>
+    </Image>
+  </ItemGroup>
+</Project>
