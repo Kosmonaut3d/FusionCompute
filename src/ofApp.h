@@ -9,7 +9,8 @@ class ofApp : public ofBaseApp{
 	{
 		DepthImage = 0,
 		PointCloud = 1,
-		Max = 2,
+		SDF = 2,
+		Max = 3,
 	};
 
 	public:
@@ -39,4 +40,5 @@ class ofApp : public ofBaseApp{
 		float depthMultipy;
 		float minDepthGrid;
 		bool computeSDF;
+		float m_buildProgress;
 };

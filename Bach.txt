@@ -1,0 +1,1 @@
+TruncationDistance for faster insertion -> calculate distance between points etc.

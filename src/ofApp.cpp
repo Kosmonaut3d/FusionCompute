@@ -1,10 +1,10 @@
 #include "ofApp.h"
 
 ofApp::ofApp() : ofBaseApp(),
-	sdf(16, glm::vec3(-10,-10,-20), 20),
+	sdf(128, glm::vec3(-10,-10,-20), 20, 2),
 	depthMultipy{2.0f},
 	minDepthGrid{2.0f},
-	renderMode{RenderMode::PointCloud},
+	renderMode{RenderMode::SDF},
 	computeSDF{false}
 {
 
@@ -27,11 +27,9 @@ void ofApp::setup(){
 	m_camera.setFarClip(1000);
 	m_camera.setTranslationKey(32); // space
 
-	pointCloud.fillPointCloud(img, depthMultipy,0);
+	pointCloud.fillPointCloud(img, depthMultipy, 3);
 
 	glEnable(GL_TEXTURE_3D);
-
-	//sdf.insertPoint(glm::vec3(0,0,-10), glm::vec3(0,0,0), 0.9f);
 }
 
 //--------------------------------------------------------------
@@ -53,14 +51,18 @@ void ofApp::update(){
 				{
 					i = 0;
 					computeSDF = false;
+
+					sdf.storeData();
+
 					break;
 				}
 
-				sdf.insertPoint(glm::vec3(pointCloud.getPoints()[k]), glm::vec3(0, 0, 0), 0.95f);
+				sdf.insertPoint(glm::vec3(pointCloud.getPoints()[k]), glm::vec3(0, 0, 0), 0.75f, 0.1f);
 				auto color = mesh.getColor(k);
 				mesh.setColor(k, color * ofColor::red);
 			}
 			i += batchsize;
+			m_buildProgress = 1.f* i / pointCloud.getSize();
 		}
 	}
 }
@@ -70,6 +72,26 @@ void ofApp::draw()
 {
 	switch (renderMode)
 	{
+		case RenderMode::SDF:
+			m_camera.begin();
+			ofEnableDepthTest();
+			ofBackground(40, 40, 40);
+
+			ofPushStyle();
+
+			//give a saturation and lightness
+			ofSetColor(255, 100, 100);
+
+			//ofDrawGrid(100.0f);
+
+			ofPopStyle();
+
+			sdf.drawOutline();
+			sdf.drawRaymarch(m_camera);
+
+			pointCloud.draw();
+			m_camera.end();
+			break;
 		case RenderMode::PointCloud:
 			m_camera.begin();
 			ofEnableDepthTest();
@@ -85,7 +107,6 @@ void ofApp::draw()
 			ofPopStyle();
 
 			sdf.drawOutline();
-			sdf.drawRaymarch(m_camera);
 			sdf.drawGrid(minDepthGrid);
 
 			pointCloud.draw();
@@ -102,7 +123,7 @@ void ofApp::draw()
 	}
 
 	ofDrawBitmapString("Press F1 to cycle render modes", 20, 30);
-	ofDrawBitmapString("Press F2 to compute the SDF by CPU", 20, 50);
+	ofDrawBitmapString("Press F2 to compute the SDF by CPU, "+std::to_string(m_buildProgress)+"%", 20, 50);
 	ofDrawBitmapString("Press +/- to change the depth " + std::to_string(minDepthGrid), 20, 70);
 	ofDrawBitmapString(ofToString(ofGetFrameRate()) + "fps", 10, 15);
 }
@@ -135,6 +156,11 @@ void ofApp::keyPressed(int key){
 	if (key == OF_KEY_F2)
 	{
 		computeSDF = !computeSDF;
+	}
+
+	if (key == OF_KEY_F4)
+	{
+		sdf.update3dTexture();
 	}
 
 	if (key == OF_KEY_F3)

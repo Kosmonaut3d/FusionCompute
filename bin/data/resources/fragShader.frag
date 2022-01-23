@@ -9,6 +9,10 @@ uniform vec3 cameraWorld;
 uniform mat4 sdfBaseTransform;
 uniform float sdfResolution;
 
+uniform mat4 viewprojection;
+uniform float near;
+uniform float far;
+
 #define PI 3.1415925359
 #define TWO_PI 6.2831852
 #define MAX_STEPS 100
@@ -48,7 +52,7 @@ float RayMarch(vec3 ro, vec3 rd)
     for(int i=0;i<MAX_STEPS;i++)
     {
         vec3 p = ro + rd * dO;
-        float ds = GetDist(p); // ds is Distance Scene
+        float ds = clamp(GetDist(p), -0.1, 0.1); // ds is Distance Scene
         dO += ds;
         if(dO > MAX_DIST || ds < SURFACE_DIST) break;
     }
@@ -79,38 +83,74 @@ float calcAO( in vec3 pos, in vec3 nor, in float maxDist, in float falloff )
     return clamp( 1.-ao/float(nbIte), 0., 1.);
 }
 
+float GetDistSDF(vec3 p)
+{
+    // Transform world position to SDF Base
+    vec3 relPos = (sdfBaseTransform * vec4(p, 1)).xyz; 
+
+    if(relPos.x < 0 || relPos.y < 0 || relPos.z < 0 || relPos.x > 1 || relPos.y > 1|| relPos.z > 1)
+    {
+        return 1.0f;
+    }
+    
+    // Replace by uniform
+    return texture(volume_tex, relPos).r;
+}
+
+vec2 RayMarchSDF(vec3 ro, vec3 rd) 
+{
+    // minDist first step
+    const vec3 b = vec3(10, 10, 10);
+    vec3 q = abs(ro-vec3(0, 0, -10)) - b;
+    float distanceBox = length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+
+    float dO = distanceBox; //Distance Origin
+
+    int i = 0;
+    for(i = 0; i<MAX_STEPS;i++)
+    {
+        vec3 p = ro + rd * dO;
+        float ds = GetDistSDF(p); // ds is Distance Scene
+        dO += ds;
+        if(dO > MAX_DIST || ds < SURFACE_DIST) break;
+    }
+
+    return vec2(dO, i * 1.0 / MAX_STEPS );
+}
+
 void main()
 {
     vec3 ro = cameraWorld; // works for backface, too
     vec3 rd = normalize(world - cameraWorld);
 
-    float windowWidth = 1920.0;
-    float windowHeight = 1080.0;
+    vec2 d = RayMarchSDF(ro, rd);
 
+    /*
     float d = RayMarch(ro,rd); // Distance
-
-    if(d < MAX_DIST)
+    
+    */
+    //if(d.x < MAX_DIST)
     {
         // Hit point
-        vec3 pos = ro + rd * d;
+        vec3 pos = ro + rd * d.x;
         vec3 nor = GetNormal(pos);
         vec3 ref = reflect(rd, nor);
 
 
-        float occ = calcAO( pos, nor, 10, .5);
+        //float occ = calcAO( pos, nor, 10, .5);
 
-        vec3 posToWorld = (sdfBaseTransform * vec4(pos, 1)).xyz; 
+        //vec3 posToWorld = (sdfBaseTransform * vec4(pos, 1)).xyz; 
 
-        vec3 color = texture(volume_tex, posToWorld).rgb;
+        //vec3 color = texture(volume_tex, posToWorld).rgb;
         //vec3 color = posToWorld;
         
         // Cut out of bounds
-        if(posToWorld.x < 0 || posToWorld.y < 0 || posToWorld.z < 0 || posToWorld.x > 1 || posToWorld.y > 1|| posToWorld.z > 1)
-        {
-            discard;
-            color = vec3(1,0,1);
-        }
-
+        // if(posToWorld.x < 0 || posToWorld.y < 0 || posToWorld.z < 0 || posToWorld.x > 1 || posToWorld.y > 1|| posToWorld.z > 1)
+        // {
+        //     discard;
+        //     //color = vec3(1,0,1);
+        // }
+        
         //float refl = RayMarch(pos + ref*0.1,ref); // Distance
         //vec3 reflPos = pos + d*ref;
         //vec3 reflNor = GetNormal(reflPos);
@@ -119,12 +159,11 @@ void main()
         //    color = color * vec3(0.2, 0.2, 0.2);
         //}
         
-        // TODO: We could add a correct gl_FragDepth for fun
     
-        outputColor = vec4(color * occ, 1.0);
+        outputColor = vec4(vec3(d.y), 1.0);
     }
-    else
-    {
-        discard;
-    }
+   //else
+   //{
+   //    discard;
+   //}
 }
