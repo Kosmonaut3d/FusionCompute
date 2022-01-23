@@ -55,19 +55,28 @@ float RayMarch(vec3 ro, vec3 rd)
     return dO;
 }
 
-float calcAO( in vec3 pos, in vec3 nor )
+//Random number [0:1] without sine
+#define HASHSCALE1 .1031
+float hash(float p)
 {
-	float occ = 0.0;
-    float sca = 1.0;
-    for( int i=0; i<5; i++ )
+	vec3 p3  = fract(vec3(p) * HASHSCALE1);
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+float calcAO( in vec3 pos, in vec3 nor, in float maxDist, in float falloff )
+{
+	float ao = 0.0;
+	const int nbIte = 6;
+    for( int i=0; i<nbIte; i++ )
     {
-        float h = 0.01 + 0.42*float(i)/4.0;
-        float d = clamp(GetDist( pos + h*nor ), 0.0, h);
-        occ += (h-d)*sca;
-        sca *= 0.8;
-        if( occ>0.30 ) break;
+        float l = hash(float(i))*maxDist;
+        vec3 rd = nor*l;
+        
+        ao += (l - max( GetDist( pos + rd ),0.)) / maxDist * falloff;
     }
-    return clamp( 1.0 - 3.0*occ, 0.0, 1.0 ) * (0.5+0.5*nor.y);
+	
+    return clamp( 1.-ao/float(nbIte), 0., 1.);
 }
 
 void main()
@@ -88,7 +97,7 @@ void main()
         vec3 ref = reflect(rd, nor);
 
 
-        float occ = calcAO( pos, nor );
+        float occ = calcAO( pos, nor, 10, .5);
 
         vec3 posToWorld = (sdfBaseTransform * vec4(pos, 1)).xyz; 
 
@@ -112,7 +121,7 @@ void main()
         
         // TODO: We could add a correct gl_FragDepth for fun
     
-        outputColor = vec4(color, 1.0);
+        outputColor = vec4(color * occ, 1.0);
     }
     else
     {
