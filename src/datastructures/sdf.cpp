@@ -7,7 +7,7 @@ SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float
 	m_resolutionSq = resolution * resolution;
 	this->m_origin = origin;
 	this->m_scale = scale;
-	m_world = ofMatrix4x4::newTranslationMatrix(origin) * ofMatrix4x4::newScaleMatrix(glm::vec3(scale));
+	m_world = ofMatrix4x4::newScaleMatrix(scale, scale, scale) * ofMatrix4x4::newTranslationMatrix(origin);
 	m_distanceField = std::vector<float>();
 	m_distanceField.resize(resolution * resolution * resolution); 
 	std::fill(m_distanceField.begin(), m_distanceField.end(), 10000000.0F);
@@ -26,7 +26,10 @@ void SignedDistanceField::drawOutline()
 	ofPushStyle();
 	ofGetCurrentRenderer()->setFillMode(ofFillFlag::OF_OUTLINE);
 	ofSetColor(255, 0, 0);
-	ofDrawBox(m_origin, 1,1,1);
+	//ofDrawBox(m_origin, 1,1,1);
+	ofVec3f vec = ofVec3f(0, 0, 0);
+	vec = ofVec3f(m_origin) * m_world.getInverse();
+	ofDrawBox(vec, 1, 1, 1);
 
 	ofSetColor(200, 100, 200);
 	float scalehalf = m_scale / 2;
@@ -43,8 +46,8 @@ void SignedDistanceField::drawRaymarch(ofCamera& camera)
 	glCullFace(GL_CCW);
 
 	m_raymarchShader.setUniform3f("cameraWorld", camera.getPosition());
-	m_raymarchShader.setUniform1f("cameraFar", camera.getFarClip());
-	m_raymarchShader.setUniform3f("sdfOrigin", m_origin);
+	m_raymarchShader.setUniformMatrix4f("sdfBaseTransform", m_world.getInverse());
+	m_raymarchShader.setUniform1f("sdfResolution", m_resolution);
 
 	ofDrawBox(m_origin + glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
 	m_raymarchShader.end();
@@ -149,12 +152,22 @@ void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, f
 
 void SignedDistanceField::create3dTexture(int dimension)
 {
-	std::vector<char> rgbaBuffer(2 * 4);
-	std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 0);
+	std::vector<UINT8> rgbaBuffer(8 * 4);
+	std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 255U);
 
 	// only r
-	rgbaBuffer[0] = 255;
-	rgbaBuffer[5] = 255;
+	int i = 0;
+	rgbaBuffer[i*4] = 255U;
+	rgbaBuffer[i*4+1] = 0;
+	rgbaBuffer[i*4+2] = 0;
+	rgbaBuffer[i*4+3] = 255U;
+
+	i++;
+	rgbaBuffer[i * 4] = 0;
+	rgbaBuffer[i * 4 + 1] = 255U;
+	rgbaBuffer[i * 4 + 2] = 0;
+	rgbaBuffer[i * 4 + 3] = 255U;
+
 
 	static int textureId = 0;
 
@@ -166,7 +179,7 @@ void SignedDistanceField::create3dTexture(int dimension)
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, 1, 1, 2, 0,
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, 2, 2, 2, 0,
 		GL_RGBA, GL_UNSIGNED_BYTE, rgbaBuffer.data());
 	glBindTexture(GL_TEXTURE_3D, 0);
 }
