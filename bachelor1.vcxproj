@@ -208,6 +208,10 @@
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</DeploymentContent>
     </Image>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="bin\data\resources\fragShader.frag" />
+    <None Include="bin\data\resources\vertShader.vert" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ProjectExtensions>
     <VisualStudio>

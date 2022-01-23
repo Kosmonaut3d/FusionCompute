@@ -20,14 +20,16 @@ void ofApp::setup(){
 	ofBackground(70, 70, 70);
 	ofEnableDepthTest();
 
-	mainCamera.setPosition(glm::vec3(0, 0, 0));
-	mainCamera.setTarget(glm::vec3(0, 0, -1)); // look forward
-	mainCamera.setDistance(10);
-	mainCamera.setNearClip(10);
-	mainCamera.setFarClip(10000);
-	mainCamera.setTranslationKey(32); // space
+	m_camera.setPosition(glm::vec3(0, 0, 0));
+	m_camera.setTarget(glm::vec3(0, 0, -1)); // look forward
+	m_camera.setDistance(10);
+	m_camera.setNearClip(10);
+	m_camera.setFarClip(1000);
+	m_camera.setTranslationKey(32); // space
 
 	pointCloud.fillPointCloud(img, depthMultipy,0);
+
+	glEnable(GL_TEXTURE_3D);
 
 	//sdf.insertPoint(glm::vec3(0,0,-10), glm::vec3(0,0,0), 0.9f);
 }
@@ -69,7 +71,7 @@ void ofApp::draw()
 	switch (renderMode)
 	{
 		case RenderMode::PointCloud:
-			mainCamera.begin();
+			m_camera.begin();
 			ofEnableDepthTest();
 			ofBackground(40,40,40);
 
@@ -82,11 +84,12 @@ void ofApp::draw()
 
 			ofPopStyle();
 
-			sdf.drawOutline();
+			//sdf.drawOutline();
+			sdf.drawRaymarch(m_camera);
 			sdf.drawGrid(minDepthGrid);
 
 			pointCloud.draw();
-			mainCamera.end();
+			m_camera.end();
 			break;
 		case RenderMode::DepthImage:
 		default:
@@ -106,6 +109,16 @@ void ofApp::draw()
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
+	if (key == 'w')
+	{
+		sdf.move(0.5f, 0.0, 0.0);
+	}
+
+	if (key == 's')
+	{
+		sdf.move(-0.5f, 0.0, 0.0);
+	}
+
 	// Cycle through the render modes
 	if (key == OF_KEY_F1)
 	{

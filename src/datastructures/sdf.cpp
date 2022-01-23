@@ -1,15 +1,24 @@
 #include "sdf.h"
 
-SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float scale)
+SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float scale):
+	m_boxMesh(scale, scale, scale)
 {
-	this->resolution = resolution;
-	resolutionSq = resolution * resolution;
-	this->origin = origin;
-	this->scale = scale;
-	world = ofMatrix4x4::newTranslationMatrix(origin) * ofMatrix4x4::newScaleMatrix(glm::vec3(scale));
-	distanceField = std::vector<float>();
-	distanceField.resize(resolution * resolution * resolution); 
-	std::fill(distanceField.begin(), distanceField.end(), 10000000.0F);
+	this->m_resolution = resolution;
+	m_resolutionSq = resolution * resolution;
+	this->m_origin = origin;
+	this->m_scale = scale;
+	m_world = ofMatrix4x4::newTranslationMatrix(origin) * ofMatrix4x4::newScaleMatrix(glm::vec3(scale));
+	m_distanceField = std::vector<float>();
+	m_distanceField.resize(resolution * resolution * resolution); 
+	std::fill(m_distanceField.begin(), m_distanceField.end(), 10000000.0F);
+
+	if (!m_raymarchShader.load("resources/vertShader.vert", "resources/fragShader.frag"))
+	{
+		throw std::exception("could not load shaders");
+	}
+
+	//m_boxMesh.setPosition(m_origin*2); 
+	create3dTexture(m_resolution);
 }
 
 void SignedDistanceField::drawOutline()
@@ -17,31 +26,49 @@ void SignedDistanceField::drawOutline()
 	ofPushStyle();
 	ofGetCurrentRenderer()->setFillMode(ofFillFlag::OF_OUTLINE);
 	ofSetColor(255, 0, 0);
-	ofDrawBox(origin, 1,1,1);
+	ofDrawBox(m_origin, 1,1,1);
 
 	ofSetColor(200, 100, 200);
-	float scalehalf = scale / 2;
-	ofDrawBox(origin+glm::vec3(scalehalf, scalehalf, scalehalf), scale, scale, scale);
+	float scalehalf = m_scale / 2;
+	ofDrawBox(m_origin+glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
 	ofPopStyle();
 }
+
+void SignedDistanceField::drawRaymarch(ofCamera& camera)
+{
+	ofPushStyle();
+	m_raymarchShader.begin();
+	glPolygonMode(GL_BACK, GL_LINE);
+	float scalehalf = m_scale / 2;
+	glCullFace(GL_CCW);
+
+	m_raymarchShader.setUniform3f("cameraWorld", camera.getPosition());
+	m_raymarchShader.setUniform1f("cameraFar", camera.getFarClip());
+	m_raymarchShader.setUniform3f("sdfOrigin", m_origin);
+
+	ofDrawBox(m_origin + glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
+	m_raymarchShader.end();
+	ofPopStyle();
+}
+
 
 void SignedDistanceField::drawGrid(float minDistance)
 {
 	ofPushStyle();
-	auto stepsize = scale / resolution;
+	auto stepsize = m_scale / m_resolution;
 	auto halfstep = stepsize / 2;
 
 	ofGetCurrentRenderer()->setFillMode(ofFillFlag::OF_OUTLINE);
 
 	ofSetColor(255, 255, 255);
 
-	for (int x = 0; x < resolution; x++)
+	for (int x = 0; x < m_resolution; x++)
 	{
-		for (int y = 0; y < resolution; y++)
+		for (int y = 0; y < m_resolution; y++)
 		{
-			for (int z = 0; z < resolution; z++)
+			for (int z = 0; z < m_resolution; z++)
 			{
-				auto sdfValue = distanceField[getIndexFromXYZ(x, y, z)];
+				auto sdfValue = m_distanceField[getIndexFromXYZ(x, y, z)];
 
 				if (sdfValue > minDistance)
 				{
@@ -51,7 +78,7 @@ void SignedDistanceField::drawGrid(float minDistance)
 				int value = (1.0f - (sdfValue / minDistance))*255;
 				ofSetColor(value, value, value);
 
-				auto localMiddleOfBox = origin + glm::vec3(stepsize * x + halfstep, stepsize * y + halfstep, stepsize * z + halfstep);
+				auto localMiddleOfBox = m_origin + glm::vec3(stepsize * x + halfstep, stepsize * y + halfstep, stepsize * z + halfstep);
 				ofDrawBox(localMiddleOfBox, stepsize, stepsize, stepsize);
 			}
 		}
@@ -59,19 +86,26 @@ void SignedDistanceField::drawGrid(float minDistance)
 	ofPopStyle();
 }
 
+void SignedDistanceField::move(float x, float y, float z)
+{
+	//auto translation = ofMatrix4x4::newTranslationMatrix(glm::vec4(x, y, z, 0));
+	//m_origin.mul;
+	m_origin += glm::vec3(x, y, z);
+}
+
 glm::vec3 SignedDistanceField::getXYZFromIndex(int index)
 {
-	int z = index / resolutionSq;
-	index = index % resolutionSq;
-	int y = index / resolution;
-	index = index % resolution;
+	int z = index / m_resolutionSq;
+	index = index % m_resolutionSq;
+	int y = index / m_resolution;
+	index = index % m_resolution;
 	int x = index;
 	return glm::vec3(x, y, z);
 }
 
 int SignedDistanceField::getIndexFromXYZ(int x, int y, int z)
 {
-	return z*resolutionSq+y*resolution+x;
+	return z*m_resolutionSq+y*m_resolution+x;
 }
 
 void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, float minDotValueForBehind)
@@ -80,17 +114,17 @@ void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, f
 	{
 		return;
 	}
-	auto stepsize = scale / resolution;
+	auto stepsize = m_scale / m_resolution;
 	auto halfstep = stepsize / 2;
-	for (int x = 0; x < resolution; x++)
+	for (int x = 0; x < m_resolution; x++)
 	{
-		for (int y = 0; y < resolution; y++)
+		for (int y = 0; y < m_resolution; y++)
 		{
-			for (int z = 0; z < resolution; z++)
+			for (int z = 0; z < m_resolution; z++)
 			{
 				auto index = getIndexFromXYZ(x, y, z);
-				auto sdfValue = distanceField[index];
-				auto localMiddleOfBox = origin + glm::vec3(stepsize * x + halfstep, stepsize * y + halfstep, stepsize * z + halfstep);
+				auto sdfValue = m_distanceField[index];
+				auto localMiddleOfBox = m_origin + glm::vec3(stepsize * x + halfstep, stepsize * y + halfstep, stepsize * z + halfstep);
 
 				auto gridVector = localMiddleOfBox - point;
 
@@ -106,9 +140,33 @@ void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, f
 						newDistance = -newDistance;
 					}
 
-					distanceField[index] = newDistance;
+					m_distanceField[index] = newDistance;
 				}
 			}
 		}
 	}
+}
+
+void SignedDistanceField::create3dTexture(int dimension)
+{
+	std::vector<char> rgbaBuffer(2 * 4);
+	std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 0);
+
+	// only r
+	rgbaBuffer[0] = 255;
+	rgbaBuffer[5] = 255;
+
+	static int textureId = 0;
+
+	glBindTexture(GL_TEXTURE_3D, textureId);
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_BORDER);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA, 1, 1, 2, 0,
+		GL_RGBA, GL_UNSIGNED_BYTE, rgbaBuffer.data());
+	glBindTexture(GL_TEXTURE_3D, 0);
 }

@@ -34,7 +34,7 @@ class ofApp : public ofBaseApp{
 		ofImage img;
 		RenderMode renderMode;
 		PointCloud pointCloud; 
-		ofEasyCam mainCamera;
+		ofEasyCam m_camera;
 		SignedDistanceField sdf;
 		float depthMultipy;
 		float minDepthGrid;
