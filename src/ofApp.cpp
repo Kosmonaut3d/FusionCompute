@@ -7,7 +7,6 @@ ofApp::ofApp() : ofBaseApp(),
 	renderMode{RenderMode::SDF},
 	computeSDF{false}
 {
-
 }
 
 //--------------------------------------------------------------
@@ -15,7 +14,6 @@ void ofApp::setup(){
 	ofSetVerticalSync(false);
 	ofSetFrameRate(0);
     ofDisableSmoothing();
-	img.load("resources/depth.png");
 	ofSetLineWidth(2);
 
 	ofBackground(70, 70, 70);
@@ -24,17 +22,99 @@ void ofApp::setup(){
 	m_camera.setPosition(glm::vec3(0, 0, 0));
 	m_camera.setTarget(glm::vec3(0, 0, -1)); // look forward
 	m_camera.setDistance(10);
-	m_camera.setNearClip(10);
+	m_camera.setNearClip(1);
 	m_camera.setFarClip(1000);
 	m_camera.setTranslationKey(32); // space
 
-	pointCloud.fillPointCloud(img, depthMultipy, 3);
 
 	glEnable(GL_TEXTURE_3D);
+
+	// enable depth->video image calibration
+	kinect.setRegistration(true);
+
+	kinect.init();
+	//kinect.init(true); // shows infrared instead of RGB video image
+	//kinect.init(false, false); // disable video image (faster fps)
+
+	kinect.open();		// opens first available kinect
+	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
+	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
+
+	// print the intrinsic IR sensor values
+	if (kinect.isConnected()) {
+		ofLogNotice() << "sensor-emitter dist: " << kinect.getSensorEmitterDistance() << "cm";
+		ofLogNotice() << "sensor-camera dist:  " << kinect.getSensorCameraDistance() << "cm";
+		ofLogNotice() << "zero plane pixel size: " << kinect.getZeroPlanePixelSize() << "mm";
+		ofLogNotice() << "zero plane dist: " << kinect.getZeroPlaneDistance() << "mm";
+	}
+
+	depthImage.allocate(kinect.width, kinect.height, ofImageType::OF_IMAGE_GRAYSCALE);
+	//img.load("resources/depth.png");
+	//pointCloud.fillPointCloud(img, depthMultipy, 3);
+}
+
+void ofApp::exit()
+{
+	kinect.close();
+}
+
+void ofApp::drawPointCloud() {
+	int w = 640;
+	int h = 480;
+	ofMesh mesh;
+	mesh.setMode(OF_PRIMITIVE_POINTS);
+	int step = 2;
+	for (int y = 0; y < h; y += step) {
+		for (int x = 0; x < w; x += step) {
+			if (kinect.getDistanceAt(x, y) > 0) {
+				mesh.addColor(kinect.getColorAt(x, y));
+				mesh.addVertex(kinect.getWorldCoordinateAt(x, y));
+			}
+		}
+	}
+	glPointSize(3);
+	ofPushMatrix();
+	// the projected points are 'upside down' and 'backwards' 
+	ofScale(0.01, -0.01, -0.01);
+	ofTranslate(0, 0, 0); // center the points a bit
+	ofEnableDepthTest();
+	mesh.drawVertices();
+	ofDisableDepthTest();
+	ofPopMatrix();
+}
+
+void ofApp::drawFullScreenImage(ofImage& image)
+{
+	int width = ofGetViewportWidth();
+	int height = ofGetViewportHeight();
+
+	float aspectImage = image.getWidth() / static_cast<float>(image.getHeight());
+	float aspectView = width / static_cast<float>(height);
+
+	if (aspectView >= aspectImage)
+	{
+		width = static_cast<int>(aspectImage * height);
+	}
+	else
+	{
+		height = static_cast<int>(width / aspectImage);
+	}
+
+	image.draw(0, 0, width, height);
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
+
+	kinect.update();
+
+	if (kinect.isFrameNew())
+	{
+		depthImage.setFromPixels(kinect.getDepthPixels());
+		depthImage.update();
+		pointCloud.fillPointCloud(kinect, 2);
+	}
+
 	static int i = 0;
 	if (computeSDF)
 	{
@@ -93,9 +173,14 @@ void ofApp::draw()
 			m_camera.end();
 			break;
 		case RenderMode::PointCloud:
+		{
+
+			ofSetColor(ofColor::white*0.2);
+			drawFullScreenImage(depthImage);
+
 			m_camera.begin();
 			ofEnableDepthTest();
-			ofBackground(40,40,40);
+			//ofBackground(40, 40, 40);
 
 			ofPushStyle();
 
@@ -107,33 +192,23 @@ void ofApp::draw()
 			ofPopStyle();
 
 			sdf.drawOutline();
-            //sdf.drawGrid(minDepthGrid);
+			//sdf.drawGrid(minDepthGrid);
 
 			pointCloud.draw();
+			//drawPointCloud();
 			m_camera.end();
 			break;
+		}
 		case RenderMode::DepthImage:
 		default:
 			ofBackground(ofColor::black);
 
 			// draw the original image
 			ofSetColor(ofColor::white);
-            int width = ofGetViewportWidth();
-            int height = ofGetViewportHeight();
+			drawFullScreenImage(depthImage);
 
-            float aspectImage = img.getWidth()/static_cast<float>(img.getHeight());
-            float aspectView = width / static_cast<float>(height);
-
-            if(aspectView >= aspectImage)
-            {
-                width = static_cast<int>(aspectImage * height);
-            }
-            else
-            {
-                height = static_cast<int>(width / aspectImage);
-            }
-
-            img.draw(0, 0, width, height);
+			kinect.drawDepth(10, 10, 400, 300);
+			kinect.draw(420, 10, 400, 300);
 			break;
 	}
 

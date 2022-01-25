@@ -1,10 +1,13 @@
 #pragma once
 #include <ofMain.h>
+#include <ofxKinect.h>
 
 class PointCloud
 {
 public: 
 	PointCloud();
+
+	void fillPointCloud(ofxKinect& kinect, int downsample);
 
 	void fillPointCloud(ofImage& depthImage, float maxDepth, int downsample = 0);
 
