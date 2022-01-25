@@ -18,10 +18,10 @@ SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float
 
 	if (!m_raymarchShader.load("resources/vertShader.vert", "resources/fragShader.frag"))
 	{
-		throw std::exception("could not load shaders");
+        throw std::exception();//"could not load shaders");
 	}
 
-	const bool load = true;
+    const bool load = true;
 	if (load)
 	{
 		ifstream fin(ofToDataPath("test.bin").c_str(), ios::binary);
@@ -142,33 +142,36 @@ void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, f
 
 	auto stepsize = m_scale / m_resolution;
 	auto halfstep = stepsize / 2;
-	for (int x = 0; x < m_resolution; x++)
+
+    int truncatedSteps = static_cast<int>((truncationDistance * 2.0) / stepsize);
+
+    int minX = static_cast<int>((pointTransformed.x - halfstep - truncationDistance) / stepsize);
+    int maxX = minX + truncatedSteps;
+
+
+    int minY = static_cast<int>((pointTransformed.y - halfstep - truncationDistance) / stepsize);
+    int maxY = minY + truncatedSteps;
+    // TODO: One vector subtraction is faster maybe
+    int minZ = static_cast<int>((pointTransformed.z - halfstep - truncationDistance) / stepsize);
+    int maxZ = minX + truncatedSteps;
+
+    for (int x = minX; x < maxX; x++)
 	{
 		float xPos = stepsize * x + halfstep;
 
-		if (abs(xPos - pointTransformed.x) > truncationDistance)
-		{
-			continue;
-		}
-
-		for (int y = 0; y < m_resolution; y++)
+        for (int y = minY; y < maxY; y++)
 		{
 			float yPos = stepsize * y + halfstep;
 
-			if (abs(yPos - pointTransformed.y) > truncationDistance)
-			{
-				continue;
-			}
-
-			for (int z = 0; z < m_resolution; z++)
+            for (int z = minZ; z < maxZ; z++)
 			{
 
 				float zPos = stepsize * z + halfstep;
 
-				if (abs(zPos - pointTransformed.z) > truncationDistance)
-				{
-					continue;
-				}
+                if (abs(zPos - pointTransformed.z) > truncationDistance)
+                {
+                    continue;
+                }
 
 				auto index = getIndexFromXYZ(x, y, z);
 				auto sdfValue = m_distanceField[index];
@@ -198,54 +201,16 @@ void SignedDistanceField::create3dTexture(int dimension, float maxDist)
 	int size = dimension * dimension * dimension;
 	/*
 	std::vector<UINT8> rgbaBuffer(size * 4);
-	std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 0U);
+    std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 0U);
 
 	// only r
-	int i = 0;
+    /*int i = 0;
 	rgbaBuffer[i*4] = 255U;
 	rgbaBuffer[i*4+1] = 0;
 	rgbaBuffer[i*4+2] = 0;
-	rgbaBuffer[i*4+3] = 255U;
+    rgbaBuffer[i*4+3] = 255U;
 
-	i++;
-	rgbaBuffer[i * 4] = 0;
-	rgbaBuffer[i * 4 + 1] = 255U;
-	rgbaBuffer[i * 4 + 2] = 0;
-	rgbaBuffer[i * 4 + 3] = 255U;
-
-	for (int i = 0; i < size; i++)
-	{
-		auto value = m_distanceField[i];
-		if (value > 0)
-		{
-			rgbaBuffer[i * 4] = static_cast<UINT8>((1-value / maxDist) * 255.0);
-		}
-		else
-		{
-			rgbaBuffer[i * 4 + 1] = static_cast<UINT8>((-1-value / maxDist) * 255.0);;
-		}
-		rgbaBuffer[i * 4 + 2] = 0;
-		rgbaBuffer[i * 4 + 3] = 255;
-	}
-
-
-	static int textureId = 0;
-
-	glBindTexture(GL_TEXTURE_3D, textureId);
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, dimension, dimension, dimension, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, rgbaBuffer.data());
-	glBindTexture(GL_TEXTURE_3D, 0);
-	*/
-
-	//std::vector<float> rgbaBuffer(size);
-	//std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 0U);
+    */
 
 	static int textureId = 0;
 
@@ -269,6 +234,7 @@ void SignedDistanceField::update3dTexture()
 
 void SignedDistanceField::storeData()
 {
+    return;
 	ofstream fout(ofToDataPath("test.bin").c_str(), std::ios::binary);
 	fout.write(reinterpret_cast<char*>( m_distanceField.data()), m_distanceField.size() * sizeof(float) );
 	fout.close();

@@ -1,7 +1,7 @@
 #include "ofApp.h"
 
 ofApp::ofApp() : ofBaseApp(),
-	sdf(128, glm::vec3(-10,-10,-20), 20, 2),
+    sdf(128, glm::vec3(-10,-10,-20), 20, 2),
 	depthMultipy{2.0f},
 	minDepthGrid{2.0f},
 	renderMode{RenderMode::SDF},
@@ -14,6 +14,7 @@ ofApp::ofApp() : ofBaseApp(),
 void ofApp::setup(){
 	ofSetVerticalSync(false);
 	ofSetFrameRate(0);
+    ofDisableSmoothing();
 	img.load("resources/depth.png");
 	ofSetLineWidth(2);
 
@@ -89,7 +90,6 @@ void ofApp::draw()
 			sdf.drawOutline();
 			sdf.drawRaymarch(m_camera);
 
-			pointCloud.draw();
 			m_camera.end();
 			break;
 		case RenderMode::PointCloud:
@@ -107,7 +107,7 @@ void ofApp::draw()
 			ofPopStyle();
 
 			sdf.drawOutline();
-			sdf.drawGrid(minDepthGrid);
+            //sdf.drawGrid(minDepthGrid);
 
 			pointCloud.draw();
 			m_camera.end();
@@ -118,7 +118,22 @@ void ofApp::draw()
 
 			// draw the original image
 			ofSetColor(ofColor::white);
-			img.draw(0, 0, img.getWidth() * 2.0f, img.getHeight()*2.0f);
+            int width = ofGetViewportWidth();
+            int height = ofGetViewportHeight();
+
+            float aspectImage = img.getWidth()/static_cast<float>(img.getHeight());
+            float aspectView = width / static_cast<float>(height);
+
+            if(aspectView >= aspectImage)
+            {
+                width = static_cast<int>(aspectImage * height);
+            }
+            else
+            {
+                height = static_cast<int>(width / aspectImage);
+            }
+
+            img.draw(0, 0, width, height);
 			break;
 	}
 
