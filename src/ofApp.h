@@ -4,6 +4,7 @@
 #include "datastructures/pointCloud.h"
 #include "datastructures/sdf.h"
 #include "ofxKinect.h"
+#include "ofxImGui.h"
 
 class ofApp : public ofBaseApp {
 	enum class RenderMode
@@ -22,10 +23,6 @@ public:
 	void draw();
 	void exit();
 
-	void drawPointCloud();
-
-	void drawFullScreenImage(ofImage& image);
-
 	void keyPressed(int key);
 	void keyReleased(int key);
 	void mouseMoved(int x, int y);
@@ -37,16 +34,25 @@ public:
 	void windowResized(int w, int h);
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
+
 private:
-	ofxKinect kinect;
-	ofImage depthImage; // grayscale depth image
-	ofImage img;
-	RenderMode renderMode;
-	PointCloud pointCloud;
+	void drawKinectPointCloud(ofxKinect& kinect);
+	void drawFullScreenImage(ofImage& image);
+	void drawGUI();
+
+private:
+	ofxImGui::Gui m_gui;
+	ofxKinect m_kinect;
+	ofImage m_depthImage; // grayscale depth image
+	RenderMode m_renderMode;
+	PointCloud m_pointCloud;
 	ofEasyCam m_camera;
-	SignedDistanceField sdf;
-	float depthMultipy;
-	float minDepthGrid;
-	bool computeSDF;
+	SignedDistanceField m_sdf;
+	float m_depthMultipy;
+	float m_minDepthGrid;
+	bool m_computeSDF;
 	float m_buildProgress;
+
+	ImVec4 m_backgroundColor;
+	float m_floatValue;
 };

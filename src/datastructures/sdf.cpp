@@ -1,6 +1,6 @@
 #include "sdf.h"
 
-SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float scale, float truncationDistance):
+SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float scale, float truncationDistance) :
 	m_boxMesh(scale, scale, scale)
 {
 	m_resolution = resolution;
@@ -18,10 +18,10 @@ SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float
 
 	if (!m_raymarchShader.load("resources/vertShader.vert", "resources/fragShader.frag"))
 	{
-        throw std::exception();//"could not load shaders");
+		throw std::exception();//"could not load shaders");
 	}
 
-    const bool load = true;
+	const bool load = true;
 	if (load)
 	{
 		ifstream fin(ofToDataPath("test.bin").c_str(), ios::binary);
@@ -44,7 +44,7 @@ void SignedDistanceField::drawOutline()
 
 	ofSetColor(200, 100, 200);
 	float scalehalf = m_scale / 2;
-	ofDrawBox(m_origin+glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
+	ofDrawBox(m_origin + glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
 	ofPopStyle();
 }
 
@@ -59,9 +59,9 @@ void SignedDistanceField::drawRaymarch(ofCamera& camera)
 	m_raymarchShader.setUniform3f("cameraWorld", camera.getPosition());
 	m_raymarchShader.setUniformMatrix4f("sdfBaseTransform", m_world.getInverse());
 	m_raymarchShader.setUniform1f("sdfResolution", m_resolution);
-	auto vp = ofMatrix4x4( camera.getProjectionMatrix() * camera.getModelViewMatrix() );
+	auto vp = ofMatrix4x4(camera.getProjectionMatrix() * camera.getModelViewMatrix());
 	ofVec4f ori = ofVec4f(0, 0, 0, 1.0);
-	ori =  vp * ori;
+	ori = vp * ori;
 	auto res = camera.worldToCamera(ofVec3f(0, 0, 0));
 	m_raymarchShader.setUniformMatrix4f("viewprojection", camera.getModelViewProjectionMatrix());
 	m_raymarchShader.setUniform1f("near", camera.getNearClip());
@@ -96,7 +96,7 @@ void SignedDistanceField::drawGrid(float minDistance)
 					continue;
 				}
 
-				int value = (1.0f - (sdfValue / minDistance))*255;
+				int value = (1.0f - (sdfValue / minDistance)) * 255;
 				ofSetColor(value, value, value);
 
 				auto localMiddleOfBox = m_origin + glm::vec3(stepsize * x + halfstep, stepsize * y + halfstep, stepsize * z + halfstep);
@@ -126,7 +126,7 @@ glm::vec3 SignedDistanceField::getXYZFromIndex(int index)
 
 int SignedDistanceField::getIndexFromXYZ(int x, int y, int z)
 {
-	return z*m_resolutionSq+y*m_resolution+x;
+	return z * m_resolutionSq + y * m_resolution + x;
 }
 
 void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, float minDotValueForBehind, float minPointSize)
@@ -143,35 +143,35 @@ void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, f
 	auto stepsize = m_scale / m_resolution;
 	auto halfstep = stepsize / 2;
 
-    int truncatedSteps = static_cast<int>((truncationDistance * 2.0) / stepsize);
+	int truncatedSteps = static_cast<int>((truncationDistance * 2.0) / stepsize);
 
-    int minX = static_cast<int>((pointTransformed.x - halfstep - truncationDistance) / stepsize);
-    int maxX = minX + truncatedSteps;
+	int minX = static_cast<int>((pointTransformed.x - halfstep - truncationDistance) / stepsize);
+	int maxX = minX + truncatedSteps;
 
 
-    int minY = static_cast<int>((pointTransformed.y - halfstep - truncationDistance) / stepsize);
-    int maxY = minY + truncatedSteps;
-    // TODO: One vector subtraction is faster maybe
-    int minZ = static_cast<int>((pointTransformed.z - halfstep - truncationDistance) / stepsize);
-    int maxZ = minX + truncatedSteps;
+	int minY = static_cast<int>((pointTransformed.y - halfstep - truncationDistance) / stepsize);
+	int maxY = minY + truncatedSteps;
+	// TODO: One vector subtraction is faster maybe
+	int minZ = static_cast<int>((pointTransformed.z - halfstep - truncationDistance) / stepsize);
+	int maxZ = minX + truncatedSteps;
 
-    for (int x = minX; x < maxX; x++)
+	for (int x = minX; x < maxX; x++)
 	{
 		float xPos = stepsize * x + halfstep;
 
-        for (int y = minY; y < maxY; y++)
+		for (int y = minY; y < maxY; y++)
 		{
 			float yPos = stepsize * y + halfstep;
 
-            for (int z = minZ; z < maxZ; z++)
+			for (int z = minZ; z < maxZ; z++)
 			{
 
 				float zPos = stepsize * z + halfstep;
 
-                if (abs(zPos - pointTransformed.z) > truncationDistance)
-                {
-                    continue;
-                }
+				if (abs(zPos - pointTransformed.z) > truncationDistance)
+				{
+					continue;
+				}
 
 				auto index = getIndexFromXYZ(x, y, z);
 				auto sdfValue = m_distanceField[index];
@@ -201,16 +201,16 @@ void SignedDistanceField::create3dTexture(int dimension, float maxDist)
 	int size = dimension * dimension * dimension;
 	/*
 	std::vector<UINT8> rgbaBuffer(size * 4);
-    std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 0U);
+	std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 0U);
 
 	// only r
-    /*int i = 0;
+	/*int i = 0;
 	rgbaBuffer[i*4] = 255U;
 	rgbaBuffer[i*4+1] = 0;
 	rgbaBuffer[i*4+2] = 0;
-    rgbaBuffer[i*4+3] = 255U;
+	rgbaBuffer[i*4+3] = 255U;
 
-    */
+	*/
 
 	static int textureId = 0;
 
@@ -234,8 +234,8 @@ void SignedDistanceField::update3dTexture()
 
 void SignedDistanceField::storeData()
 {
-    return;
+	return;
 	ofstream fout(ofToDataPath("test.bin").c_str(), std::ios::binary);
-	fout.write(reinterpret_cast<char*>( m_distanceField.data()), m_distanceField.size() * sizeof(float) );
+	fout.write(reinterpret_cast<char*>(m_distanceField.data()), m_distanceField.size() * sizeof(float));
 	fout.close();
 }

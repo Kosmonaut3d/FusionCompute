@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/addons/ofxImGui
+/addons/ofxKinect/libs/libfreenect/src
+*.sarif
+*.nativecodeanalysis.xml

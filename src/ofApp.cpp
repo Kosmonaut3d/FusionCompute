@@ -1,23 +1,29 @@
 #include "ofApp.h"
 
 ofApp::ofApp() : ofBaseApp(),
-    sdf(128, glm::vec3(-10,-10,-20), 20, 2),
-	depthMultipy{2.0f},
-	minDepthGrid{2.0f},
-	renderMode{RenderMode::SDF},
-	computeSDF{false}
+m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
+m_depthMultipy{ 2.0f },
+m_minDepthGrid{ 2.0f },
+m_renderMode{ RenderMode::SDF },
+m_computeSDF{ false },
+m_buildProgress{0.0f},
+m_backgroundColor{ofColor::white*0.2},
+m_floatValue{0.1f}
 {
 }
 
 //--------------------------------------------------------------
-void ofApp::setup(){
+void ofApp::setup() {
 	ofSetVerticalSync(false);
 	ofSetFrameRate(0);
-    ofDisableSmoothing();
+
+	ofDisableSmoothing();
 	ofSetLineWidth(2);
 
 	ofBackground(70, 70, 70);
 	ofEnableDepthTest();
+
+	glEnable(GL_TEXTURE_3D);
 
 	m_camera.setPosition(glm::vec3(0, 0, 0));
 	m_camera.setTarget(glm::vec3(0, 0, -1)); // look forward
@@ -27,38 +33,34 @@ void ofApp::setup(){
 	m_camera.setTranslationKey(32); // space
 
 
-	glEnable(GL_TEXTURE_3D);
-
 	// enable depth->video image calibration
-	kinect.setRegistration(true);
-
-	kinect.init();
-	//kinect.init(true); // shows infrared instead of RGB video image
-	//kinect.init(false, false); // disable video image (faster fps)
-
-	kinect.open();		// opens first available kinect
-	//kinect.open(1);	// open a kinect by id, starting with 0 (sorted by serial # lexicographically))
-	//kinect.open("A00362A08602047A");	// open a kinect using it's unique serial #
+	m_kinect.setRegistration(true);
+	m_kinect.init();
+	m_kinect.open();// opens first available kinect
 
 	// print the intrinsic IR sensor values
-	if (kinect.isConnected()) {
-		ofLogNotice() << "sensor-emitter dist: " << kinect.getSensorEmitterDistance() << "cm";
-		ofLogNotice() << "sensor-camera dist:  " << kinect.getSensorCameraDistance() << "cm";
-		ofLogNotice() << "zero plane pixel size: " << kinect.getZeroPlanePixelSize() << "mm";
-		ofLogNotice() << "zero plane dist: " << kinect.getZeroPlaneDistance() << "mm";
+	if (m_kinect.isConnected()) {
+		ofLogNotice() << "sensor-emitter dist: " << m_kinect.getSensorEmitterDistance() << "cm";
+		ofLogNotice() << "sensor-camera dist:  " << m_kinect.getSensorCameraDistance() << "cm";
+		ofLogNotice() << "zero plane pixel size: " << m_kinect.getZeroPlanePixelSize() << "mm";
+		ofLogNotice() << "zero plane dist: " << m_kinect.getZeroPlaneDistance() << "mm";
 	}
 
-	depthImage.allocate(kinect.width, kinect.height, ofImageType::OF_IMAGE_GRAYSCALE);
-	//img.load("resources/depth.png");
-	//pointCloud.fillPointCloud(img, depthMultipy, 3);
+	m_depthImage.allocate(m_kinect.width, m_kinect.height, ofImageType::OF_IMAGE_GRAYSCALE);
+
+	// IMGUI
+	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+	m_gui.setup(); 
 }
 
+//--------------------------------------------------------------
 void ofApp::exit()
 {
-	kinect.close();
+	m_kinect.close();
 }
 
-void ofApp::drawPointCloud() {
+//--------------------------------------------------------------
+void ofApp::drawKinectPointCloud(ofxKinect& kinect) {
 	int w = 640;
 	int h = 480;
 	ofMesh mesh;
@@ -83,6 +85,7 @@ void ofApp::drawPointCloud() {
 	ofPopMatrix();
 }
 
+//--------------------------------------------------------------
 void ofApp::drawFullScreenImage(ofImage& image)
 {
 	int width = ofGetViewportWidth();
@@ -103,47 +106,86 @@ void ofApp::drawFullScreenImage(ofImage& image)
 	image.draw(0, 0, width, height);
 }
 
-//--------------------------------------------------------------
-void ofApp::update(){
+void ofApp::drawGUI()
+{
+	m_gui.begin();
 
-	kinect.update();
-
-	if (kinect.isFrameNew())
+	// 1. Show a simple window
 	{
-		depthImage.setFromPixels(kinect.getDepthPixels());
-		depthImage.update();
-		pointCloud.fillPointCloud(kinect, 2);
+		ImGui::SetWindowPos(ofVec2f(0, 0), ImGuiCond_FirstUseEver);
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		ImGui::SliderFloat("Float", &m_floatValue, 0.0f, 1.0f);
+
+		//this will change the app background color
+		ImGui::ColorEdit3("Background Color", (float*)&m_backgroundColor);
+
+		if (ImGui::Button("CUSTOM THEME"))
+		{
+			//gui.setTheme(new MyTheme());
+
+		}ImGui::SameLine();
+
+		if (ImGui::Button("DEFAULT THEME"))
+		{
+			m_gui.setTheme(new ofxImGui::DefaultTheme());
+
+		}
+	}
+
+	if (ImGui::GetIO().WantCaptureMouse)
+	{
+		m_camera.disableMouseInput();
+	}
+	else
+	{
+		m_camera.enableMouseInput();
+	}
+
+	// endcall
+	m_gui.end();
+}
+
+//--------------------------------------------------------------
+void ofApp::update() {
+
+	m_kinect.update();
+
+	if (m_kinect.isFrameNew() && !m_computeSDF)
+	{
+		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
+		m_depthImage.update();
+		m_pointCloud.fillPointCloud(m_kinect, 2);
 	}
 
 	static int i = 0;
-	if (computeSDF)
+	if (m_computeSDF)
 	{
 		const int batchsize = 2000;
-		auto& mesh = pointCloud.getMesh();
+		auto& mesh = m_pointCloud.getMesh();
 		const ofColor finishColor = ofColor::red;
 
-		if (pointCloud.getSize() > 0)
+		if (m_pointCloud.getSize() > 0)
 		{
 			for (int j = 0; j < batchsize; j++)
 			{
 				int k = j + i;
 
-				if (k >= pointCloud.getSize())
+				if (k >= m_pointCloud.getSize())
 				{
 					i = 0;
-					computeSDF = false;
+					m_computeSDF = false;
 
-					sdf.storeData();
+					m_sdf.storeData();
 
 					break;
 				}
 
-				sdf.insertPoint(glm::vec3(pointCloud.getPoints()[k]), glm::vec3(0, 0, 0), 0.75f, 0.1f);
+				m_sdf.insertPoint(glm::vec3(m_pointCloud.getPoints()[k]), glm::vec3(0, 0, 0), 0.75f, 0.1f);
 				auto color = mesh.getColor(k);
 				mesh.setColor(k, color * ofColor::red);
 			}
 			i += batchsize;
-			m_buildProgress = 1.f* i / pointCloud.getSize();
+			m_buildProgress = 1.f * i / m_pointCloud.getSize();
 		}
 	}
 }
@@ -151,106 +193,102 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-	switch (renderMode)
+	switch (m_renderMode)
 	{
-		case RenderMode::SDF:
-			m_camera.begin();
-			ofEnableDepthTest();
-			ofBackground(40, 40, 40);
+	case RenderMode::SDF:
+		m_camera.begin();
+		ofEnableDepthTest();
+		ofBackground(m_backgroundColor);
 
-			ofPushStyle();
+		ofPushStyle();
 
-			//give a saturation and lightness
-			ofSetColor(255, 100, 100);
+		//give a saturation and lightness
+		ofSetColor(255, 100, 100);
 
-			//ofDrawGrid(100.0f);
+		//ofDrawGrid(100.0f);
 
-			ofPopStyle();
+		ofPopStyle();
 
-			sdf.drawOutline();
-			sdf.drawRaymarch(m_camera);
+		m_sdf.drawOutline();
+		m_sdf.drawRaymarch(m_camera);
 
-			m_camera.end();
-			break;
-		case RenderMode::PointCloud:
-		{
+		m_camera.end();
+		break;
+	case RenderMode::PointCloud:
+	{
+		ofBackground(m_backgroundColor);
+		ofSetColor(ofColor::white * 0.2);
+		drawFullScreenImage(m_depthImage);
 
-			ofSetColor(ofColor::white*0.2);
-			drawFullScreenImage(depthImage);
+		m_camera.begin();
+		ofEnableDepthTest();
+		//ofBackground(40, 40, 40);
 
-			m_camera.begin();
-			ofEnableDepthTest();
-			//ofBackground(40, 40, 40);
+		ofPushStyle();
 
-			ofPushStyle();
+		//give a saturation and lightness
+		ofSetColor(255, 100, 100);
 
-			//give a saturation and lightness
-			ofSetColor(255, 100, 100);
+		//ofDrawGrid(100.0f);
 
-			//ofDrawGrid(100.0f);
+		ofPopStyle();
 
-			ofPopStyle();
+		m_sdf.drawOutline();
 
-			sdf.drawOutline();
-			//sdf.drawGrid(minDepthGrid);
+		m_pointCloud.draw();
+		m_camera.end();
+		break;
+	}
+	case RenderMode::DepthImage:
+	default:
+		ofBackground(ofColor::black);
 
-			pointCloud.draw();
-			//drawPointCloud();
-			m_camera.end();
-			break;
-		}
-		case RenderMode::DepthImage:
-		default:
-			ofBackground(ofColor::black);
+		// draw the original image
+		ofSetColor(ofColor::white);
+		drawFullScreenImage(m_depthImage);
 
-			// draw the original image
-			ofSetColor(ofColor::white);
-			drawFullScreenImage(depthImage);
-
-			kinect.drawDepth(10, 10, 400, 300);
-			kinect.draw(420, 10, 400, 300);
-			break;
+		m_kinect.drawDepth(10, 10, 400, 300);
+		m_kinect.draw(420, 10, 400, 300);
+		break;
 	}
 
-	ofDrawBitmapString("Press F1 to cycle render modes", 20, 30);
-	ofDrawBitmapString("Press F2 to compute the SDF by CPU, "+std::to_string(m_buildProgress)+"%", 20, 50);
-	ofDrawBitmapString("Press +/- to change the depth " + std::to_string(minDepthGrid), 20, 70);
-	ofDrawBitmapString(ofToString(ofGetFrameRate()) + "fps", 10, 15);
+	// Draw GUI
+	drawGUI();
 }
 
 //--------------------------------------------------------------
-void ofApp::keyPressed(int key){
+void ofApp::keyPressed(int key) {
 	if (key == 'w')
 	{
-		sdf.move(0.5f, 0.0, 0.0);
+		m_sdf.move(0.5f, 0.0, 0.0);
 	}
 
 	if (key == 's')
 	{
-		sdf.move(-0.5f, 0.0, 0.0);
+		m_sdf.move(-0.5f, 0.0, 0.0);
 	}
 
 	// Cycle through the render modes
 	if (key == OF_KEY_F1)
 	{
-		int it = static_cast<int>(renderMode);
+		int it = static_cast<int>(m_renderMode);
 		it++;
 		if (it >= static_cast<int>(RenderMode::Max))
 		{
 			it = 0;
 		}
 
-		renderMode = static_cast<RenderMode>(it);
+		m_renderMode = static_cast<RenderMode>(it);
 	}
 
 	if (key == OF_KEY_F2)
 	{
-		computeSDF = !computeSDF;
+		m_computeSDF = !m_computeSDF;
 	}
 
 	if (key == OF_KEY_F4)
 	{
-		sdf.update3dTexture();
+		m_sdf.update3dTexture();
 	}
 
 	if (key == OF_KEY_F3)
@@ -262,67 +300,67 @@ void ofApp::keyPressed(int key){
 			downsample = 0;
 		}
 
-		pointCloud.fillPointCloud(img, depthMultipy, downsample);
+		//m_pointCloud.fillPointCloud(img, m_depthMultipy, downsample);
 	}
 
 	if (key == 43)
 	{
-		minDepthGrid+=0.2F;
+		m_minDepthGrid += 0.2F;
 		//pointCloud.fillPointCloud(img, ++depthMultipy);
 	}
 	if (key == 45)
 	{
-		minDepthGrid-=0.2F;
+		m_minDepthGrid -= 0.2F;
 		//pointCloud.fillPointCloud(img, --depthMultipy);
 	}
 }
 
 //--------------------------------------------------------------
-void ofApp::keyReleased(int key){
+void ofApp::keyReleased(int key) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseMoved(int x, int y ){
+void ofApp::mouseMoved(int x, int y) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseDragged(int x, int y, int button){
+void ofApp::mouseDragged(int x, int y, int button) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mousePressed(int x, int y, int button){
+void ofApp::mousePressed(int x, int y, int button) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseReleased(int x, int y, int button){
+void ofApp::mouseReleased(int x, int y, int button) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseEntered(int x, int y){
+void ofApp::mouseEntered(int x, int y) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::mouseExited(int x, int y){
+void ofApp::mouseExited(int x, int y) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::windowResized(int w, int h){
+void ofApp::windowResized(int w, int h) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::gotMessage(ofMessage msg){
+void ofApp::gotMessage(ofMessage msg) {
 
 }
 
 //--------------------------------------------------------------
-void ofApp::dragEvent(ofDragInfo dragInfo){ 
+void ofApp::dragEvent(ofDragInfo dragInfo) {
 
 }

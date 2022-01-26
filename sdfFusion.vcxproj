@@ -100,7 +100,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxImGui\libs;..\..\..\addons\ofxImGui\libs\imgui;..\..\..\addons\ofxImGui\libs\imgui\src;..\..\..\addons\ofxImGui\src;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -120,7 +120,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxImGui\libs;..\..\..\addons\ofxImGui\libs\imgui;..\..\..\addons\ofxImGui\libs\imgui\src;..\..\..\addons\ofxImGui\src;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
@@ -140,7 +140,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxImGui\libs;..\..\..\addons\ofxImGui\libs\imgui;..\..\..\addons\ofxImGui\libs\imgui\src;..\..\..\addons\ofxImGui\src;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
@@ -163,7 +163,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxImGui\libs;..\..\..\addons\ofxImGui\libs\imgui;..\..\..\addons\ofxImGui\libs\imgui\src;..\..\..\addons\ofxImGui\src;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
     </ClCompile>
@@ -184,6 +184,18 @@
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="src\datastructures\pointCloud.cpp" />
     <ClCompile Include="src\datastructures\sdf.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\src\BaseEngine.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\src\DefaultTheme.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\src\EngineGLFW.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\src\EngineOpenGLES.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\src\EngineVk.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\src\Gui.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\src\ImHelpers.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\src\ofxImGuiLoggerChannel.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\libs\imgui\src\imgui.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\libs\imgui\src\imgui_demo.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\libs\imgui\src\imgui_draw.cpp" />
+    <ClCompile Include="..\..\..\addons\ofxImGui\libs\imgui\src\imgui_widgets.cpp" />
     <ClCompile Include="..\..\..\addons\ofxKinect\src\extra\ofxKinectExtras.cpp" />
     <ClCompile Include="..\..\..\addons\ofxKinect\src\ofxKinect.cpp" />
     <ClCompile Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\audio.c" />
@@ -199,6 +211,22 @@
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="src\datastructures\pointCloud.h" />
     <ClInclude Include="src\datastructures\sdf.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\BaseEngine.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\BaseTheme.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\DefaultTheme.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\EngineGLFW.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\EngineOpenGLES.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\EngineVk.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\Gui.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\imconfig.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\ImHelpers.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\ofxImGui.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\src\ofxImGuiLoggerChannel.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\libs\imgui\src\imgui.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\libs\imgui\src\imgui_internal.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\libs\imgui\src\imstb_rectpack.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\libs\imgui\src\imstb_textedit.h" />
+    <ClInclude Include="..\..\..\addons\ofxImGui\libs\imgui\src\imstb_truetype.h" />
     <ClInclude Include="..\..\..\addons\ofxKinect\src\extra\ofxKinectExtras.h" />
     <ClInclude Include="..\..\..\addons\ofxKinect\src\ofxBase3DVideo.h" />
     <ClInclude Include="..\..\..\addons\ofxKinect\src\ofxKinect.h" />
@@ -225,6 +253,10 @@
       <AdditionalOptions Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">/D_DEBUG %(AdditionalOptions)</AdditionalOptions>
       <AdditionalIncludeDirectories>$(OF_ROOT)\libs\openFrameworksCompiled\project\vs</AdditionalIncludeDirectories>
     </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="data\resources\fragShader.frag" />
+    <None Include="data\resources\vertShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ProjectExtensions>

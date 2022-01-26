@@ -2,12 +2,12 @@
 #include "ofApp.h"
 
 //========================================================================
-int main( ){
+int main() {
 	ofGLFWWindowSettings settings;
 	settings.setGLVersion(3, 2); //we define the OpenGL version we want to use
 	//ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 
-    settings.setSize(1280, 800);
+	settings.setSize(1280, 800);
 	ofCreateWindow(settings);
 
 	// this kicks off the running of my app
