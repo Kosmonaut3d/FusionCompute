@@ -85,6 +85,12 @@
     <ClCompile Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\usb_libusb10.c">
       <Filter>addons\ofxKinect\libs\libfreenect\src</Filter>
     </ClCompile>
+    <ClCompile Include="src\datastructures\slice.cpp">
+      <Filter>src\datastructures</Filter>
+    </ClCompile>
+    <ClCompile Include="src\algorithms\computeSDF.cpp">
+      <Filter>src\algorithms</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -146,6 +152,9 @@
     </Filter>
     <Filter Include="shaders">
       <UniqueIdentifier>{8de03219-945f-4271-af35-4ef2f6ac04c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\algorithms">
+      <UniqueIdentifier>{5a6987b7-d594-4b3c-b7bb-af5c459ba1ec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -251,15 +260,33 @@
     <ClInclude Include="..\..\..\addons\ofxKinect\libs\libusb\include\libusb.h">
       <Filter>addons\ofxKinect\libs\libusb\include</Filter>
     </ClInclude>
+    <ClInclude Include="src\datastructures\slice.h">
+      <Filter>src\datastructures</Filter>
+    </ClInclude>
+    <ClInclude Include="src\algorithms\computeSDF.h">
+      <Filter>src\algorithms</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\resources\fragShader.frag">
+    <None Include="bin\data\resources\fragShader.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="data\resources\vertShader.vert">
+    <None Include="bin\data\resources\vertShader.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="bin\data\resources\sliceFragShader.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="bin\data\resources\computeSDF.comp">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="bin\data\resources\SimpleFrag.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="bin\data\resources\SimpleVert.vert">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

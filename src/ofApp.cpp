@@ -2,13 +2,22 @@
 
 ofApp::ofApp() : ofBaseApp(),
 m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
+m_computeSDFAlgorithm(),
+m_slice(glm::vec3(0, 0, -10), 20),
 m_depthMultipy{ 2.0f },
 m_minDepthGrid{ 2.0f },
 m_renderMode{ RenderMode::SDF },
 m_computeSDF{ false },
+m_drawSlice{ false },
+m_drawDepthBackground{ true },
+m_drawSDF{ false },
+m_drawPointCloud{ false },
+m_drawSDFAlgorithm{ false },
 m_buildProgress{0.0f},
 m_backgroundColor{ofColor::white*0.2},
-m_floatValue{0.1f}
+m_floatValue{0.1f},
+m_sdfResolutionExp{6},
+m_sdfResolution(pow(2, m_sdfResolutionExp))
 {
 }
 
@@ -114,20 +123,38 @@ void ofApp::drawGUI()
 	{
 		ImGui::SetWindowPos(ofVec2f(0, 0), ImGuiCond_FirstUseEver);
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		ImGui::SliderFloat("Float", &m_floatValue, 0.0f, 1.0f);
+		if (ImGui::SliderFloat("Float", &m_floatValue, -1.0f, 1.0f))
+		{
+			m_slice.setPos(glm::vec3(m_floatValue*10, 0, -10));
+		};
 
 		//this will change the app background color
 		ImGui::ColorEdit3("Background Color", (float*)&m_backgroundColor);
 
-		if (ImGui::Button("CUSTOM THEME"))
-		{
-			//gui.setTheme(new MyTheme());
+		ImGui::Checkbox("Draw Slice", &m_drawSlice);
+		ImGui::Checkbox("Draw Kinect Depth", &m_drawDepthBackground);
+		ImGui::Checkbox("Draw SDF", &m_drawSDF);
+		ImGui::Checkbox("Draw PCL", &m_drawPointCloud);
+		ImGui::Checkbox("Draw SDF Compute", &m_drawSDFAlgorithm);
 
-		}ImGui::SameLine();
-
-		if (ImGui::Button("DEFAULT THEME"))
+		if (ImGui::SliderInt("SDF resolution", &m_sdfResolutionExp, 3, 8))
 		{
-			m_gui.setTheme(new ofxImGui::DefaultTheme());
+			m_sdfResolution = pow(2, m_sdfResolutionExp);
+			m_sdf.setResolution(m_sdfResolution);
+		} ImGui::SameLine();
+		ImGui::Text("%d", m_sdfResolution);
+
+		if (ImGui::Button("Compute SDF "))
+		{
+			m_sdf.resetData();
+			m_computeSDF = !m_computeSDF;
+		} ImGui::SameLine();
+
+		ImGui::ProgressBar(m_buildProgress);
+
+		if (ImGui::Button("Apply SDF tex"))
+		{
+			m_sdf.update3dTexture();
 
 		}
 	}
@@ -157,11 +184,16 @@ void ofApp::update() {
 		m_pointCloud.fillPointCloud(m_kinect, 2);
 	}
 
+	if (m_drawSDFAlgorithm)
+	{
+		m_computeSDFAlgorithm.compute();
+	}
+
 	static int i = 0;
 	if (m_computeSDF)
 	{
 		const int batchsize = 2000;
-		auto& mesh = m_pointCloud.getMesh();
+		//auto& mesh = m_pointCloud.getMesh();
 		const ofColor finishColor = ofColor::red;
 
 		if (m_pointCloud.getSize() > 0)
@@ -181,8 +213,8 @@ void ofApp::update() {
 				}
 
 				m_sdf.insertPoint(glm::vec3(m_pointCloud.getPoints()[k]), glm::vec3(0, 0, 0), 0.75f, 0.1f);
-				auto color = mesh.getColor(k);
-				mesh.setColor(k, color * ofColor::red);
+				//auto color = mesh.getColor(k);
+				//mesh.setColor(k, color * ofColor::red);
 			}
 			i += batchsize;
 			m_buildProgress = 1.f * i / m_pointCloud.getSize();
@@ -195,47 +227,41 @@ void ofApp::draw()
 {
 	switch (m_renderMode)
 	{
+
 	case RenderMode::SDF:
-		m_camera.begin();
-		ofEnableDepthTest();
-		ofBackground(m_backgroundColor);
-
-		ofPushStyle();
-
-		//give a saturation and lightness
-		ofSetColor(255, 100, 100);
-
-		//ofDrawGrid(100.0f);
-
-		ofPopStyle();
-
-		m_sdf.drawOutline();
-		m_sdf.drawRaymarch(m_camera);
-
-		m_camera.end();
-		break;
-	case RenderMode::PointCloud:
 	{
 		ofBackground(m_backgroundColor);
-		ofSetColor(ofColor::white * 0.2);
-		drawFullScreenImage(m_depthImage);
+		ofDisableDepthTest();
+		if (m_drawDepthBackground)
+		{
+			ofSetColor(ofColor::white * 0.2);
+			drawFullScreenImage(m_depthImage);
+		}
+
+		if (m_drawSDFAlgorithm)
+		{
+			ofSetColor(ofColor::white);
+			m_computeSDFAlgorithm.draw();
+		}
 
 		m_camera.begin();
 		ofEnableDepthTest();
-		//ofBackground(40, 40, 40);
-
-		ofPushStyle();
-
-		//give a saturation and lightness
-		ofSetColor(255, 100, 100);
-
-		//ofDrawGrid(100.0f);
-
-		ofPopStyle();
 
 		m_sdf.drawOutline();
+		if (m_drawSDF)
+		{
+			m_sdf.drawRaymarch(m_camera);
+		}
+		if (m_drawPointCloud)
+		{
+			m_pointCloud.draw();
+		}
+		if (m_drawSlice)
+		{
+			ofSetColor(ofColor::red);
+			m_slice.draw(m_sdf.getInvWorld(), m_sdf.getTextureID(), m_computeSDFAlgorithm.getTextureID());
+		}
 
-		m_pointCloud.draw();
 		m_camera.end();
 		break;
 	}

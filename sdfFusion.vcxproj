@@ -38,6 +38,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -180,6 +181,8 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\algorithms\computeSDF.cpp" />
+    <ClCompile Include="src\datastructures\slice.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="src\datastructures\pointCloud.cpp" />
@@ -208,6 +211,8 @@
     <ClCompile Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\usb_libusb10.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\algorithms\computeSDF.h" />
+    <ClInclude Include="src\datastructures\slice.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="src\datastructures\pointCloud.h" />
     <ClInclude Include="src\datastructures\sdf.h" />
@@ -255,8 +260,12 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\resources\fragShader.frag" />
-    <None Include="data\resources\vertShader.vert" />
+    <None Include="bin\data\resources\computeSDF.comp" />
+    <None Include="bin\data\resources\fragShader.frag" />
+    <None Include="bin\data\resources\SimpleFrag.frag" />
+    <None Include="bin\data\resources\SimpleVert.vert" />
+    <None Include="bin\data\resources\sliceFragShader.frag" />
+    <None Include="bin\data\resources\vertShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ProjectExtensions>

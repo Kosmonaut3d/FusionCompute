@@ -85,6 +85,7 @@ float calcAO( in vec3 pos, in vec3 nor, in float maxDist, in float falloff )
 
 float GetDistSDF(vec3 p)
 {
+    // IDEA: Transform the p first to sdfBase and trace from there
     // Transform world position to SDF Base
     vec3 relPos = (sdfBaseTransform * vec4(p, 1)).xyz; 
 
@@ -93,6 +94,7 @@ float GetDistSDF(vec3 p)
         return 1.0f;
     }
     
+
     // Replace by uniform
     return texture(volume_tex, relPos).r;
 }
@@ -129,7 +131,7 @@ void main()
     float d = RayMarch(ro,rd); // Distance
     
     */
-    //if(d.x < MAX_DIST)
+    if(d.x < MAX_DIST)
     {
         // Hit point
         vec3 pos = ro + rd * d.x;
@@ -137,7 +139,7 @@ void main()
         vec3 ref = reflect(rd, nor);
 
 
-        //float occ = calcAO( pos, nor, 10, .5);
+        float occ = calcAO( pos, nor, 10, .5);
 
         //vec3 posToWorld = (sdfBaseTransform * vec4(pos, 1)).xyz; 
 
@@ -162,8 +164,8 @@ void main()
     
         outputColor = vec4(vec3(d.y), 1.0);
     }
-   //else
-   //{
-   //    discard;
-   //}
+    else
+    {
+        discard;
+    }
 }

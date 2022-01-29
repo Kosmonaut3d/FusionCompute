@@ -5,14 +5,15 @@
 #include "datastructures/sdf.h"
 #include "ofxKinect.h"
 #include "ofxImGui.h"
+#include "slice.h"
+#include "algorithms/computeSDF.h"
 
 class ofApp : public ofBaseApp {
 	enum class RenderMode
 	{
 		DepthImage = 0,
-		PointCloud = 1,
-		SDF = 2,
-		Max = 3,
+		SDF = 1,
+		Max = 2,
 	};
 
 public:
@@ -46,12 +47,21 @@ private:
 	ofImage m_depthImage; // grayscale depth image
 	RenderMode m_renderMode;
 	PointCloud m_pointCloud;
+	Slice m_slice;
 	ofEasyCam m_camera;
 	SignedDistanceField m_sdf;
+	computeSDF m_computeSDFAlgorithm;
 	float m_depthMultipy;
 	float m_minDepthGrid;
 	bool m_computeSDF;
+	bool m_drawSlice;
+	bool m_drawSDF;
+	bool m_drawPointCloud;
+	bool m_drawDepthBackground;
+	bool m_drawSDFAlgorithm;
 	float m_buildProgress;
+	int m_sdfResolutionExp;
+	int m_sdfResolution;
 
 	ImVec4 m_backgroundColor;
 	float m_floatValue;

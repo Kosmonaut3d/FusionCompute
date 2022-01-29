@@ -17,8 +17,13 @@ public:
 	void create3dTexture(int dimension, float maxDist);
 	void update3dTexture();
 	void storeData();
+	void resetData();
+	void setResolution(int resolution);
+	ofMatrix4x4& getInvWorld();
+	unsigned int getTextureID();
 
 private:
+	unsigned int m_textureID;
 	int m_resolution;
 	int m_resolutionSq;
 	glm::vec3 m_origin;
@@ -27,6 +32,7 @@ private:
 	float m_recpTruncationDistance;
 	float m_distanceBetweenCells;
 	ofMatrix4x4 m_world;
+	ofMatrix4x4 m_worldInv;
 	std::vector<float> m_distanceField;
 	ofShader m_raymarchShader;
 
