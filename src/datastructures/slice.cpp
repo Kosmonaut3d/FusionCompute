@@ -18,9 +18,8 @@ Slice::Slice(ofVec3f position, float size):
 		throw std::exception();//"could not load shaders");
 	}
 
-	//glUniform1i(m_sliceShader.getUniformLocation("volume_tex"), 0); // set it manually
-	glUniform1i(m_sliceShader.getUniformLocation("tex2D"),0); // set it manually
-
+	//glUniform1i(m_sliceShader.getUniformLocation("tex2D"), 0); // set it manually
+	//glUniform1i(m_sliceShader.getUniformLocation("tex3D"), 1); // set it manually
 	//m_sliceShader.setUniformTexture("volume_tex", 0 )
 }
 
@@ -29,18 +28,17 @@ void Slice::setPos(ofVec3f pos)
 	m_mesh.setPosition(pos);
 }
 
-void Slice::draw(ofMatrix4x4& sdfInvWorld, unsigned int boundTextureID3d, unsigned int boundTextureID)
+void Slice::draw(ofMatrix4x4& sdfInvWorld, unsigned int sdfTextureID, unsigned int computeShaderTexID)
 {
 	m_sliceShader.begin();
 
-	/*glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_3D, boundTextureID3d);
+	m_sliceShader.setUniform1i("tex2D", 0);
+	m_sliceShader.setUniform1i("tex3D", 1);
 
-	glActiveTexture(GL_TEXTURE0 + 1); // Texture unit 1
-	glBindTexture(GL_TEXTURE_2D, boundTextureID);
-	*/
-	glActiveTexture(GL_TEXTURE0); // Texture unit 1
-	glBindTexture(GL_TEXTURE_2D, boundTextureID);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, computeShaderTexID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_3D, sdfTextureID);
 
 	m_sliceShader.setUniformMatrix4f("sdfBaseTransform", sdfInvWorld);
 	m_mesh.draw();

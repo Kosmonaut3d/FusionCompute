@@ -69,7 +69,6 @@ void computeSDF::compute()
 
 void computeSDF::draw()
 {
-	return;
 	ofMesh quad;
 
 	m_fsShader.begin();
