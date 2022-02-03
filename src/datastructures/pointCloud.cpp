@@ -1,30 +1,68 @@
 #include "pointCloud.h"
 
 PointCloud::PointCloud() :
-	mesh{},
+	meshPoints{},
 	generated{ false }
 {
 	size = sizeof(points) / sizeof(points[0]);
+	meshPoints.setMode(OF_PRIMITIVE_POINTS);
+	meshNormals.setMode(OF_PRIMITIVE_LINES);
 }
 
-void PointCloud::fillPointCloud(ofxKinect& kinect, int downsample)
+void PointCloud::fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals)
 {
 	int w = 640;
 	int h = 480;
-	mesh.setMode(OF_PRIMITIVE_POINTS);
-	mesh.clearVertices();
-	mesh.clearColors();
+	meshPoints.clearVertices();
+	meshPoints.clearColors();
 	int step = downsample;
-	for (int y = 0; y < h; y += step) {
-		for (int x = 0; x < w; x += step) {
-			if (kinect.getDistanceAt(x, y) > 0) {
-				glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * 0.01;
 
-				int index = y * w + x;
-				points[index] = glm::vec4(pos.x, -pos.y, -pos.z, -pos.z);
 
-				mesh.addColor(kinect.getColorAt(x, y));
-				mesh.addVertex(points[index]);
+	if (!compNormals)
+	{
+		for (int y = 0; y < h; y += step) {
+			for (int x = 0; x < w; x += step) {
+				if (kinect.getDistanceAt(x, y) > 0) {
+					glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * 0.01;
+
+					int index = y * w + x;
+					points[index] = glm::vec4(pos.x, -pos.y, -pos.z, -pos.z);
+
+					meshPoints.addColor(kinect.getColorAt(x, y));
+					meshPoints.addVertex(points[index]);
+				}
+			}
+		}
+	}
+	else
+	{
+		meshNormals.clearVertices();
+		meshNormals.clearColors();
+		for (int y = 0; y < h; y += step) {
+			for (int x = 0; x < w; x += step) {
+				if (kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x+1, y) > 0 && kinect.getDistanceAt(x, y+1) > 0){
+					glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * glm::vec3(1, -1, -1);
+
+					glm::vec3 pos_x = kinect.getWorldCoordinateAt(x+1, y) * glm::vec3(1, -1, -1);
+					glm::vec3 pos_y = kinect.getWorldCoordinateAt(x, y+1) * glm::vec3(1, -1, -1);
+
+					int index = y * w + x;
+					points[index] = glm::vec4(pos * 0.01, 1);
+
+					meshPoints.addColor(kinect.getColorAt(x, y));
+					meshPoints.addVertex(points[index]);
+
+					const auto v1 = glm::normalize(pos_x - pos);
+					const auto v2 = glm::normalize(pos_y - pos);
+					glm::vec3 nor = glm::cross(v2, v1);
+
+					glm::vec3 color = (nor + glm::vec3(1, 1, 1)) * 0.5 * 255;
+
+					meshNormals.addColor(ofColor(color.x, color.y, color.z));
+					meshNormals.addVertex(pos * 0.01);
+					meshNormals.addColor(ofColor(color.x, color.y, color.z));
+					meshNormals.addVertex((pos * 0.01 + nor));
+				}
 			}
 		}
 	}
@@ -53,9 +91,9 @@ void PointCloud::fillPointCloud(ofImage& depthImage, float maxDepth, int downsam
 	view.width = pixels.getWidth();
 	view.height = pixels.getHeight();
 
-	mesh.setMode(OF_PRIMITIVE_POINTS);
-	mesh.clearVertices();
-	mesh.clearColors();
+	meshPoints.setMode(OF_PRIMITIVE_POINTS);
+	meshPoints.clearVertices();
+	meshPoints.clearColors();
 
 	for (int y = 0; y < height; y++)
 	{
@@ -85,8 +123,8 @@ void PointCloud::fillPointCloud(ofImage& depthImage, float maxDepth, int downsam
 	auto size = pixels.getWidth() * pixels.getHeight();
 
 	for (unsigned int i = 0; i < size; i++) {
-		mesh.addColor(ofColor::white.getLerped(ofColor::black, 1 - points[i].w));
-		mesh.addVertex(points[i]);
+		meshPoints.addColor(ofColor::white.getLerped(ofColor::black, 1 - points[i].w));
+		meshPoints.addVertex(points[i]);
 	}
 	generated = true;
 }
@@ -94,7 +132,7 @@ void PointCloud::fillPointCloud(ofImage& depthImage, float maxDepth, int downsam
 /// <summary>
 /// 
 /// </summary>
-void PointCloud::draw()
+void PointCloud::draw(bool drawNormals)
 {
 	if (!generated)
 	{
@@ -106,7 +144,16 @@ void PointCloud::draw()
 	ofScale(factor, factor, factor);
 	// the projected points are 'upside down' and 'backwards' 
 	ofEnableDepthTest();
-	mesh.drawVertices();
+
+	if (drawNormals)
+	{
+		meshNormals.drawVertices();
+	}
+	else
+	{
+		meshPoints.drawVertices();
+	}
+
 	ofDisableDepthTest();
 	ofPopMatrix();
 }
@@ -131,5 +178,5 @@ int PointCloud::getSize()
 
 ofMesh& PointCloud::getMesh()
 {
-	return mesh;
+	return meshPoints;
 }

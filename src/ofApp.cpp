@@ -12,7 +12,9 @@ m_drawSlice{ false },
 m_drawDepthBackground{ true },
 m_drawSDF{ false },
 m_drawPointCloud{ false },
+m_computeNormalsCPU{ false},
 m_drawSDFAlgorithm{ false },
+m_updateKinect{true},
 m_buildProgress{0.0f},
 m_backgroundColor{ofColor::white*0.2},
 m_floatValue{0.1f},
@@ -131,10 +133,12 @@ void ofApp::drawGUI()
 		//this will change the app background color
 		ImGui::ColorEdit3("Background Color", (float*)&m_backgroundColor);
 
+		ImGui::Checkbox("Update Camera", &m_updateKinect);
 		ImGui::Checkbox("Draw Slice", &m_drawSlice);
 		ImGui::Checkbox("Draw Kinect Depth", &m_drawDepthBackground);
 		ImGui::Checkbox("Draw SDF", &m_drawSDF);
 		ImGui::Checkbox("Draw PCL", &m_drawPointCloud);
+		ImGui::Checkbox("Compute Normals", &m_computeNormalsCPU);
 		ImGui::Checkbox("Draw SDF Compute", &m_drawSDFAlgorithm);
 
 		if (ImGui::SliderInt("SDF resolution", &m_sdfResolutionExp, 3, 8))
@@ -177,11 +181,11 @@ void ofApp::update() {
 
 	m_kinect.update();
 
-	if (m_kinect.isFrameNew() && !m_computeSDF)
+	if (m_kinect.isFrameNew() && !m_computeSDF && m_updateKinect)
 	{
 		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
 		m_depthImage.update();
-		m_pointCloud.fillPointCloud(m_kinect, 2);
+		m_pointCloud.fillPointCloud(m_kinect, 4, m_computeNormalsCPU);
 	}
 
 	if (m_drawSDFAlgorithm)
@@ -254,7 +258,7 @@ void ofApp::draw()
 		}
 		if (m_drawPointCloud)
 		{
-			m_pointCloud.draw();
+			m_pointCloud.draw(m_computeNormalsCPU);
 		}
 		if (m_drawSlice)
 		{

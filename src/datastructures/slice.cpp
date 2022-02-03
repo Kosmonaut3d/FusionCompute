@@ -7,7 +7,6 @@ Slice::Slice(ofVec3f position, float size):
 	m_size(size),
 	m_sliceShader()
 {
-
 	m_mesh.set(20, 20);
 	m_mesh.setPosition(position);
 	m_mesh.setScale(1);

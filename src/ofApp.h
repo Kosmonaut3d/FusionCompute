@@ -57,11 +57,13 @@ private:
 	bool m_drawSlice;
 	bool m_drawSDF;
 	bool m_drawPointCloud;
+	bool m_computeNormalsCPU;
 	bool m_drawDepthBackground;
 	bool m_drawSDFAlgorithm;
 	float m_buildProgress;
 	int m_sdfResolutionExp;
 	int m_sdfResolution;
+	bool m_updateKinect;
 
 	ImVec4 m_backgroundColor;
 	float m_floatValue;
