@@ -5,7 +5,8 @@ bool GUIScene::s_updateKinectData = true;
 ImVec4 GUIScene::s_backgroundColor = ImVec4(0.2, 0.2, 0.2, 1);
 bool GUIScene::s_computePointCloud = true;
 bool GUIScene::s_drawPointCloud = true;
-bool GUIScene::s_drawDepthBackground = true;
+bool GUIScene::s_drawPointCloudTex = false;
+bool GUIScene::s_drawDepthBackground = false;
 
 //---------------------------------------------------
 GUIScene::GUIScene() : m_gui()
@@ -45,6 +46,7 @@ void GUIScene::draw(ofEasyCam& camera)
 			{
 				ImGui::Checkbox("Compute PCL", &s_computePointCloud);
 				ImGui::Checkbox("Draw PCL", &s_drawPointCloud);
+				ImGui::Checkbox("Draw PCL World Tex", &s_drawPointCloudTex);
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();
@@ -52,6 +54,7 @@ void GUIScene::draw(ofEasyCam& camera)
 		ImGui::Separator();
 
 		ImGui::ColorEdit3("Background Color", (float*)&s_backgroundColor);
+		ImGui::Checkbox("Draw Kinect Depth", &s_drawDepthBackground);
 
 		//ImGui::ShowDemoWindow();// ::ShowExampleAppDockSpace(true);
 		/*if (ImGui::SliderFloat("Float", &m_floatValue, -10.0f, 10.0f))

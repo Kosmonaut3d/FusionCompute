@@ -13,7 +13,8 @@ public:
 	PointCloudScene();
 	void setup(ofxKinect& kinect);
 	void update(bool kinectUpdate, ofxKinect& kinect);
-	void draw(ofCamera& camera) ;
+	void draw(ofCamera& camera);
+	void drawOutline();
 
 private:
 	PointCloudComp m_pointCloudComp;

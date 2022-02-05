@@ -18,6 +18,7 @@ public:
 	static ImVec4 s_backgroundColor;
 	static bool s_computePointCloud;
 	static bool s_drawPointCloud;
+	static bool s_drawPointCloudTex;
 	static bool s_drawDepthBackground;
 private:
 	ofxImGui::Gui m_gui;
