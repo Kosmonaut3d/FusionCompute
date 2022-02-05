@@ -91,6 +91,12 @@
     <ClCompile Include="src\algorithms\computeSDF.cpp">
       <Filter>src\algorithms</Filter>
     </ClCompile>
+    <ClCompile Include="src\compute\PointCloudComp.cpp">
+      <Filter>src\compute</Filter>
+    </ClCompile>
+    <ClCompile Include="src\helper\dataStorageHelper.cpp">
+      <Filter>src\helper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -155,6 +161,12 @@
     </Filter>
     <Filter Include="src\algorithms">
       <UniqueIdentifier>{5a6987b7-d594-4b3c-b7bb-af5c459ba1ec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\compute">
+      <UniqueIdentifier>{9c9ffd7f-b3eb-481b-9df7-2c5c70e173a8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\helper">
+      <UniqueIdentifier>{5e5a439c-60f6-4173-b4e4-f7b62103b927}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -266,6 +278,12 @@
     <ClInclude Include="src\algorithms\computeSDF.h">
       <Filter>src\algorithms</Filter>
     </ClInclude>
+    <ClInclude Include="src\compute\PointCloudComp.h">
+      <Filter>src\compute</Filter>
+    </ClInclude>
+    <ClInclude Include="src\helper\dataStorageHelper.h">
+      <Filter>src\helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
@@ -287,6 +305,12 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="bin\data\resources\SimpleVert.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="bin\data\resources\pointCloud.frag">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="bin\data\resources\pointCloud.vert">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

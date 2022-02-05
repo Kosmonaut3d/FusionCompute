@@ -7,6 +7,7 @@
 #include "ofxImGui.h"
 #include "slice.h"
 #include "algorithms/computeSDF.h"
+#include "compute/PointCloudComp.h"
 
 class ofApp : public ofBaseApp {
 	enum class RenderMode
@@ -45,8 +46,10 @@ private:
 	ofxImGui::Gui m_gui;
 	ofxKinect m_kinect;
 	ofImage m_depthImage; // grayscale depth image
+	ofTexture m_depthRawTexture;
 	RenderMode m_renderMode;
 	PointCloud m_pointCloud;
+	PointCloudComp m_pointCloudComp;
 	Slice m_slice;
 	ofEasyCam m_camera;
 	SignedDistanceField m_sdf;

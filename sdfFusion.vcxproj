@@ -182,7 +182,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\algorithms\computeSDF.cpp" />
+    <ClCompile Include="src\compute\PointCloudComp.cpp" />
     <ClCompile Include="src\datastructures\slice.cpp" />
+    <ClCompile Include="src\helper\dataStorageHelper.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="src\datastructures\pointCloud.cpp" />
@@ -212,7 +214,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\algorithms\computeSDF.h" />
+    <ClInclude Include="src\compute\PointCloudComp.h" />
     <ClInclude Include="src\datastructures\slice.h" />
+    <ClInclude Include="src\helper\dataStorageHelper.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="src\datastructures\pointCloud.h" />
     <ClInclude Include="src\datastructures\sdf.h" />
@@ -262,6 +266,8 @@
   <ItemGroup>
     <None Include="bin\data\resources\computeSDF.comp" />
     <None Include="bin\data\resources\fragShader.frag" />
+    <None Include="bin\data\resources\pointCloud.frag" />
+    <None Include="bin\data\resources\pointCloud.vert" />
     <None Include="bin\data\resources\SimpleFrag.frag" />
     <None Include="bin\data\resources\SimpleVert.vert" />
     <None Include="bin\data\resources\sliceFragShader.frag" />

@@ -147,8 +147,6 @@ void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, f
 		return;
 	}
 
-
-
 	auto stepsize = m_scale / m_resolution;
 	auto halfstep = stepsize / 2;
 

@@ -1,7 +1,10 @@
 #include "ofApp.h"
+#include "helper/dataStorageHelper.h"
 
 ofApp::ofApp() : ofBaseApp(),
+m_depthRawTexture(),
 m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
+m_pointCloudComp(),
 m_computeSDFAlgorithm(),
 m_slice(glm::vec3(0, 0, -10), 20),
 m_depthMultipy{ 2.0f },
@@ -55,10 +58,16 @@ void ofApp::setup() {
 		ofLogNotice() << "sensor-camera dist:  " << m_kinect.getSensorCameraDistance() << "cm";
 		ofLogNotice() << "zero plane pixel size: " << m_kinect.getZeroPlanePixelSize() << "mm";
 		ofLogNotice() << "zero plane dist: " << m_kinect.getZeroPlaneDistance() << "mm";
+		m_computeSDFAlgorithm.registerKinectData(m_kinect.getZeroPlaneDistance(), m_kinect.getZeroPlanePixelSize());
 	}
 
 	m_depthImage.allocate(m_kinect.width, m_kinect.height, ofImageType::OF_IMAGE_GRAYSCALE);
-
+	DataStorageHelper::loadImage("depth.bin", m_depthImage);
+	
+	unsigned short dataRaw[640*480];
+	DataStorageHelper::loadData("depthRaw.bin", dataRaw, 640*480);
+	m_depthRawTexture.loadData(dataRaw, 640, 480, m_kinect.getRawDepthPixels().getPixelFormat());
+	
 	// IMGUI
 	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	m_gui.setup(); 
@@ -117,6 +126,7 @@ void ofApp::drawFullScreenImage(ofImage& image)
 	image.draw(0, 0, width, height);
 }
 
+//--------------------------------------------------------------
 void ofApp::drawGUI()
 {
 	m_gui.begin();
@@ -125,9 +135,9 @@ void ofApp::drawGUI()
 	{
 		ImGui::SetWindowPos(ofVec2f(0, 0), ImGuiCond_FirstUseEver);
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		if (ImGui::SliderFloat("Float", &m_floatValue, -1.0f, 1.0f))
+		if (ImGui::SliderFloat("Float", &m_floatValue, -10.0f, 10.0f))
 		{
-			m_slice.setPos(glm::vec3(m_floatValue*10, 0, -10));
+			m_slice.setPos(glm::vec3(m_floatValue, 0, -10));
 		};
 
 		//this will change the app background color
@@ -161,6 +171,18 @@ void ofApp::drawGUI()
 			m_sdf.update3dTexture();
 
 		}
+
+		if (ImGui::Button("Save Kinect Depth "))
+		{
+			if (m_kinect.isConnected())
+			{
+				DataStorageHelper::storeImage("depth.bin", m_depthImage);
+				const auto& pixelsRaw = m_kinect.getRawDepthPixels();
+				const auto* dataRaw = pixelsRaw.getData();
+				DataStorageHelper::storeData("depthRaw.bin", dataRaw, pixelsRaw.getWidth() * pixelsRaw.getHeight());
+
+			}
+		}
 	}
 
 	if (ImGui::GetIO().WantCaptureMouse)
@@ -185,12 +207,14 @@ void ofApp::update() {
 	{
 		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
 		m_depthImage.update();
+		m_depthImage.getPixels().getBytesPerPixel();
 		m_pointCloud.fillPointCloud(m_kinect, 4, m_computeNormalsCPU);
+		m_depthRawTexture.loadData(m_kinect.getRawDepthPixels());
 	}
 
 	if (m_drawSDFAlgorithm)
 	{
-		m_computeSDFAlgorithm.compute();
+		m_computeSDFAlgorithm.compute(m_depthRawTexture);
 	}
 
 	static int i = 0;
@@ -245,7 +269,8 @@ void ofApp::draw()
 		if (m_drawSDFAlgorithm)
 		{
 			ofSetColor(ofColor::white);
-			m_computeSDFAlgorithm.draw();
+			//m_computeSDFAlgorithm.draw(m_depthRawTexture);
+			m_pointCloudComp.draw(m_computeSDFAlgorithm.getTextureID(), m_kinect.getTextureReference().getTextureData().textureID, false, m_camera.getModelViewProjectionMatrix(), m_floatValue);
 		}
 
 		m_camera.begin();
