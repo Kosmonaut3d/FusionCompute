@@ -73,4 +73,5 @@ private:
 	ImVec4 m_backgroundColor;
 	float m_floatValue;
 	float m_pclSizeValue;
+	bool m_isKinectDeliveringData;
 };

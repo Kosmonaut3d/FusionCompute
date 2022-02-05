@@ -16,12 +16,12 @@ MessageCallback(GLenum source,
 			 "** GL ERROR **",
 			type, severity, message);
 	}
-	else
+	/*else
 	{
 		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 			"** NO GL ERROR **",
 			type, severity, message);
-	}
+	}*/
 }
 
 

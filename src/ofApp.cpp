@@ -25,6 +25,7 @@ m_floatValue{0.1f},
 m_pclSizeValue{100.0f},
 m_sdfResolutionExp{6},
 m_sdfResolution(pow(2, m_sdfResolutionExp))
+, m_isKinectDeliveringData{false}
 {
 }
 
@@ -133,6 +134,9 @@ void ofApp::drawGUI()
 	// 1. Show a simple window
 	{
 		ImGui::SetWindowPos(ofVec2f(0, 0), ImGuiCond_FirstUseEver);
+
+		ImGui::MenuItem("Kinect Connected", NULL, m_isKinectDeliveringData);
+
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		if (ImGui::SliderFloat("Float", &m_floatValue, -10.0f, 10.0f))
 		{
@@ -207,6 +211,7 @@ void ofApp::update() {
 
 	if (m_kinect.isFrameNew() && !m_computeSDF && m_updateKinect)
 	{
+		m_isKinectDeliveringData = true;
 		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
 		m_depthImage.update();
 		m_depthImage.getPixels().getBytesPerPixel();
@@ -265,8 +270,8 @@ void ofApp::draw()
 		if (m_drawDepthBackground)
 		{
 			//ofSetColor(ofColor::white * 0.2);
-			//drawFullScreenImage(m_depthImage);
 			FullScreenQuadRender::get().draw(m_depthImage.getTextureReference());
+			//drawFullScreenImage(m_depthImage);
 		}
 
 		if (m_drawSDFAlgorithm)
