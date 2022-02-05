@@ -3,29 +3,10 @@
 #include "helper/fullScreenQuadRender.h"
 
 ofApp::ofApp() : ofBaseApp(),
-m_depthRawTexture(),
+m_guiScene(),
+m_pointCloudScene(),
 //m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
-m_pointCloudComp(),
-m_computeSDFAlgorithm(),
-m_slice(glm::vec3(0, 0, -10), 20),
-m_depthMultipy{ 2.0f },
-m_minDepthGrid{ 2.0f },
-m_renderMode{ RenderMode::SDF },
-m_computeSDF{ false },
-m_drawSlice{ false },
-m_drawDepthBackground{ true },
-m_drawSDF{ false },
-m_drawPointCloud{ false },
-m_computeNormalsCPU{ false},
-m_drawSDFAlgorithm{ false },
-m_updateKinect{true},
-m_buildProgress{0.0f},
-m_backgroundColor{ofColor::white*0.2},
-m_floatValue{0.1f},
-m_pclSizeValue{100.0f},
-m_sdfResolutionExp{6},
-m_sdfResolution(pow(2, m_sdfResolutionExp))
-, m_isKinectDeliveringData{false}
+m_slice(glm::vec3(0, 0, -10), 20)
 {
 }
 
@@ -34,19 +15,18 @@ void ofApp::setup() {
 	ofSetVerticalSync(false);
 	ofSetFrameRate(0);
 
+	// IMPORTANT - read rect textures as normalized GL_TEXTURE_2D instead!
+	ofDisableArbTex();
+
 	ofDisableSmoothing();
 	ofSetLineWidth(2);
 
-	ofBackground(70, 70, 70);
-	ofEnableDepthTest();
-
 	m_camera.setPosition(glm::vec3(0, 0, 0));
 	m_camera.setTarget(glm::vec3(0, 0, -1)); // look forward
-	m_camera.setDistance(10);
-	m_camera.setNearClip(1);
-	m_camera.setFarClip(1000);
+	m_camera.setDistance(2);
+	m_camera.setNearClip(0.01); // 10 cm
+	m_camera.setFarClip(1000); 
 	m_camera.setTranslationKey(32); // space
-
 
 	// enable depth->video image calibration
 	m_kinect.setRegistration(true);
@@ -59,18 +39,13 @@ void ofApp::setup() {
 		ofLogNotice() << "sensor-camera dist:  " << m_kinect.getSensorCameraDistance() << "cm";
 		ofLogNotice() << "zero plane pixel size: " << m_kinect.getZeroPlanePixelSize() << "mm";
 		ofLogNotice() << "zero plane dist: " << m_kinect.getZeroPlaneDistance() << "mm";
-		m_computeSDFAlgorithm.registerKinectData(m_kinect.getZeroPlaneDistance(), m_kinect.getZeroPlanePixelSize());
 	}
 
 	m_depthImage.allocate(m_kinect.width, m_kinect.height, ofImageType::OF_IMAGE_GRAYSCALE);
 	DataStorageHelper::loadImage("depth.bin", m_depthImage);
-	
-	DataStorageHelper::loadData("depthRaw.bin", m_kinect.getRawDepthPixels().getData(), 640 * 480);
-	m_depthRawTexture.allocate(m_kinect.getRawDepthPixels());
 
-	// IMGUI
-	ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-	m_gui.setup(); 
+	m_guiScene.setup();
+	m_pointCloudScene.setup(m_kinect);
 }
 
 //--------------------------------------------------------------
@@ -127,103 +102,31 @@ void ofApp::drawFullScreenImage(ofImage& image)
 }
 
 //--------------------------------------------------------------
-void ofApp::drawGUI()
-{
-	m_gui.begin();
-
-	// 1. Show a simple window
-	{
-		ImGui::SetWindowPos(ofVec2f(0, 0), ImGuiCond_FirstUseEver);
-
-		ImGui::MenuItem("Kinect Connected", NULL, m_isKinectDeliveringData);
-
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		if (ImGui::SliderFloat("Float", &m_floatValue, -10.0f, 10.0f))
-		{
-			m_slice.setPos(glm::vec3(m_floatValue, 0, -10));
-		};
-
-		if (ImGui::SliderFloat("PCL Size", &m_pclSizeValue, 0.0f, 1000.0f))
-
-		//this will change the app background color
-		ImGui::ColorEdit3("Background Color", (float*)&m_backgroundColor);
-
-		ImGui::Checkbox("Update Camera", &m_updateKinect);
-		ImGui::Checkbox("Draw Slice", &m_drawSlice);
-		ImGui::Checkbox("Draw Kinect Depth", &m_drawDepthBackground);
-		ImGui::Checkbox("Draw SDF", &m_drawSDF);
-		ImGui::Checkbox("Draw PCL", &m_drawPointCloud);
-		ImGui::Checkbox("Compute Normals", &m_computeNormalsCPU);
-		ImGui::Checkbox("Draw SDF Compute", &m_drawSDFAlgorithm);
-
-		if (ImGui::SliderInt("SDF resolution", &m_sdfResolutionExp, 3, 8))
-		{
-			m_sdfResolution = pow(2, m_sdfResolutionExp);
-			//m_sdf.setResolution(m_sdfResolution);
-		} ImGui::SameLine();
-		ImGui::Text("%d", m_sdfResolution);
-
-		if (ImGui::Button("Compute SDF "))
-		{
-			//m_sdf.resetData();
-			m_computeSDF = !m_computeSDF;
-		} ImGui::SameLine();
-
-		ImGui::ProgressBar(m_buildProgress);
-
-		if (ImGui::Button("Apply SDF tex"))
-		{
-			//m_sdf.update3dTexture();
-
-		}
-
-		if (ImGui::Button("Save Kinect Depth "))
-		{
-			if (m_kinect.isConnected())
-			{
-				DataStorageHelper::storeImage("depth.bin", m_depthImage);
-
-				const auto& pixelsRaw = m_kinect.getRawDepthPixels();
-				const auto* dataRaw = pixelsRaw.getData();
-				DataStorageHelper::storeData("depthRaw.bin", dataRaw, pixelsRaw.getWidth() * pixelsRaw.getHeight());
-
-			}
-		}
-	}
-
-	if (ImGui::GetIO().WantCaptureMouse)
-	{
-		m_camera.disableMouseInput();
-	}
-	else
-	{
-		m_camera.enableMouseInput();
-	}
-
-	// endcall
-	m_gui.end();
-}
-
-//--------------------------------------------------------------
 void ofApp::update() {
 
 	m_kinect.update();
 
-	if (m_kinect.isFrameNew() && !m_computeSDF && m_updateKinect)
+	const bool updateKinect = m_kinect.isFrameNew() && GUIScene::s_updateKinectData;
+
+	// Update 
+	if (updateKinect) //&& !m_computeSDF && m_updateKinect)
 	{
-		m_isKinectDeliveringData = true;
+		GUIScene::s_isKinectDeliveringData = true;
+
+		// TODO maybe use the kinect internal one instead, or make this a reference
 		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
 		m_depthImage.update();
-		m_depthImage.getPixels().getBytesPerPixel();
-		m_pointCloud.fillPointCloud(m_kinect, 4, m_computeNormalsCPU);
-		m_depthRawTexture.loadData(m_kinect.getRawDepthPixels());
 	}
 
-	if (m_drawSDFAlgorithm)
+	m_pointCloudScene.update(updateKinect, m_kinect);
+	m_guiScene.update();
+
+	/*if (m_drawSDFAlgorithm)
 	{
 		m_computeSDFAlgorithm.compute(m_depthRawTexture);
-	}
+	}*/
 
+	/*
 	static int i = 0;
 	if (m_computeSDF)
 	{
@@ -254,130 +157,61 @@ void ofApp::update() {
 			i += batchsize;
 			m_buildProgress = 1.f * i / m_pointCloud.getSize();
 		}
-	}
+	}*/
 }
 
 //--------------------------------------------------------------
 void ofApp::draw()
 {
-	switch (m_renderMode)
+	ofDisableDepthTest();
+	ofBackground(GUIScene::s_backgroundColor);
+
+	if (GUIScene::s_drawDepthBackground)
 	{
+		ofSetColor(ofColor::white * 0.2);
+		FullScreenQuadRender::get().draw(m_depthImage.getTextureReference());
+		//drawFullScreenImage(m_depthImage);
+	}
 
-	case RenderMode::SDF:
+	m_pointCloudScene.draw(m_camera);
+	/*
+	ofDisableDepthTest();
+
+	if (m_drawSDFAlgorithm)
 	{
-		ofBackground(m_backgroundColor);
-		ofDisableDepthTest();
-		if (m_drawDepthBackground)
-		{
-			//ofSetColor(ofColor::white * 0.2);
-			FullScreenQuadRender::get().draw(m_depthImage.getTextureReference());
-			//drawFullScreenImage(m_depthImage);
-		}
+		//ofSetColor(ofColor::white);
+		//m_computeSDFAlgorithm.draw(m_depthRawTexture);
 
-		if (m_drawSDFAlgorithm)
-		{
-			//ofSetColor(ofColor::white);
-			//m_computeSDFAlgorithm.draw(m_depthRawTexture);
-			
-			//m_pointCloudComp.draw(m_computeSDFAlgorithm.getTextureID(), m_kinect.getTexture().getTextureData().textureID, false, m_camera.getModelViewProjectionMatrix(), m_pclSizeValue);
+		m_pointCloudComp.draw(m_computeSDFAlgorithm.getTextureID(), m_kinect.getTexture().getTextureData().textureID, false, m_camera.getModelViewProjectionMatrix(), m_pclSizeValue);
 
-		}
-
-		m_camera.begin();
-		ofEnableDepthTest();
-
-		//m_sdf.drawOutline();
-		if (m_drawSDF)
-		{
-			//m_sdf.drawRaymarch(m_camera);
-		}
-		if (m_drawPointCloud)
-		{
-			//m_pointCloud.draw(m_computeNormalsCPU);
-		}
-		if (m_drawSlice)
-		{
-			//ofSetColor(ofColor::red);
-			//m_slice.draw(m_sdf.getInvWorld(), m_sdf.getTextureID(), m_computeSDFAlgorithm.getTextureID());
-		}
-
-		m_camera.end();
-		break;
 	}
-	case RenderMode::DepthImage:
-	default:
-		ofBackground(ofColor::black);
 
-		// draw the original image
-		ofSetColor(ofColor::white);
-		drawFullScreenImage(m_depthImage);
+	m_camera.begin();
+	ofEnableDepthTest();
 
-		m_kinect.drawDepth(10, 10, 400, 300);
-		m_kinect.draw(420, 10, 400, 300);
-		break;
+	//m_sdf.drawOutline();
+	if (m_drawSDF)
+	{
+		//m_sdf.drawRaymarch(m_camera);
 	}
+	if (m_drawPointCloud)
+	{
+		//m_pointCloud.draw(m_computeNormalsCPU);
+	}
+	if (m_drawSlice)
+	{
+		//ofSetColor(ofColor::red);
+		//m_slice.draw(m_sdf.getInvWorld(), m_sdf.getTextureID(), m_computeSDFAlgorithm.getTextureID());
+	}
+
+	m_camera.end(); */
 
 	// Draw GUI
-	drawGUI();
+	m_guiScene.draw(m_camera);
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key) {
-	if (key == 'w')
-	{
-		//m_sdf.move(0.5f, 0.0, 0.0);
-	}
-
-	if (key == 's')
-	{
-		//m_sdf.move(-0.5f, 0.0, 0.0);
-	}
-
-	// Cycle through the render modes
-	if (key == OF_KEY_F1)
-	{
-		int it = static_cast<int>(m_renderMode);
-		it++;
-		if (it >= static_cast<int>(RenderMode::Max))
-		{
-			it = 0;
-		}
-
-		m_renderMode = static_cast<RenderMode>(it);
-	}
-
-	if (key == OF_KEY_F2)
-	{
-		m_computeSDF = !m_computeSDF;
-	}
-
-	if (key == OF_KEY_F4)
-	{
-		//m_sdf.update3dTexture();
-	}
-
-	if (key == OF_KEY_F3)
-	{
-		static int downsample = 0;
-		downsample++;
-		if (downsample >= 3)
-		{
-			downsample = 0;
-		}
-
-		//m_pointCloud.fillPointCloud(img, m_depthMultipy, downsample);
-	}
-
-	if (key == 43)
-	{
-		m_minDepthGrid += 0.2F;
-		//pointCloud.fillPointCloud(img, ++depthMultipy);
-	}
-	if (key == 45)
-	{
-		m_minDepthGrid -= 0.2F;
-		//pointCloud.fillPointCloud(img, --depthMultipy);
-	}
 }
 
 //--------------------------------------------------------------

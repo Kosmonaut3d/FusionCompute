@@ -2,12 +2,11 @@
 
 #include "ofMain.h"
 
-class computeSDF
+class PointCloudComp
 {
 public:
-	computeSDF();
+	PointCloudComp();
 	void compute(ofTexture & depthImage);
-	void draw(ofTexture& depthImage);
 	unsigned int getTextureID();
 	void registerKinectData(float planeDist, float pixelSize);
 
@@ -18,7 +17,6 @@ private:
 	ofShader m_computeShader;
 	ofBufferObject inPointBuffer;
 	unsigned int m_texID;
-	ofShader m_fsShader;
 	float m_planeDist;
 	float m_pixelSize;
 };

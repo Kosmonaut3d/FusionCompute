@@ -181,8 +181,8 @@
     <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\algorithms\computeSDF.cpp" />
-    <ClCompile Include="src\compute\PointCloudComp.cpp" />
+    <ClCompile Include="src\compute\PointCloudCompute.cpp" />
+    <ClCompile Include="src\compute\PointCloudVis.cpp" />
     <ClCompile Include="src\datastructures\slice.cpp" />
     <ClCompile Include="src\helper\dataStorageHelper.cpp" />
     <ClCompile Include="src\helper\fullScreenQuadRender.cpp" />
@@ -212,10 +212,12 @@
     <ClCompile Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\registration.c" />
     <ClCompile Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\tilt.c" />
     <ClCompile Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\usb_libusb10.c" />
+    <ClCompile Include="src\scenes\GUIScene.cpp" />
+    <ClCompile Include="src\scenes\PointCloudScene.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\algorithms\computeSDF.h" />
-    <ClInclude Include="src\compute\PointCloudComp.h" />
+    <ClInclude Include="src\compute\PointCloudCompute.h" />
+    <ClInclude Include="src\compute\PointCloudVis.h" />
     <ClInclude Include="src\datastructures\slice.h" />
     <ClInclude Include="src\helper\dataStorageHelper.h" />
     <ClInclude Include="src\helper\fullScreenQuadRender.h" />
@@ -252,6 +254,9 @@
     <ClInclude Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\registration.h" />
     <ClInclude Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\usb_libusb10.h" />
     <ClInclude Include="..\..\..\addons\ofxKinect\libs\libusb\include\libusb.h" />
+    <ClInclude Include="src\scenes\GUIScene.h" />
+    <ClInclude Include="src\scenes\PointCloudScene.h" />
+    <ClInclude Include="src\scenes\SceneImpl.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">

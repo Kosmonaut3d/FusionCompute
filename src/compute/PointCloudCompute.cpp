@@ -1,12 +1,7 @@
-#include "computeSDF.h"
+#include "PointCloudCompute.h"
 
-computeSDF::computeSDF()
+PointCloudComp::PointCloudComp()
 {
-	if (!m_fsShader.load("resources/fullScreenQuad.vert", "resources/fullScreenQuad.frag"))
-	{
-		throw std::exception();//"could not load shaders");
-	}
-
 	int result;
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &result);
 
@@ -36,7 +31,7 @@ computeSDF::computeSDF()
 	setUpOutputTexture();
 }
 
-void computeSDF::setUpOutputTexture()
+void PointCloudComp::setUpOutputTexture()
 {
 	// dimensions of the image
 	const int tex_w = 640, tex_h = 480;
@@ -49,7 +44,7 @@ void computeSDF::setUpOutputTexture()
 	glBindImageTexture(1, m_texID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 }
 
-void computeSDF::compute(ofTexture & depthImage)
+void PointCloudComp::compute(ofTexture & depthImage)
 {
 	m_computeShader.begin();
 
@@ -62,30 +57,12 @@ void computeSDF::compute(ofTexture & depthImage)
 	m_computeShader.end();
 }
 
-void computeSDF::draw(ofTexture& depthImage)
-{
-	m_fsShader.begin();
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, depthImage.getTextureData().textureID);//outputTexture.getTextureData().textureID);
-
-	GLuint emptyVAO; 
-	glGenVertexArrays(1, &emptyVAO); 
-	glBindVertexArray(emptyVAO);
-	glDrawArrays(GL_TRIANGLES, 0, 3);
-
-	//glBindTexture(GL_TEXTURE_2D, 0);
-
-	m_fsShader.end();
-
-}
-
-unsigned int computeSDF::getTextureID()
+unsigned int PointCloudComp::getTextureID()
 {
 	return m_texID;
 }
 
-void computeSDF::registerKinectData(float planeDist, float pixelSize)
+void PointCloudComp::registerKinectData(float planeDist, float pixelSize)
 {
 	m_planeDist = planeDist;
 	m_pixelSize = pixelSize;

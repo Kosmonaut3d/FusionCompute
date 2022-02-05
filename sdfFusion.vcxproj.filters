@@ -88,10 +88,7 @@
     <ClCompile Include="src\datastructures\slice.cpp">
       <Filter>src\datastructures</Filter>
     </ClCompile>
-    <ClCompile Include="src\algorithms\computeSDF.cpp">
-      <Filter>src\algorithms</Filter>
-    </ClCompile>
-    <ClCompile Include="src\compute\PointCloudComp.cpp">
+    <ClCompile Include="src\compute\PointCloudVis.cpp">
       <Filter>src\compute</Filter>
     </ClCompile>
     <ClCompile Include="src\helper\dataStorageHelper.cpp">
@@ -99,6 +96,15 @@
     </ClCompile>
     <ClCompile Include="src\helper\fullScreenQuadRender.cpp">
       <Filter>src\helper</Filter>
+    </ClCompile>
+    <ClCompile Include="src\compute\PointCloudCompute.cpp">
+      <Filter>src\compute</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scenes\PointCloudScene.cpp">
+      <Filter>src\scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scenes\GUIScene.cpp">
+      <Filter>src\scenes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -162,14 +168,14 @@
     <Filter Include="shaders">
       <UniqueIdentifier>{8de03219-945f-4271-af35-4ef2f6ac04c2}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\algorithms">
-      <UniqueIdentifier>{5a6987b7-d594-4b3c-b7bb-af5c459ba1ec}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\compute">
       <UniqueIdentifier>{9c9ffd7f-b3eb-481b-9df7-2c5c70e173a8}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\helper">
       <UniqueIdentifier>{5e5a439c-60f6-4173-b4e4-f7b62103b927}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\scenes">
+      <UniqueIdentifier>{fc03f97d-8566-411c-8dc5-7eb3a36b2313}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -278,17 +284,26 @@
     <ClInclude Include="src\datastructures\slice.h">
       <Filter>src\datastructures</Filter>
     </ClInclude>
-    <ClInclude Include="src\algorithms\computeSDF.h">
-      <Filter>src\algorithms</Filter>
-    </ClInclude>
-    <ClInclude Include="src\compute\PointCloudComp.h">
-      <Filter>src\compute</Filter>
-    </ClInclude>
     <ClInclude Include="src\helper\dataStorageHelper.h">
       <Filter>src\helper</Filter>
     </ClInclude>
     <ClInclude Include="src\helper\fullScreenQuadRender.h">
       <Filter>src\helper</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compute\PointCloudCompute.h">
+      <Filter>src\compute</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compute\PointCloudVis.h">
+      <Filter>src\compute</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scenes\PointCloudScene.h">
+      <Filter>src\scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scenes\GUIScene.h">
+      <Filter>src\scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scenes\SceneImpl.h">
+      <Filter>src\scenes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

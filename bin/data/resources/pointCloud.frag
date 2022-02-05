@@ -8,5 +8,5 @@ in vec2 texcoords; // texcoords are in the normalized [0,1] range for the viewpo
 
 void main() {
    vec3 tex = texture(colorTex,texcoords).rgb;
-   outputColor =  mix(vec4(texcoords,0,1), vec4(tex, 1), 0.9);
+   outputColor =  vec4(tex, 1);
 }

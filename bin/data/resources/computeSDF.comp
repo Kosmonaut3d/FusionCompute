@@ -30,6 +30,6 @@ void main() {
   vec4 pixel = vec4(kinectDepthToWorld(pixel_coords), 1.0);
 
   // Problem: openGL reads textures from bottom
-  pixel_coords = ivec2(pixel_coords.x, HEIGHT - pixel_coords.y);
+  pixel_coords = ivec2(pixel_coords.x, pixel_coords.y);
   imageStore(world_output, pixel_coords, pixel);
 }

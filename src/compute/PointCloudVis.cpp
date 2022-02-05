@@ -1,6 +1,6 @@
-#include "PointCloudComp.h"
+#include "PointCloudVis.h"
 
-PointCloudComp::PointCloudComp() : m_shader{}
+PointCloudVis::PointCloudVis() : m_shader{}
 {
 	if (!m_shader.load("resources/pointCloud.vert", "resources/pointCloud.frag"))
 	{
@@ -11,7 +11,7 @@ PointCloudComp::PointCloudComp() : m_shader{}
 /// <summary>
 /// 
 /// </summary>
-void PointCloudComp::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4& mvpMat, float factor)
+void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4& mvpMat, float factor)
 {
 	m_shader.begin();
 
@@ -30,7 +30,7 @@ void PointCloudComp::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, b
 	GLuint emptyVAO;
 	glGenVertexArrays(1, &emptyVAO);
 	glBindVertexArray(emptyVAO);
-	glPointSize(4.0f);
+	glPointSize(1.0f);
 	glDrawArrays(GL_POINTS, 0, 640*480);
 
 	m_shader.end();
