@@ -2,7 +2,7 @@
 
 computeSDF::computeSDF()
 {
-	if (!m_fsShader.load("resources/SimpleVert.vert", "resources/SimpleFrag.frag"))
+	if (!m_fsShader.load("resources/fullScreenQuad.vert", "resources/fullScreenQuad.frag"))
 	{
 		throw std::exception();//"could not load shaders");
 	}
@@ -74,11 +74,10 @@ void computeSDF::draw(ofTexture& depthImage)
 	glBindVertexArray(emptyVAO);
 	glDrawArrays(GL_TRIANGLES, 0, 3);
 
+	//glBindTexture(GL_TEXTURE_2D, 0);
+
 	m_fsShader.end();
 
-	//outputTexture.unbind();
-
-	//outputTexture.draw(10+512, 0.0);
 }
 
 unsigned int computeSDF::getTextureID()

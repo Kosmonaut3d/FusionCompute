@@ -19,11 +19,13 @@ void PointCloudComp::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, b
 
 	m_shader.setUniform1f("mixFactor", factor);
 
-	//glActiveTexture(GL_TEXTURE0);
-	//glBindTexture(GL_TEXTURE_2D, pointCloudTexId);//outputTexture.getTextureData().textureID);
+	glUniform1i(m_shader.getUniformLocation("worldTex"), 0);
+	glUniform1i(m_shader.getUniformLocation("colorTex"), 1);
 
-	glBindImageTexture(0, pointCloudTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-	//glBindImageTexture(1, rgbTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, pointCloudTexId);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, rgbTexId);
 
 	GLuint emptyVAO;
 	glGenVertexArrays(1, &emptyVAO);

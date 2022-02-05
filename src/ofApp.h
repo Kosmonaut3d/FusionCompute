@@ -52,8 +52,10 @@ private:
 	PointCloudComp m_pointCloudComp;
 	Slice m_slice;
 	ofEasyCam m_camera;
-	SignedDistanceField m_sdf;
+
+	//SignedDistanceField m_sdf;
 	computeSDF m_computeSDFAlgorithm;
+
 	float m_depthMultipy;
 	float m_minDepthGrid;
 	bool m_computeSDF;
@@ -70,4 +72,5 @@ private:
 
 	ImVec4 m_backgroundColor;
 	float m_floatValue;
+	float m_pclSizeValue;
 };

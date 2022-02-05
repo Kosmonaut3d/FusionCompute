@@ -18,7 +18,9 @@ vec3 kinectDepthToWorld(ivec2 pixel_coords)
 	float factor = 2 * _zeroPixelSize * wz / _zeroPlaneDist;
 	float wx = (pixel_coords.x - WIDTH/2) * factor;
 	float wy = (pixel_coords.y - HEIGHT/2) * factor;
-	return vec3(wx, wy, wz);
+
+	// NOTE: Y AND Z ARE SWAPPED
+	return vec3(wx, -wy, -wz);
 }
 
 void main() {
@@ -28,6 +30,6 @@ void main() {
   vec4 pixel = vec4(kinectDepthToWorld(pixel_coords), 1.0);
 
   // Problem: openGL reads textures from bottom
-  //pixel_coords = ivec2(pixel_coords.x, HEIGHT - pixel_coords.y);
+  pixel_coords = ivec2(pixel_coords.x, HEIGHT - pixel_coords.y);
   imageStore(world_output, pixel_coords, pixel);
 }

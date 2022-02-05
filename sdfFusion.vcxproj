@@ -185,6 +185,7 @@
     <ClCompile Include="src\compute\PointCloudComp.cpp" />
     <ClCompile Include="src\datastructures\slice.cpp" />
     <ClCompile Include="src\helper\dataStorageHelper.cpp" />
+    <ClCompile Include="src\helper\fullScreenQuadRender.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="src\datastructures\pointCloud.cpp" />
@@ -217,6 +218,7 @@
     <ClInclude Include="src\compute\PointCloudComp.h" />
     <ClInclude Include="src\datastructures\slice.h" />
     <ClInclude Include="src\helper\dataStorageHelper.h" />
+    <ClInclude Include="src\helper\fullScreenQuadRender.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="src\datastructures\pointCloud.h" />
     <ClInclude Include="src\datastructures\sdf.h" />
@@ -268,8 +270,8 @@
     <None Include="bin\data\resources\fragShader.frag" />
     <None Include="bin\data\resources\pointCloud.frag" />
     <None Include="bin\data\resources\pointCloud.vert" />
-    <None Include="bin\data\resources\SimpleFrag.frag" />
-    <None Include="bin\data\resources\SimpleVert.vert" />
+    <None Include="bin\data\resources\fullScreenQuad.frag" />
+    <None Include="bin\data\resources\fullScreenQuad.vert" />
     <None Include="bin\data\resources\sliceFragShader.frag" />
     <None Include="bin\data\resources\vertShader.vert" />
   </ItemGroup>

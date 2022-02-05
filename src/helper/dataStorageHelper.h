@@ -1,6 +1,7 @@
 #pragma once
 #include "ofMain.h"
 
+#pragma once
 
 static class DataStorageHelper
 {

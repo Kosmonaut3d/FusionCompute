@@ -97,6 +97,9 @@
     <ClCompile Include="src\helper\dataStorageHelper.cpp">
       <Filter>src\helper</Filter>
     </ClCompile>
+    <ClCompile Include="src\helper\fullScreenQuadRender.cpp">
+      <Filter>src\helper</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -284,6 +287,9 @@
     <ClInclude Include="src\helper\dataStorageHelper.h">
       <Filter>src\helper</Filter>
     </ClInclude>
+    <ClInclude Include="src\helper\fullScreenQuadRender.h">
+      <Filter>src\helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
@@ -301,10 +307,10 @@
     <None Include="bin\data\resources\computeSDF.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\SimpleFrag.frag">
+    <None Include="bin\data\resources\fullScreenQuad.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\SimpleVert.vert">
+    <None Include="bin\data\resources\fullScreenQuad.vert">
       <Filter>shaders</Filter>
     </None>
     <None Include="bin\data\resources\pointCloud.frag">

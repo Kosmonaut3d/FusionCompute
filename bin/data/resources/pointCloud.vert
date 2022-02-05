@@ -1,6 +1,8 @@
-#version 430
+#version 420
 
-layout(binding=0) uniform sampler2D worldTex;
+uniform sampler2D worldTex;
+uniform sampler2D colorTex;
+
 uniform mat4 modelViewProjectionMatrix;
 uniform float mixFactor;
 
@@ -12,6 +14,5 @@ out vec2 texcoords; // texcoords are in the normalized [0,1] range for the viewp
 void main() {
         vec2 pixel_coord = vec2(mod(gl_VertexID, WIDTH), floor(gl_VertexID / WIDTH)); 
         texcoords = pixel_coord/vec2(WIDTH,HEIGHT);
-
         gl_Position = modelViewProjectionMatrix * vec4(texture(worldTex, texcoords).xyz * mixFactor, 1);
 }
