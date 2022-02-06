@@ -1,0 +1,37 @@
+#version 440 core
+
+layout(local_size_x = 1, local_size_y = 1) in;
+
+layout(r16ui, binding = 0) uniform readonly uimage2D rawDepthImage;
+layout(rgba32f, binding = 1) uniform writeonly image2D model_output;
+
+// Kinect Data
+uniform float _zeroPlaneDist;
+uniform float _zeroPixelSize;
+
+// Note could be replaced with global invocation size
+const float WIDTH = 320; //halfed
+const float HEIGHT = 240;
+
+vec3 kinectDepthToWorld(ivec2 pixel_coords)
+{
+	float wz = imageLoad(rawDepthImage, pixel_coords).r * 0.001f; // to meters
+	float factor = 2 * _zeroPixelSize * wz / _zeroPlaneDist;
+	float wx = (pixel_coords.x - WIDTH) * factor;
+	float wy = (pixel_coords.y - HEIGHT) * factor;
+
+	// NOTE: Y AND Z ARE SWAPPED
+	return vec3(wx, -wy, -wz);
+}
+
+void main() {
+  // base pixel colour for image
+  ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+  vec4 pixel = vec4(kinectDepthToWorld(pixel_coords), 1.0);
+  
+  imageStore(model_output, pixel_coords, pixel);
+
+  // NOTE: Nvidia could use derivates for normal maps;
+
+  // Problem: openGL reads textures from bottom
+}

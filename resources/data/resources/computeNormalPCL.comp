@@ -1,0 +1,30 @@
+#version 440
+
+layout(local_size_x = 1, local_size_y = 1) in;
+
+layout(rgba32f, binding = 1) uniform readonly coherent image2D model_output;
+layout(rgba32f, binding = 2) uniform writeonly image2D normal_output;
+
+void main() {
+	// base pixel colour for image
+	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+	// Normals
+	// NOTE: Nvidia could use derivates for normal maps;
+
+	vec3 model = imageLoad(model_output, pixel_coords).xyz;
+	vec3 model_x = imageLoad(model_output, pixel_coords + ivec2(1, 0)).xyz;
+	vec3 model_y = imageLoad(model_output, pixel_coords + ivec2(0, 1)).xyz;
+	
+	vec3 v1 = (model_x - model);
+	vec3 v2 = (model_y - model);
+
+	vec3 normal = normalize(cross(v2, v1));
+	
+	vec4 output_color = vec4(normal, 1);
+
+	// saturated normals 0...1
+	//vec4 output_color = vec4(0.5 * (normal + vec3(1)), 1);
+
+	imageStore(normal_output, pixel_coords, output_color);
+}

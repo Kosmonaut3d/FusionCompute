@@ -13,6 +13,7 @@ ofApp::ofApp()
 //--------------------------------------------------------------
 void ofApp::setup()
 {
+
 	ofSetVerticalSync(false);
 	ofSetFrameRate(0);
 
