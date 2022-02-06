@@ -7,10 +7,27 @@
 PointCloudScene::PointCloudScene()
     : m_pointCloudComp{}
     , m_pointCloudVis{}
-    , m_pointCloudCPU{}
+    , m_pointCloudCPU_0{}
+    , m_pointCloudCPU_1{}
+    , m_icpCPU{}
     , m_texDepthRaw{}
     , m_texColorPtr{}
+    , m_isPCL_0{false}
+    , m_kinectView{}
+    , m_kinectViewProjection{}
 {
+	constexpr float fovy           = glm::radians(62.0);
+	glm::mat4x4     projection     = glm::perspective(fovy, 4.0f / 3.0f, 0.1f, 200.0f);
+
+	glm::vec3   kinectOrigin   = glm::vec3(0, 0, 0);
+	auto        ori = ofVec3f(kinectOrigin);
+	auto        tar = ofVec3f(kinectOrigin + glm::vec3(0, 0, -1));
+	auto        upv = ofVec3f(glm::vec3(0, 1, 0));
+	ofMatrix4x4 view;
+	view.makeLookAtViewMatrix(ori, tar, upv);
+
+	m_kinectView = view;
+	m_kinectViewProjection = view * projection;
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -23,13 +40,14 @@ void PointCloudScene::setup(ofxKinect &kinect)
 	m_texColorPtr = &kinect.getTexture();
 
 	m_pointCloudComp.compute(m_texDepthRaw);
-	m_pointCloudCPU.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, false);
+	m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, false);
+	m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, false);
 }
 
 //----------------------------------------------------------------------------------------------------------
 void PointCloudScene::update(bool kinectUpdate, ofxKinect &kinect)
 {
-	if (kinectUpdate)
+	if (kinectUpdate || GUIScene::s_pointCloudCPUForceUpdate)
 	{
 		if (GUIScene::s_computePointCloud)
 		{
@@ -39,8 +57,31 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect &kinect)
 
 		if (GUIScene::s_computePointCloudCPU)
 		{
-			m_pointCloudCPU.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, false);
+			m_isPCL_0 = !m_isPCL_0;
+
+			// Keep 2 PCL buffers
+			if (m_isPCL_0)
+			{
+				m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale,
+				                                 GUIScene::s_drawPointCloudNormCPU);
+			}
+			else
+			{
+				m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale,
+				                                 GUIScene::s_drawPointCloudNormCPU);
+			}
 		}
+	}
+
+	if (GUIScene::s_computeICPCPU)
+	{
+		GUIScene::s_computeICPCPU = false;
+		
+		auto& ptrNew = m_isPCL_0 ? m_pointCloudCPU_0 : m_pointCloudCPU_1;
+		auto& ptrOld = m_isPCL_0 ? m_pointCloudCPU_1 : m_pointCloudCPU_0;
+
+		glm::mat4x4 output;
+		m_icpCPU.compute(ptrNew.getPoints(), ptrNew.getNormals(), ptrOld.getPoints(), ptrOld.getNormals(), m_kinectView, m_kinectViewProjection, output, GUIScene::s_pointCloudDownscale);
 	}
 }
 
@@ -61,7 +102,14 @@ void PointCloudScene::draw(ofCamera &camera)
 
 	if (GUIScene::s_drawPointCloudCPU)
 	{
-		m_pointCloudCPU.draw(false);
+		if (m_isPCL_0)
+		{
+			m_pointCloudCPU_0.draw(GUIScene::s_drawPointCloudNormCPU);
+		}
+		else
+		{
+			m_pointCloudCPU_1.draw(GUIScene::s_drawPointCloudNormCPU);
+		}
 	}
 
 	if (GUIScene::s_drawPointCloudNorm)

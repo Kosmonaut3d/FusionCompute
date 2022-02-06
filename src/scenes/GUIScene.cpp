@@ -3,16 +3,17 @@
 bool   GUIScene::s_isKinectDeliveringData = false;
 bool   GUIScene::s_updateKinectData       = true;
 ImVec4 GUIScene::s_backgroundColor        = ImVec4(0.2, 0.2, 0.2, 1);
-bool   GUIScene::s_computePointCloud      = true;
-bool   GUIScene::s_drawPointCloud         = true;
+bool   GUIScene::s_computePointCloud      = false;
+bool   GUIScene::s_drawPointCloud         = false;
 bool   GUIScene::s_drawPointCloudTex      = false;
 bool   GUIScene::s_drawPointCloudNorm     = false;
 bool   GUIScene::s_computePointCloudCPU   = true;
-bool   GUIScene::s_drawPointCloudCPU      = false;
+bool   GUIScene::s_pointCloudCPUForceUpdate   = false;
+bool   GUIScene::s_drawPointCloudCPU      = true;
 bool   GUIScene::s_drawPointCloudNormCPU  = false;
-
 int    GUIScene::s_pointCloudDownscaleExp = 1;
-int GUIScene::s_pointCloudDownscale = 2;
+int    GUIScene::s_pointCloudDownscale    = 2;
+bool   GUIScene::s_computeICPCPU          = false;
 bool   GUIScene::s_quickDebug             = false;
 bool   GUIScene::s_drawDepthBackground    = false;
 
@@ -66,7 +67,8 @@ void GUIScene::draw(ofEasyCam& camera)
 		ImGui::Text("Application average %.3f (%.1f FPS), %d vertices", msAvg, ImGui::GetIO().Framerate,
 		            ImGui::GetIO().MetricsRenderVertices);
 
-		ImGui::MenuItem("Kinect Connected", NULL, s_isKinectDeliveringData);
+		ImGui::TextColored(s_isKinectDeliveringData ? ImColor(50, 200, 50) : ImColor(200, 50, 50),
+		                   "Kinect Delivering Data");
 		ImGui::Checkbox("Update Kinect Data", &s_updateKinectData);
 
 		ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
@@ -95,6 +97,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				if (ImGui::SliderInt("PCL CPU downscale", &s_pointCloudDownscaleExp, 0, 4))
 				{
 					s_pointCloudDownscale = pow(2, s_pointCloudDownscaleExp);
+					s_pointCloudCPUForceUpdate = true;
 				}
 				ImGui::SameLine();
 				ImGui::Text("eff. %d", s_pointCloudDownscale);
@@ -103,8 +106,17 @@ void GUIScene::draw(ofEasyCam& camera)
 
 				ImGui::EndTabItem();
 			}
+			if (ImGui::BeginTabItem("ICP"))
+			{
+				if (ImGui::Button("Compute ICP CPU"))
+				{
+					s_computeICPCPU = true;
+				}
+				ImGui::EndTabItem();
+			}
 			ImGui::EndTabBar();
 		}
+		ImGui::Dummy(ImVec2(0.0f, 20.0f));
 		ImGui::Separator();
 
 		ImGui::ColorEdit3("Background Color", (float*)&s_backgroundColor);

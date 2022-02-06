@@ -100,6 +100,9 @@
     <ClCompile Include="src\cpuReference\PointCloudCPU.cpp">
       <Filter>src\cpuReference</Filter>
     </ClCompile>
+    <ClCompile Include="src\cpuReference\IterativeClosestPointCPU.cpp">
+      <Filter>src\cpuReference</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -291,6 +294,9 @@
       <Filter>src\scenes</Filter>
     </ClInclude>
     <ClInclude Include="src\cpuReference\PointCloudCPU.h">
+      <Filter>src\cpuReference</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpuReference\IterativeClosestPointCPU.h">
       <Filter>src\cpuReference</Filter>
     </ClInclude>
   </ItemGroup>

@@ -2,23 +2,23 @@
 #include <scenes/GUIScene.h>
 
 //----------------------------------------------------------------------------------------------------------
-PointCloudCPU::PointCloudCPU() :
-	meshPoints{},
-	generated{ false }
+PointCloudCPU::PointCloudCPU()
+    : m_meshPoints{}
+    , m_generated{false}
 {
-	size = sizeof(points) / sizeof(points[0]);
-	meshPoints.setMode(OF_PRIMITIVE_POINTS);
-	meshNormals.setMode(OF_PRIMITIVE_LINES);
+	m_size = sizeof(m_points) / sizeof(m_points[0]);
+	m_meshPoints.setMode(OF_PRIMITIVE_POINTS);
+	m_meshNormals.setMode(OF_PRIMITIVE_LINES);
 }
 
 //----------------------------------------------------------------------------------------------------------
 void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals)
 {
-	const int w = 640;
-	const int h = 480;
+	const int w = 640 / downsample;
+	const int h = 480 / downsample;
 
-	meshPoints.clearVertices();
-	meshPoints.clearColors();
+	m_meshPoints.clearVertices();
+	m_meshPoints.clearColors();
 	int step = downsample;
 
 	float     scaleToMeters = 0.001;
@@ -26,59 +26,73 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 
 	if (!compNormals)
 	{
-		for (int y = 0; y < h; y += step) {
-			for (int x = 0; x < w; x += step) {
-				if (kinect.getDistanceAt(x, y) > 0) {
-					glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * trafo;
-
+		for (int y = 0; y < h; y++)
+		{
+			for (int x = 0; x < w; x++)
+			{
+				int x_ = x * step;
+				int y_ = y * step;
+				if (kinect.getDistanceAt(x_, y_) > 0)
+				{
 					int index = y * w + x;
-					points[index] = glm::vec4(pos.x, pos.y, pos.z, 1);
 
-					meshPoints.addColor(kinect.getColorAt(x, y));
-					meshPoints.addVertex(points[index]);
+					glm::vec3 pos   = kinect.getWorldCoordinateAt(x_, y_) * trafo;
+					m_points[index] = pos;
+
+					m_meshPoints.addColor(kinect.getColorAt(x_, y_));
+					m_meshPoints.addVertex(pos);
 				}
 			}
 		}
 	}
 	else
 	{
-		meshNormals.clearVertices();
-		meshNormals.clearColors();
-		for (int y = 0; y < h; y += step) {
-			for (int x = 0; x < w; x += step) {
-				if (kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x+1, y) > 0 && kinect.getDistanceAt(x, y+1) > 0){
-					glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * trafo;
+		m_meshNormals.clearVertices();
+		m_meshNormals.clearColors();
+		for (int y = 0; y < h; y++)
+		{
+			for (int x = 0; x < w; x++)
+			{
+				int x_ = x * step;
+				int y_ = y * step;
 
-					glm::vec3 pos_x = kinect.getWorldCoordinateAt(x + 1, y) * trafo;
-					glm::vec3 pos_y = kinect.getWorldCoordinateAt(x, y + 1) * trafo;
-
+				if (kinect.getDistanceAt(x_, y_) > 0 && kinect.getDistanceAt(x_ + 1, y_) > 0 &&
+				    kinect.getDistanceAt(x_, y_ + 1) > 0)
+				{
 					int index = y * w + x;
-					points[index] = glm::vec4(pos, 1);
 
-					meshPoints.addColor(kinect.getColorAt(x, y));
-					meshPoints.addVertex(points[index]);
+					glm::vec3 pos = kinect.getWorldCoordinateAt(x_, y_) * trafo;
 
-					const auto v1 = glm::normalize(pos_x - pos);
-					const auto v2 = glm::normalize(pos_y - pos);
-					glm::vec3 nor = glm::cross(v2, v1);
+					glm::vec3 pos_x = kinect.getWorldCoordinateAt(x_ + 1, y_) * trafo;
+					glm::vec3 pos_y = kinect.getWorldCoordinateAt(x_, y_ + 1) * trafo;
+
+					m_points[index] = pos;
+
+					m_meshPoints.addColor(kinect.getColorAt(x_, y_));
+					m_meshPoints.addVertex(m_points[index]);
+
+					const auto v1    = (pos_x - pos);
+					const auto v2    = (pos_y - pos);
+					glm::vec3  nor   = glm::normalize(glm::cross(v2, v1));
+					m_normals[index] = nor;
 
 					glm::vec3 color = (nor + glm::vec3(1, 1, 1)) * 0.5 * 255;
 
-					meshNormals.addColor(ofColor(color.x, color.y, color.z));
-					meshNormals.addVertex(pos);
-					meshNormals.addColor(ofColor(color.x, color.y, color.z));
-					meshNormals.addVertex((pos + nor));
+					m_meshNormals.addColor(ofColor(color.x, color.y, color.z));
+					m_meshNormals.addVertex(pos);
+					m_meshNormals.addColor(ofColor(color.x, color.y, color.z));
+					m_meshNormals.addVertex((pos + nor * 0.01)); // Length = 0.01m/1cm
 				}
 			}
 		}
 	}
-	generated = true;
+	m_generated = true;
 }
 
 //----------------------------------------------------------------------------------------------------------
 void PointCloudCPU::draw(bool drawNormals)
 {
-	if (!generated)
+	if (!m_generated)
 	{
 		return;
 	}
@@ -86,29 +100,34 @@ void PointCloudCPU::draw(bool drawNormals)
 
 	if (drawNormals)
 	{
-		meshNormals.drawVertices();
+		m_meshNormals.drawVertices();
 	}
 	else
 	{
-		meshPoints.drawVertices();
+		m_meshPoints.drawVertices();
 	}
-
 }
 
 //----------------------------------------------------------------------------------------------------------
-glm::vec4* PointCloudCPU::getPoints()
+glm::vec3* PointCloudCPU::getPoints()
 {
-	return points;
+	return m_points;
+}
+
+//----------------------------------------------------------------------------------------------------------
+glm::vec3* PointCloudCPU::getNormals()
+{
+	return m_normals;
 }
 
 //----------------------------------------------------------------------------------------------------------
 int PointCloudCPU::getSize()
 {
-	return size;
+	return m_size;
 }
 
 //----------------------------------------------------------------------------------------------------------
 ofMesh& PointCloudCPU::getMesh()
 {
-	return meshPoints;
+	return m_meshPoints;
 }

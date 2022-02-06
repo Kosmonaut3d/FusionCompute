@@ -11,17 +11,18 @@ public:
 
 	void draw(bool drawNormals);
 
-	glm::vec4* getPoints();
+	glm::vec3* getPoints();
+	glm::vec3* getNormals();
 	int getSize();
 	ofMesh& getMesh();
 
 private:
-	glm::vec4 points[640 * 480];
-	glm::vec3 normals[640 * 480 * 2];
-	int size;
+	glm::vec3 m_points[640 * 480];
+	glm::vec3 m_normals[640 * 480 * 2];
+	int m_size;
 
-	ofMesh meshPoints;
-	ofMesh meshNormals;
-	bool generated;
+	ofMesh m_meshPoints;
+	ofMesh m_meshNormals;
+	bool m_generated;
 };
 

@@ -183,6 +183,7 @@
   <ItemGroup>
     <ClCompile Include="src\compute\PointCloudCompute.cpp" />
     <ClCompile Include="src\compute\PointCloudVis.cpp" />
+    <ClCompile Include="src\cpuReference\IterativeClosestPointCPU.cpp" />
     <ClCompile Include="src\cpuReference\PointCloudCPU.cpp" />
     <ClCompile Include="src\helper\dataStorageHelper.cpp" />
     <ClCompile Include="src\helper\fullScreenQuadRender.cpp" />
@@ -216,6 +217,7 @@
   <ItemGroup>
     <ClInclude Include="src\compute\PointCloudCompute.h" />
     <ClInclude Include="src\compute\PointCloudVis.h" />
+    <ClInclude Include="src\cpuReference\IterativeClosestPointCPU.h" />
     <ClInclude Include="src\cpuReference\PointCloudCPU.h" />
     <ClInclude Include="src\helper\dataStorageHelper.h" />
     <ClInclude Include="src\helper\fullScreenQuadRender.h" />

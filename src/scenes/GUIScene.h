@@ -23,8 +23,10 @@ class GUIScene //: public SceneImpl
 	static bool   s_computePointCloudCPU;
 	static bool   s_drawPointCloudCPU;
 	static bool   s_drawPointCloudNormCPU;
-	static int   s_pointCloudDownscaleExp;
-	static int   s_pointCloudDownscale;
+	static bool   s_pointCloudCPUForceUpdate;
+	static int    s_pointCloudDownscaleExp;
+	static int    s_pointCloudDownscale;
+	static bool   s_computeICPCPU;
 	static bool   s_quickDebug;
 	static bool   s_drawDepthBackground;
 
