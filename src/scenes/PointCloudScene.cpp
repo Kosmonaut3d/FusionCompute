@@ -1,15 +1,20 @@
 #include "PointCloudScene.h"
+
 #include "helper/dataStorageHelper.h"
 #include "helper/fullScreenQuadRender.h"
 
 //---------------------------------------------------
-PointCloudScene::PointCloudScene() : m_pointCloudComp{}, m_pointCloudVis{}, m_texDepthRaw{}, m_texColorPtr{}
+PointCloudScene::PointCloudScene()
+    : m_pointCloudComp{}
+    , m_pointCloudVis{}
+    , m_pointCloudCPU{}
+    , m_texDepthRaw{}
+    , m_texColorPtr{}
 {
-	
 }
 
 //---------------------------------------------------
-void PointCloudScene::setup(ofxKinect& kinect)
+void PointCloudScene::setup(ofxKinect &kinect)
 {
 	m_pointCloudComp.registerKinectData(kinect.getZeroPlaneDistance(), kinect.getZeroPlanePixelSize());
 
@@ -21,7 +26,7 @@ void PointCloudScene::setup(ofxKinect& kinect)
 }
 
 //---------------------------------------------------
-void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect)
+void PointCloudScene::update(bool kinectUpdate, ofxKinect &kinect)
 {
 	if (kinectUpdate && GUIScene::s_computePointCloud)
 	{
@@ -31,7 +36,7 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect)
 }
 
 //---------------------------------------------------
-void PointCloudScene::draw(ofCamera& camera)
+void PointCloudScene::draw(ofCamera &camera)
 {
 	camera.begin();
 
@@ -39,24 +44,23 @@ void PointCloudScene::draw(ofCamera& camera)
 
 	drawOutline();
 
-	constexpr float fovy = glm::radians(62.0);
-	glm::mat4x4 projection = glm::perspective(fovy, 4.0f / 3.0f, 0.1f, 200.0f);
+	constexpr float fovy       = glm::radians(62.0);
+	glm::mat4x4     projection = glm::perspective(fovy, 4.0f / 3.0f, 0.1f, 200.0f);
 
-	glm::vec3 kinectOrigin = glm::vec3(0, 0, 0);
+	glm::vec3   kinectOrigin   = glm::vec3(0, 0, 0);
 	glm::mat3x3 kinectRotation = glm::lookAt(kinectOrigin, kinectOrigin + glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
 
-	auto ori = ofVec3f(kinectOrigin);
-	auto tar = ofVec3f(kinectOrigin + glm::vec3(0, 0, -1)); 
-	auto upv = ofVec3f(glm::vec3(0, 1, 0));
+	auto        ori = ofVec3f(kinectOrigin);
+	auto        tar = ofVec3f(kinectOrigin + glm::vec3(0, 0, -1));
+	auto        upv = ofVec3f(glm::vec3(0, 1, 0));
 	ofMatrix4x4 view;
 	view.makeLookAtViewMatrix(ori, tar, upv);
-	ofMatrix4x4 persp = ofMatrix4x4(projection);
+	ofMatrix4x4 persp          = ofMatrix4x4(projection);
 	ofMatrix4x4 viewProjection = view * projection;
 
 	ofVec3f testPosition = ofVec3f(1, 0, -10);
-	auto test = testPosition * view;
-	auto test2 = testPosition * viewProjection;
-
+	auto    test         = testPosition * view;
+	auto    test2        = testPosition * viewProjection;
 
 	glm::vec4 origin = glm::vec4(0, 0, -10, 1);
 
@@ -76,7 +80,8 @@ void PointCloudScene::draw(ofCamera& camera)
 
 	if (GUIScene::s_drawPointCloud)
 	{
-		m_pointCloudVis.draw(m_pointCloudComp.getModelTextureID(), m_texColorPtr->getTextureData().textureID, false, camera.getModelViewProjectionMatrix(), 10.0f);
+		m_pointCloudVis.draw(m_pointCloudComp.getModelTextureID(), m_texColorPtr->getTextureData().textureID, false,
+		                     camera.getModelViewProjectionMatrix(), 10.0f);
 	}
 
 	if (GUIScene::s_drawPointCloudNorm)
@@ -87,16 +92,15 @@ void PointCloudScene::draw(ofCamera& camera)
 	{
 		FullScreenQuadRender::get().draw(m_pointCloudComp.getModelTextureID(), GL_TEXTURE_2D);
 	}
-	
 
 	camera.end();
 }
 
 void PointCloudScene::drawOutline()
 {
-	glm::vec3 origin = glm::vec3(-10, -10, -20);
-	float scale = 20;
-	float scalehalf = scale / 2;
+	glm::vec3 origin    = glm::vec3(-10, -10, -20);
+	float     scale     = 20;
+	float     scalehalf = scale / 2;
 
 	ofPushStyle();
 	ofGetCurrentRenderer()->setFillMode(ofFillFlag::OF_OUTLINE);
@@ -106,5 +110,3 @@ void PointCloudScene::drawOutline()
 	ofDrawBox(origin + glm::vec3(scalehalf, scalehalf, scalehalf), scale, scale, scale);
 	ofPopStyle();
 }
-
-

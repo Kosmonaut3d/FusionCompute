@@ -1,24 +1,26 @@
 #pragma once
 
-#include "ofMain.h"
+#include "GUIScene.h"
 #include "SceneImpl.h"
-#include "ofxKinect.h"
 #include "compute/PointCloudCompute.h"
 #include "compute/PointCloudVis.h"
-#include "GUIScene.h"
+#include "cpuReference/PointCloudCPU.h"
+#include "ofMain.h"
+#include "ofxKinect.h"
 
 class PointCloudScene //: public SceneImpl
 {
-public:
+  public:
 	PointCloudScene();
-	void setup(ofxKinect& kinect);
-	void update(bool kinectUpdate, ofxKinect& kinect);
-	void draw(ofCamera& camera);
+	void setup(ofxKinect &kinect);
+	void update(bool kinectUpdate, ofxKinect &kinect);
+	void draw(ofCamera &camera);
 	void drawOutline();
 
-private:
+  private:
 	PointCloudComp m_pointCloudComp;
-	PointCloudVis m_pointCloudVis;
-	ofTexture m_texDepthRaw;
-	ofTexture* m_texColorPtr;
+	PointCloudVis  m_pointCloudVis;
+	PointCloudCPU  m_pointCloudCPU;
+	ofTexture      m_texDepthRaw;
+	ofTexture *    m_texColorPtr;
 };

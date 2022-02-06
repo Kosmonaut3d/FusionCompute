@@ -1,17 +1,19 @@
 #include "PointCloudVis.h"
 
-PointCloudVis::PointCloudVis() : m_shader{}
+PointCloudVis::PointCloudVis()
+    : m_shader{}
 {
 	if (!m_shader.load("resources/pointCloud.vert", "resources/pointCloud.frag"))
 	{
-		throw std::exception();//"could not load shaders");
+		throw std::exception(); //"could not load shaders");
 	}
 }
 
 /// <summary>
-/// 
+///
 /// </summary>
-void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4& mvpMat, float factor)
+void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4 &mvpMat,
+                         float factor)
 {
 	m_shader.begin();
 
@@ -31,7 +33,7 @@ void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bo
 	glGenVertexArrays(1, &emptyVAO);
 	glBindVertexArray(emptyVAO);
 	glPointSize(1.0f);
-	glDrawArrays(GL_POINTS, 0, 640*480);
+	glDrawArrays(GL_POINTS, 0, 640 * 480);
 
 	m_shader.end();
 }

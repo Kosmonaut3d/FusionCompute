@@ -1,0 +1,17 @@
+﻿---
+BasedOnStyle: Microsoft
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: 'true'
+AlignConsecutiveDeclarations: 'true'
+AlignOperands: 'true'
+BreakConstructorInitializers: BeforeComma
+ConstructorInitializerAllOnOneLineOrOnePerLine: 'false'
+Cpp11BracedListStyle: 'true'
+FixNamespaceComments: 'true'
+Language: Cpp
+SortIncludes: 'true'
+Standard: Cpp11
+TabWidth: '4'
+UseTab: ForIndentation
+
+...

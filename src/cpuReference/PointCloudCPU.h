@@ -2,14 +2,12 @@
 #include <ofMain.h>
 #include <ofxKinect.h>
 
-class PointCloud
+class PointCloudCPU
 {
 public: 
-	PointCloud();
+	PointCloudCPU();
 
 	void fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals);
-
-	void fillPointCloud(ofImage& depthImage, float maxDepth, int downsample = 0);
 
 	void draw(bool drawNormals);
 
@@ -21,6 +19,7 @@ private:
 	glm::vec4 points[640 * 480];
 	glm::vec3 normals[640 * 480 * 2];
 	int size;
+
 	ofMesh meshPoints;
 	ofMesh meshNormals;
 	bool generated;

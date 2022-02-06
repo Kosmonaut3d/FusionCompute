@@ -4,24 +4,22 @@
 
 class PointCloudComp
 {
-public:
+  public:
 	PointCloudComp();
-	void compute(ofTexture & depthImage);
+	void         compute(ofTexture &depthImage);
 	unsigned int getModelTextureID();
 	unsigned int getNormalTextureID();
-	void registerKinectData(float planeDist, float pixelSize);
+	void         registerKinectData(float planeDist, float pixelSize);
 
-private:
+  private:
 	void setUpOutputTexture();
 
-private:
-	ofShader m_computeModelShader;
-	ofShader m_computeNormalShader;
+  private:
+	ofShader       m_computeModelShader;
+	ofShader       m_computeNormalShader;
 	ofBufferObject inPointBuffer;
-	unsigned int m_texModelID;
-	unsigned int m_texNormalID;
-	float m_planeDist;
-	float m_pixelSize;
+	unsigned int   m_texModelID;
+	unsigned int   m_texNormalID;
+	float          m_planeDist;
+	float          m_pixelSize;
 };
-
- 

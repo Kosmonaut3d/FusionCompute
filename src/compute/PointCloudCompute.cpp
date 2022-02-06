@@ -15,8 +15,7 @@ PointCloudComp::PointCloudComp()
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &work_grp_cnt[1]);
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &work_grp_cnt[2]);
 
-	printf("max global (total) work group counts x:%i y:%i z:%i\n",
-		work_grp_cnt[0], work_grp_cnt[1], work_grp_cnt[2]);
+	printf("max global (total) work group counts x:%i y:%i z:%i\n", work_grp_cnt[0], work_grp_cnt[1], work_grp_cnt[2]);
 
 	int work_grp_size[3];
 
@@ -24,8 +23,8 @@ PointCloudComp::PointCloudComp()
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &work_grp_size[1]);
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &work_grp_size[2]);
 
-	printf("max local (in one shader) work group sizes x:%i y:%i z:%i\n",
-		work_grp_size[0], work_grp_size[1], work_grp_size[2]);
+	printf("max local (in one shader) work group sizes x:%i y:%i z:%i\n", work_grp_size[0], work_grp_size[1],
+	       work_grp_size[2]);
 
 	m_computeModelShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeModelPCL.comp");
 	m_computeModelShader.linkProgram();
@@ -36,7 +35,7 @@ PointCloudComp::PointCloudComp()
 	setUpOutputTexture();
 }
 
-//---------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 void PointCloudComp::setUpOutputTexture()
 {
 	// dimensions of the image
@@ -61,8 +60,8 @@ void PointCloudComp::setUpOutputTexture()
 	glBindImageTexture(2, m_texNormalID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 }
 
-//---------------------------------------------------
-void PointCloudComp::compute(ofTexture & depthImage)
+//----------------------------------------------------------------------------------------------------------
+void PointCloudComp::compute(ofTexture &depthImage)
 {
 	// Worlds
 	m_computeModelShader.begin();
@@ -74,7 +73,7 @@ void PointCloudComp::compute(ofTexture & depthImage)
 	m_computeModelShader.dispatchCompute(640, 480, 1);
 	m_computeModelShader.end();
 
-	//glMemoryBarrier(GL_ALL_BARRIER_BITS);
+	// glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 	// Normals
 	m_computeNormalShader.begin();
@@ -84,19 +83,19 @@ void PointCloudComp::compute(ofTexture & depthImage)
 	m_computeNormalShader.end();
 }
 
-//---------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 unsigned int PointCloudComp::getModelTextureID()
 {
 	return m_texModelID;
 }
 
-//---------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 unsigned int PointCloudComp::getNormalTextureID()
 {
 	return m_texNormalID;
 }
 
-//---------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 void PointCloudComp::registerKinectData(float planeDist, float pixelSize)
 {
 	m_planeDist = planeDist;

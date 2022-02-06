@@ -7,12 +7,6 @@
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\datastructures\pointCloud.cpp">
-      <Filter>src\datastructures</Filter>
-    </ClCompile>
-    <ClCompile Include="src\datastructures\sdf.cpp">
-      <Filter>src\datastructures</Filter>
-    </ClCompile>
     <ClCompile Include="src\main.cpp">
       <Filter>src</Filter>
     </ClCompile>
@@ -85,9 +79,6 @@
     <ClCompile Include="..\..\..\addons\ofxKinect\libs\libfreenect\src\usb_libusb10.c">
       <Filter>addons\ofxKinect\libs\libfreenect\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\datastructures\slice.cpp">
-      <Filter>src\datastructures</Filter>
-    </ClCompile>
     <ClCompile Include="src\compute\PointCloudVis.cpp">
       <Filter>src\compute</Filter>
     </ClCompile>
@@ -106,13 +97,13 @@
     <ClCompile Include="src\scenes\GUIScene.cpp">
       <Filter>src\scenes</Filter>
     </ClCompile>
+    <ClCompile Include="src\cpuReference\PointCloudCPU.cpp">
+      <Filter>src\cpuReference</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{d8376475-7454-4a24-b08a-aac121d3ad6f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="src\datastructures">
-      <UniqueIdentifier>{343CC745-4082-277E-A32B-3C52}</UniqueIdentifier>
     </Filter>
     <Filter Include="addons">
       <UniqueIdentifier>{71834F65-F3A9-211E-73B8-DC85}</UniqueIdentifier>
@@ -177,16 +168,13 @@
     <Filter Include="src\scenes">
       <UniqueIdentifier>{fc03f97d-8566-411c-8dc5-7eb3a36b2313}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\cpuReference">
+      <UniqueIdentifier>{02eb1219-0536-4c63-9b0c-9d429a6aa81a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ofApp.h">
       <Filter>src</Filter>
-    </ClInclude>
-    <ClInclude Include="src\datastructures\pointCloud.h">
-      <Filter>src\datastructures</Filter>
-    </ClInclude>
-    <ClInclude Include="src\datastructures\sdf.h">
-      <Filter>src\datastructures</Filter>
     </ClInclude>
     <ClInclude Include="src\ofApp.h">
       <Filter>src</Filter>
@@ -281,9 +269,6 @@
     <ClInclude Include="..\..\..\addons\ofxKinect\libs\libusb\include\libusb.h">
       <Filter>addons\ofxKinect\libs\libusb\include</Filter>
     </ClInclude>
-    <ClInclude Include="src\datastructures\slice.h">
-      <Filter>src\datastructures</Filter>
-    </ClInclude>
     <ClInclude Include="src\helper\dataStorageHelper.h">
       <Filter>src\helper</Filter>
     </ClInclude>
@@ -304,6 +289,9 @@
     </ClInclude>
     <ClInclude Include="src\scenes\SceneImpl.h">
       <Filter>src\scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpuReference\PointCloudCPU.h">
+      <Filter>src\cpuReference</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

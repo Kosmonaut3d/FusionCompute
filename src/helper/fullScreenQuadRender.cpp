@@ -6,7 +6,7 @@ FullScreenQuadRender::FullScreenQuadRender()
 	{
 		if (!m_shader.load("resources/fullScreenQuad.vert", "resources/fullScreenQuad.frag"))
 		{
-			throw std::exception();//"could not load shaders");
+			throw std::exception(); //"could not load shaders");
 		}
 	}
 }
@@ -23,7 +23,7 @@ void FullScreenQuadRender::draw(unsigned int texID, GLenum textureTarget = GL_TE
 
 	glUniform1i(m_shader.getUniformLocation("t"), 0);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(textureTarget, texID);//outputTexture.getTextureData().textureID);
+	glBindTexture(textureTarget, texID); // outputTexture.getTextureData().textureID);
 
 	GLuint emptyVAO;
 	glGenVertexArrays(1, &emptyVAO);
@@ -36,7 +36,7 @@ void FullScreenQuadRender::draw(unsigned int texID, GLenum textureTarget = GL_TE
 	m_shader.end();
 }
 
-FullScreenQuadRender& FullScreenQuadRender::get()
+FullScreenQuadRender &FullScreenQuadRender::get()
 {
 	static FullScreenQuadRender instance;
 	return instance;

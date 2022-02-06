@@ -1,18 +1,16 @@
 #pragma once
 
-#include "ofMain.h"
-#include "datastructures/pointCloud.h"
-#include "datastructures/sdf.h"
-#include "ofxKinect.h"
-#include "slice.h"
-#include "compute/PointCloudVis.h"
 #include "compute/PointCloudCompute.h"
+#include "compute/PointCloudVis.h"
+#include "ofMain.h"
+#include "ofxKinect.h"
 #include "scenes/GUIScene.h"
 #include "scenes/PointCloudScene.h"
 
-class ofApp : public ofBaseApp {
+class ofApp : public ofBaseApp
+{
 
-public:
+  public:
 	ofApp();
 
 	void setup();
@@ -32,17 +30,15 @@ public:
 	void dragEvent(ofDragInfo dragInfo);
 	void gotMessage(ofMessage msg);
 
-private:
-	void drawKinectPointCloud(ofxKinect& kinect);
-	void drawFullScreenImage(ofImage& image);
+  private:
+	void drawKinectPointCloud(ofxKinect &kinect);
+	void drawFullScreenImage(ofImage &image);
 
-private:
-	GUIScene m_guiScene;
+  private:
+	GUIScene        m_guiScene;
 	PointCloudScene m_pointCloudScene;
 
 	ofxKinect m_kinect;
-	ofImage m_depthImage; // grayscale depth image
-	Slice m_slice;
+	ofImage   m_depthImage; // grayscale depth image
 	ofEasyCam m_camera;
-
 };

@@ -183,13 +183,11 @@
   <ItemGroup>
     <ClCompile Include="src\compute\PointCloudCompute.cpp" />
     <ClCompile Include="src\compute\PointCloudVis.cpp" />
-    <ClCompile Include="src\datastructures\slice.cpp" />
+    <ClCompile Include="src\cpuReference\PointCloudCPU.cpp" />
     <ClCompile Include="src\helper\dataStorageHelper.cpp" />
     <ClCompile Include="src\helper\fullScreenQuadRender.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
-    <ClCompile Include="src\datastructures\pointCloud.cpp" />
-    <ClCompile Include="src\datastructures\sdf.cpp" />
     <ClCompile Include="..\..\..\addons\ofxImGui\src\BaseEngine.cpp" />
     <ClCompile Include="..\..\..\addons\ofxImGui\src\DefaultTheme.cpp" />
     <ClCompile Include="..\..\..\addons\ofxImGui\src\EngineGLFW.cpp" />
@@ -218,12 +216,10 @@
   <ItemGroup>
     <ClInclude Include="src\compute\PointCloudCompute.h" />
     <ClInclude Include="src\compute\PointCloudVis.h" />
-    <ClInclude Include="src\datastructures\slice.h" />
+    <ClInclude Include="src\cpuReference\PointCloudCPU.h" />
     <ClInclude Include="src\helper\dataStorageHelper.h" />
     <ClInclude Include="src\helper\fullScreenQuadRender.h" />
     <ClInclude Include="src\ofApp.h" />
-    <ClInclude Include="src\datastructures\pointCloud.h" />
-    <ClInclude Include="src\datastructures\sdf.h" />
     <ClInclude Include="..\..\..\addons\ofxImGui\src\BaseEngine.h" />
     <ClInclude Include="..\..\..\addons\ofxImGui\src\BaseTheme.h" />
     <ClInclude Include="..\..\..\addons\ofxImGui\src\DefaultTheme.h" />
