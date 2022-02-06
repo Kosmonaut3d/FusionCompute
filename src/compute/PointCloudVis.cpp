@@ -12,7 +12,7 @@ PointCloudVis::PointCloudVis()
 /// <summary>
 ///
 /// </summary>
-void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4 &mvpMat)
+void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, const glm::mat4x4 &mvpMat)
 {
 	m_shader.begin();
 

@@ -12,16 +12,31 @@ Project{
         name: { return FileInfo.baseName(sourceDirectory) }
 
         files: [
-            'src/datastructures/pointCloud.cpp',
-            'src/datastructures/pointCloud.h',
-            'src/datastructures/sdf.cpp',
-            'src/datastructures/sdf.h',
+            "src/compute/PointCloudCompute.cpp",
+            "src/compute/PointCloudCompute.h",
+            "src/compute/PointCloudVis.cpp",
+            "src/compute/PointCloudVis.h",
+            "src/cpuReference/IterativeClosestPointCPU.cpp",
+            "src/cpuReference/IterativeClosestPointCPU.h",
+            "src/cpuReference/PointCloudCPU.cpp",
+            "src/cpuReference/PointCloudCPU.h",
+            "src/helper/dataStorageHelper.cpp",
+            "src/helper/dataStorageHelper.h",
+            "src/helper/fullScreenQuadRender.cpp",
+            "src/helper/fullScreenQuadRender.h",
+            "src/scenes/GUIScene.cpp",
+            "src/scenes/GUIScene.h",
+            "src/scenes/PointCloudScene.cpp",
+            "src/scenes/PointCloudScene.h",
+            "src/scenes/SceneImpl.h",
             'src/main.cpp',
             'src/ofApp.cpp',
             'src/ofApp.h',
         ]
 
         of.addons: [
+            'ofxImGui',
+            'ofxKinect',
         ]
 
         // additional flags for the project. the of module sets some

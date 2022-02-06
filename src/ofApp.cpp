@@ -177,7 +177,7 @@ void ofApp::draw()
 	if (GUIScene::s_drawDepthBackground)
 	{
 		ofSetColor(ofColor::white * 0.2);
-		FullScreenQuadRender::get().draw(m_depthImage.getTextureReference());
+        FullScreenQuadRender::get().draw(m_depthImage.getTexture());
 		// drawFullScreenImage(m_depthImage);
 	}
 

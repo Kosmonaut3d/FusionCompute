@@ -1,7 +1,7 @@
 #pragma once
 #include "ofMain.h"
 
-static class DataStorageHelper
+class DataStorageHelper
 {
 public:
 	static void storeData(string path, const char* data, int size);
