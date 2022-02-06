@@ -13,7 +13,7 @@ PointCloudScene::PointCloudScene()
 {
 }
 
-//---------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 void PointCloudScene::setup(ofxKinect &kinect)
 {
 	m_pointCloudComp.registerKinectData(kinect.getZeroPlaneDistance(), kinect.getZeroPlanePixelSize());
@@ -23,19 +23,28 @@ void PointCloudScene::setup(ofxKinect &kinect)
 	m_texColorPtr = &kinect.getTexture();
 
 	m_pointCloudComp.compute(m_texDepthRaw);
+	m_pointCloudCPU.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, false);
 }
 
-//---------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 void PointCloudScene::update(bool kinectUpdate, ofxKinect &kinect)
 {
-	if (kinectUpdate && GUIScene::s_computePointCloud)
+	if (kinectUpdate)
 	{
-		m_texDepthRaw.loadData(kinect.getRawDepthPixels());
-		m_pointCloudComp.compute(m_texDepthRaw);
+		if (GUIScene::s_computePointCloud)
+		{
+			m_texDepthRaw.loadData(kinect.getRawDepthPixels());
+			m_pointCloudComp.compute(m_texDepthRaw);
+		}
+
+		if (GUIScene::s_computePointCloudCPU)
+		{
+			m_pointCloudCPU.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, false);
+		}
 	}
 }
 
-//---------------------------------------------------
+//----------------------------------------------------------------------------------------------------------
 void PointCloudScene::draw(ofCamera &camera)
 {
 	camera.begin();
@@ -44,6 +53,49 @@ void PointCloudScene::draw(ofCamera &camera)
 
 	drawOutline();
 
+	if (GUIScene::s_drawPointCloud)
+	{
+		m_pointCloudVis.draw(m_pointCloudComp.getModelTextureID(), m_texColorPtr->getTextureData().textureID, false,
+		                     camera.getModelViewProjectionMatrix());
+	}
+
+	if (GUIScene::s_drawPointCloudCPU)
+	{
+		m_pointCloudCPU.draw(false);
+	}
+
+	if (GUIScene::s_drawPointCloudNorm)
+	{
+		FullScreenQuadRender::get().draw(m_pointCloudComp.getNormalTextureID(), GL_TEXTURE_2D);
+	}
+	else if (GUIScene::s_drawPointCloudTex)
+	{
+		FullScreenQuadRender::get().draw(m_pointCloudComp.getModelTextureID(), GL_TEXTURE_2D);
+	}
+
+
+	camera.end();
+}
+
+//----------------------------------------------------------------------------------------------------------
+void PointCloudScene::drawOutline()
+{
+	glm::vec3 origin    = glm::vec3(-10, -10, -20);
+	float     scale     = 20;
+	float     scalehalf = scale / 2;
+
+	ofPushStyle();
+	ofGetCurrentRenderer()->setFillMode(ofFillFlag::OF_OUTLINE);
+	ofSetColor(255, 0, 0);
+	ofDrawBox(glm::vec3(0, 0, 0), 1, 1, 1);
+	ofSetColor(200, 100, 200);
+	ofDrawBox(origin + glm::vec3(scalehalf, scalehalf, scalehalf), scale, scale, scale);
+	ofPopStyle();
+}
+
+//----------------------------------------------------------------------------------------------------------
+void PointCloudScene::drawTest()
+{
 	constexpr float fovy       = glm::radians(62.0);
 	glm::mat4x4     projection = glm::perspective(fovy, 4.0f / 3.0f, 0.1f, 200.0f);
 
@@ -75,38 +127,6 @@ void PointCloudScene::draw(ofCamera &camera)
 	float ndc_y = ((2.0 * y) - (2.0 * 0)) / 480 - 1.0;
 	float ndc_z = .9;
 
-	ofVec3f output = ofVec3f(ndc_x, ndc_y, ndc_z) * glm::inverse(camera.getModelViewProjectionMatrix());
-	ofDrawSphere(output, .01);
-
-	if (GUIScene::s_drawPointCloud)
-	{
-		m_pointCloudVis.draw(m_pointCloudComp.getModelTextureID(), m_texColorPtr->getTextureData().textureID, false,
-		                     camera.getModelViewProjectionMatrix(), 10.0f);
-	}
-
-	if (GUIScene::s_drawPointCloudNorm)
-	{
-		FullScreenQuadRender::get().draw(m_pointCloudComp.getNormalTextureID(), GL_TEXTURE_2D);
-	}
-	else if (GUIScene::s_drawPointCloudTex)
-	{
-		FullScreenQuadRender::get().draw(m_pointCloudComp.getModelTextureID(), GL_TEXTURE_2D);
-	}
-
-	camera.end();
-}
-
-void PointCloudScene::drawOutline()
-{
-	glm::vec3 origin    = glm::vec3(-10, -10, -20);
-	float     scale     = 20;
-	float     scalehalf = scale / 2;
-
-	ofPushStyle();
-	ofGetCurrentRenderer()->setFillMode(ofFillFlag::OF_OUTLINE);
-	ofSetColor(255, 0, 0);
-	ofDrawBox(glm::vec3(0, 0, 0), 1, 1, 1);
-	ofSetColor(200, 100, 200);
-	ofDrawBox(origin + glm::vec3(scalehalf, scalehalf, scalehalf), scale, scale, scale);
-	ofPopStyle();
+	//ofVec3f output = ofVec3f(ndc_x, ndc_y, ndc_z) * glm::inverse(camera.getModelViewProjectionMatrix());
+	//ofDrawSphere(output, .01);
 }

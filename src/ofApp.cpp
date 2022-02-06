@@ -203,10 +203,6 @@ void ofApp::draw()
 	{
 	    //m_sdf.drawRaymarch(m_camera);
 	}
-	if (m_drawPointCloud)
-	{
-	    //m_pointCloud.draw(m_computeNormalsCPU);
-	}
 	if (m_drawSlice)
 	{
 	    //ofSetColor(ofColor::red);

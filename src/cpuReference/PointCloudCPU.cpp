@@ -1,4 +1,5 @@
 #include "PointCloudCPU.h"
+#include <scenes/GUIScene.h>
 
 //----------------------------------------------------------------------------------------------------------
 PointCloudCPU::PointCloudCPU() :
@@ -20,15 +21,18 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 	meshPoints.clearColors();
 	int step = downsample;
 
+	float     scaleToMeters = 0.001;
+	glm::vec3 trafo         = glm::vec3(1, -1, -1) * scaleToMeters;
+
 	if (!compNormals)
 	{
 		for (int y = 0; y < h; y += step) {
 			for (int x = 0; x < w; x += step) {
 				if (kinect.getDistanceAt(x, y) > 0) {
-					glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * 0.01;
+					glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * trafo;
 
 					int index = y * w + x;
-					points[index] = glm::vec4(pos.x, -pos.y, -pos.z, -pos.z);
+					points[index] = glm::vec4(pos.x, pos.y, pos.z, 1);
 
 					meshPoints.addColor(kinect.getColorAt(x, y));
 					meshPoints.addVertex(points[index]);
@@ -43,13 +47,13 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 		for (int y = 0; y < h; y += step) {
 			for (int x = 0; x < w; x += step) {
 				if (kinect.getDistanceAt(x, y) > 0 && kinect.getDistanceAt(x+1, y) > 0 && kinect.getDistanceAt(x, y+1) > 0){
-					glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * glm::vec3(1, -1, -1);
+					glm::vec3 pos = kinect.getWorldCoordinateAt(x, y) * trafo;
 
-					glm::vec3 pos_x = kinect.getWorldCoordinateAt(x+1, y) * glm::vec3(1, -1, -1);
-					glm::vec3 pos_y = kinect.getWorldCoordinateAt(x, y+1) * glm::vec3(1, -1, -1);
+					glm::vec3 pos_x = kinect.getWorldCoordinateAt(x + 1, y) * trafo;
+					glm::vec3 pos_y = kinect.getWorldCoordinateAt(x, y + 1) * trafo;
 
 					int index = y * w + x;
-					points[index] = glm::vec4(pos * 0.01, 1);
+					points[index] = glm::vec4(pos, 1);
 
 					meshPoints.addColor(kinect.getColorAt(x, y));
 					meshPoints.addVertex(points[index]);
@@ -61,9 +65,9 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 					glm::vec3 color = (nor + glm::vec3(1, 1, 1)) * 0.5 * 255;
 
 					meshNormals.addColor(ofColor(color.x, color.y, color.z));
-					meshNormals.addVertex(pos * 0.01);
+					meshNormals.addVertex(pos);
 					meshNormals.addColor(ofColor(color.x, color.y, color.z));
-					meshNormals.addVertex((pos * 0.01 + nor));
+					meshNormals.addVertex((pos + nor));
 				}
 			}
 		}
@@ -78,11 +82,7 @@ void PointCloudCPU::draw(bool drawNormals)
 	{
 		return;
 	}
-	glPointSize(3);
-	ofPushMatrix();
-	float factor = 1;
-	ofScale(factor, factor, factor);
-	ofEnableDepthTest();
+	glPointSize(GUIScene::s_pointCloudDownscale);
 
 	if (drawNormals)
 	{
@@ -93,8 +93,6 @@ void PointCloudCPU::draw(bool drawNormals)
 		meshPoints.drawVertices();
 	}
 
-	ofDisableDepthTest();
-	ofPopMatrix();
 }
 
 //----------------------------------------------------------------------------------------------------------

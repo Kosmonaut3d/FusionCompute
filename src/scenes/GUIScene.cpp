@@ -7,6 +7,12 @@ bool   GUIScene::s_computePointCloud      = true;
 bool   GUIScene::s_drawPointCloud         = true;
 bool   GUIScene::s_drawPointCloudTex      = false;
 bool   GUIScene::s_drawPointCloudNorm     = false;
+bool   GUIScene::s_computePointCloudCPU   = true;
+bool   GUIScene::s_drawPointCloudCPU      = false;
+bool   GUIScene::s_drawPointCloudNormCPU  = false;
+
+int    GUIScene::s_pointCloudDownscaleExp = 1;
+int GUIScene::s_pointCloudDownscale = 2;
 bool   GUIScene::s_quickDebug             = false;
 bool   GUIScene::s_drawDepthBackground    = false;
 
@@ -29,7 +35,7 @@ void GUIScene::update()
 }
 
 //---------------------------------------------------
-void GUIScene::draw(ofEasyCam &camera)
+void GUIScene::draw(ofEasyCam& camera)
 {
 	m_gui.begin();
 
@@ -68,17 +74,40 @@ void GUIScene::draw(ofEasyCam &camera)
 		{
 			if (ImGui::BeginTabItem("Point Cloud"))
 			{
+				const ImVec4 gpuCol = (ImVec4)ImColor(0.5, 170.5f, 0.5f);
+				ImGui::PushStyleColor(ImGuiCol_CheckMark, gpuCol);
+				ImGui::TextColored(gpuCol, "Point Cloud GPU Compute");
 				ImGui::Checkbox("Compute PCL", &s_computePointCloud);
 				ImGui::Checkbox("Draw PCL", &s_drawPointCloud);
 				ImGui::Checkbox("Draw PCL Model Tex", &s_drawPointCloudTex);
 				ImGui::Checkbox("Draw PCL Normal Tex", &s_drawPointCloudNorm);
+				ImGui::PopStyleColor(1);
+
+				ImGui::Separator();
+
+				const ImVec4 cpuCol = (ImVec4)ImColor(0.5, 120.5f, 170.5f);
+				ImGui::PushStyleColor(ImGuiCol_CheckMark, cpuCol);
+				ImGui::TextColored(cpuCol, "Point Cloud CPU Compute");
+				ImGui::Checkbox("Compute PCL CPU", &s_computePointCloudCPU);
+				ImGui::Checkbox("Draw PCL CPU", &s_drawPointCloudCPU);
+				ImGui::Checkbox("Draw PCL Normal CPU", &s_drawPointCloudNormCPU);
+
+				if (ImGui::SliderInt("PCL CPU downscale", &s_pointCloudDownscaleExp, 0, 4))
+				{
+					s_pointCloudDownscale = pow(2, s_pointCloudDownscaleExp);
+				}
+				ImGui::SameLine();
+				ImGui::Text("eff. %d", s_pointCloudDownscale);
+
+				ImGui::PopStyleColor(1);
+
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();
 		}
 		ImGui::Separator();
 
-		ImGui::ColorEdit3("Background Color", (float *)&s_backgroundColor);
+		ImGui::ColorEdit3("Background Color", (float*)&s_backgroundColor);
 		ImGui::Checkbox("Draw Kinect Depth", &s_drawDepthBackground);
 		ImGui::Checkbox("Quick Debug Check", &s_quickDebug);
 

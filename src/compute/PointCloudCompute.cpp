@@ -68,7 +68,7 @@ void PointCloudComp::compute(ofTexture &depthImage)
 
 	m_computeModelShader.setUniform1f("_zeroPlaneDist", m_planeDist);
 	m_computeModelShader.setUniform1f("_zeroPixelSize", m_pixelSize);
-	glBindImageTexture(0, depthImage.getTextureData().textureID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16);
+	glBindImageTexture(0, depthImage.getTextureData().textureID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16UI);
 
 	m_computeModelShader.dispatchCompute(640, 480, 1);
 	m_computeModelShader.end();

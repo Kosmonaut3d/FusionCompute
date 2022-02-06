@@ -12,14 +12,13 @@ PointCloudVis::PointCloudVis()
 /// <summary>
 ///
 /// </summary>
-void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4 &mvpMat,
-                         float factor)
+void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4 &mvpMat)
 {
 	m_shader.begin();
 
 	m_shader.setUniformMatrix4f("modelViewProjectionMatrix", mvpMat);
 
-	m_shader.setUniform1f("mixFactor", factor);
+	//m_shader.setUniform1f("mixFactor", factor);
 
 	glUniform1i(m_shader.getUniformLocation("worldTex"), 0);
 	glUniform1i(m_shader.getUniformLocation("colorTex"), 1);

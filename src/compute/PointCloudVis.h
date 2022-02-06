@@ -7,7 +7,7 @@ class PointCloudVis
 public: 
 	PointCloudVis();
 
-	void draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4& mvpMat, float factor);
+	void draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, glm::mat4x4& mvpMat);
 
 
 private:

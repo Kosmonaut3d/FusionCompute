@@ -13,5 +13,6 @@ SortIncludes: 'true'
 Standard: Cpp11
 TabWidth: '4'
 UseTab: ForIndentation
+PointerAlignment: Left
 
 ...
