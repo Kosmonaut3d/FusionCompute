@@ -22,8 +22,9 @@ void ofApp::setup() {
 	ofSetLineWidth(2);
 
 	m_camera.setPosition(glm::vec3(0, 0, 0));
-	m_camera.setTarget(glm::vec3(0, 0, -1)); // look forward
+	m_camera.setTarget(glm::vec3(0, 0, -2)); // look forward
 	m_camera.setDistance(2);
+	m_camera.setFov(48.6f);
 	m_camera.setNearClip(0.01); // 10 cm
 	m_camera.setFarClip(1000); 
 	m_camera.setTranslationKey(32); // space

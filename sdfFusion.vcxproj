@@ -271,7 +271,8 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\data\resources\computeSDF.comp" />
+    <None Include="bin\data\resources\computeModelPCL.comp" />
+    <None Include="bin\data\resources\computeNormalPCL.comp" />
     <None Include="bin\data\resources\fragShader.frag" />
     <None Include="bin\data\resources\pointCloud.frag" />
     <None Include="bin\data\resources\pointCloud.vert" />

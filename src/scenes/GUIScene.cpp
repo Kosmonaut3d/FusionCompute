@@ -6,6 +6,8 @@ ImVec4 GUIScene::s_backgroundColor = ImVec4(0.2, 0.2, 0.2, 1);
 bool GUIScene::s_computePointCloud = true;
 bool GUIScene::s_drawPointCloud = true;
 bool GUIScene::s_drawPointCloudTex = false;
+bool GUIScene::s_drawPointCloudNorm = false;
+bool GUIScene::s_quickDebug = false;
 bool GUIScene::s_drawDepthBackground = false;
 
 //---------------------------------------------------
@@ -34,7 +36,28 @@ void GUIScene::draw(ofEasyCam& camera)
 	{
 		ImGui::SetWindowPos(ofVec2f(0, 0), ImGuiCond_FirstUseEver);
 
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS), %d vertices", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate, ImGui::GetIO().MetricsRenderVertices);
+		// Framerate average for maxTimeDelta
+		static float timeDelta = 0.0f;
+		static double msAccu = 0.0f;
+		static int accuCnt = 0;
+		static const float maxTimeDelta = 1.0f;
+		static float msAvg = 0.0f;
+
+		float ms_current = 1000.0f / ImGui::GetIO().Framerate;
+
+		accuCnt++;
+		msAccu += ms_current;
+		timeDelta += ImGui::GetIO().DeltaTime;
+
+		if (timeDelta > maxTimeDelta)
+		{
+			msAvg = (msAccu / accuCnt);
+			accuCnt = 0;
+			msAccu = 0.0;
+			timeDelta = 0.0f;
+		}
+
+		ImGui::Text("Application average %.3f (%.1f FPS), %d vertices", msAvg, ImGui::GetIO().Framerate, ImGui::GetIO().MetricsRenderVertices);
 
 		ImGui::MenuItem("Kinect Connected", NULL, s_isKinectDeliveringData);
 		ImGui::Checkbox("Update Kinect Data", &s_updateKinectData);
@@ -46,7 +69,8 @@ void GUIScene::draw(ofEasyCam& camera)
 			{
 				ImGui::Checkbox("Compute PCL", &s_computePointCloud);
 				ImGui::Checkbox("Draw PCL", &s_drawPointCloud);
-				ImGui::Checkbox("Draw PCL World Tex", &s_drawPointCloudTex);
+				ImGui::Checkbox("Draw PCL Model Tex", &s_drawPointCloudTex);
+				ImGui::Checkbox("Draw PCL Normal Tex", &s_drawPointCloudNorm);
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();
@@ -55,6 +79,7 @@ void GUIScene::draw(ofEasyCam& camera)
 
 		ImGui::ColorEdit3("Background Color", (float*)&s_backgroundColor);
 		ImGui::Checkbox("Draw Kinect Depth", &s_drawDepthBackground);
+		ImGui::Checkbox("Quick Debug Check", &s_quickDebug);
 
 		//ImGui::ShowDemoWindow();// ::ShowExampleAppDockSpace(true);
 		/*if (ImGui::SliderFloat("Float", &m_floatValue, -10.0f, 10.0f))

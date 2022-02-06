@@ -16,7 +16,7 @@ MessageCallback(GLenum source,
 			 "** GL ERROR **",
 			type, severity, message);
 	}
-	else if(severity != GL_DEBUG_SEVERITY_NOTIFICATION)
+	else if(severity != GL_DEBUG_SEVERITY_NOTIFICATION && id != 131218)
 	{
 		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
 			"** NO GL ERROR **",
@@ -31,7 +31,7 @@ int main() {
 	settings.setGLVersion(4, 4); //we define the OpenGL version we want to use
 	//ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 
-	settings.setSize(1280, 800);
+	settings.setSize(1280, 960);
 	ofCreateWindow(settings);
 
 	// During init, enable debug output

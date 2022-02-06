@@ -1,5 +1,7 @@
 #include "PointCloudCompute.h"
+#include "scenes/GUIScene.h"
 
+//---------------------------------------------------
 PointCloudComp::PointCloudComp()
 {
 	int result;
@@ -25,43 +27,76 @@ PointCloudComp::PointCloudComp()
 	printf("max local (in one shader) work group sizes x:%i y:%i z:%i\n",
 		work_grp_size[0], work_grp_size[1], work_grp_size[2]);
 
-	m_computeShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeSDF.comp");
-	m_computeShader.linkProgram();
+	m_computeModelShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeModelPCL.comp");
+	m_computeModelShader.linkProgram();
+
+	m_computeNormalShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeNormalPCL.comp");
+	m_computeNormalShader.linkProgram();
 
 	setUpOutputTexture();
 }
 
+//---------------------------------------------------
 void PointCloudComp::setUpOutputTexture()
 {
 	// dimensions of the image
 	const int tex_w = 640, tex_h = 480;
-	glGenTextures(1, &m_texID);
+
+	// Model
+	glGenTextures(1, &m_texModelID);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_texID);
+	glBindTexture(GL_TEXTURE_2D, m_texModelID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
-	glBindImageTexture(1, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	glBindImageTexture(1, m_texModelID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+
+	// Normal map
+	glGenTextures(1, &m_texNormalID);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, m_texNormalID);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
+	glBindImageTexture(2, m_texNormalID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 }
 
+//---------------------------------------------------
 void PointCloudComp::compute(ofTexture & depthImage)
 {
-	m_computeShader.begin();
+	// Worlds
+	m_computeModelShader.begin();
 
-	m_computeShader.setUniform1f("_zeroPlaneDist", m_planeDist);
-	m_computeShader.setUniform1f("_zeroPixelSize", m_pixelSize);
+	m_computeModelShader.setUniform1f("_zeroPlaneDist", m_planeDist);
+	m_computeModelShader.setUniform1f("_zeroPixelSize", m_pixelSize);
 	glBindImageTexture(0, depthImage.getTextureData().textureID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16);
 
-	m_computeShader.dispatchCompute(640, 480, 1);
-	
-	m_computeShader.end();
+	m_computeModelShader.dispatchCompute(640, 480, 1);
+	m_computeModelShader.end();
+
+	//glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+	// Normals
+	m_computeNormalShader.begin();
+	glBindImageTexture(1, m_texModelID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	glBindImageTexture(2, m_texNormalID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	m_computeNormalShader.dispatchCompute(640, 480, 1);
+	m_computeNormalShader.end();
 }
 
-unsigned int PointCloudComp::getTextureID()
+//---------------------------------------------------
+unsigned int PointCloudComp::getModelTextureID()
 {
-	return m_texID;
+	return m_texModelID;
 }
 
+//---------------------------------------------------
+unsigned int PointCloudComp::getNormalTextureID()
+{
+	return m_texNormalID;
+}
+
+//---------------------------------------------------
 void PointCloudComp::registerKinectData(float planeDist, float pixelSize)
 {
 	m_planeDist = planeDist;

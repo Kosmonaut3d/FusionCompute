@@ -319,7 +319,7 @@
     <None Include="bin\data\resources\sliceFragShader.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\computeSDF.comp">
+    <None Include="bin\data\resources\computeModelPCL.comp">
       <Filter>shaders</Filter>
     </None>
     <None Include="bin\data\resources\fullScreenQuad.frag">
@@ -332,6 +332,9 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="bin\data\resources\pointCloud.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="bin\data\resources\computeNormalPCL.comp">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
