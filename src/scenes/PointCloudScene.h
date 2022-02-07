@@ -17,7 +17,7 @@ class PointCloudScene //: public SceneImpl
 	void update(bool kinectUpdate, ofxKinect& kinect);
 	void draw(ofCamera& camera);
 	void drawOutline();
-	void drawTest();
+	void drawTest(ofxKinect& kinect);
 
   private:
 	PointCloudComp            m_pointCloudComp;
@@ -29,5 +29,5 @@ class PointCloudScene //: public SceneImpl
 	ofTexture*                m_texColorPtr;
 	bool                      m_isPCL_0;
 	glm::mat4x4               m_kinectView;
-	glm::mat4x4               m_kinectViewProjection;
+	glm::mat4x4               m_kinectProjection;
 };

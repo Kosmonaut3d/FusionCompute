@@ -49,6 +49,7 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 	{
 		m_meshNormals.clearVertices();
 		m_meshNormals.clearColors();
+
 		for (int y = 0; y < h; y++)
 		{
 			for (int x = 0; x < w; x++)

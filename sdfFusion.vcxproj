@@ -269,15 +269,15 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\data\resources\computeModelPCL.comp" />
-    <None Include="bin\data\resources\computeNormalPCL.comp" />
-    <None Include="bin\data\resources\fragShader.frag" />
-    <None Include="bin\data\resources\pointCloud.frag" />
-    <None Include="bin\data\resources\pointCloud.vert" />
-    <None Include="bin\data\resources\fullScreenQuad.frag" />
-    <None Include="bin\data\resources\fullScreenQuad.vert" />
-    <None Include="bin\data\resources\sliceFragShader.frag" />
-    <None Include="bin\data\resources\vertShader.vert" />
+    <None Include="resources\data\resources\computeModelPCL.comp" />
+    <None Include="resources\data\resources\computeNormalPCL.comp" />
+    <None Include="resources\data\resources\fragShader.frag" />
+    <None Include="resources\data\resources\fullScreenQuad.frag" />
+    <None Include="resources\data\resources\fullScreenQuad.vert" />
+    <None Include="resources\data\resources\pointCloud.frag" />
+    <None Include="resources\data\resources\pointCloud.vert" />
+    <None Include="resources\data\resources\sliceFragShader.frag" />
+    <None Include="resources\data\resources\vertShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ProjectExtensions>

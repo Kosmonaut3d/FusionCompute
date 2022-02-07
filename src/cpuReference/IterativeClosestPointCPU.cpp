@@ -12,28 +12,76 @@ IterativeClostestPointCPU::IterativeClostestPointCPU()
 
 void IterativeClostestPointCPU::compute(const glm::vec3* newVertices, const glm::vec3* newNormals,
                                         const glm::vec3* oldVertices, const glm::vec3* oldNormals,
-                                        const glm::mat4x4& oldTransform, const glm::mat4x4& oldTransformProjection,
+                                        const glm::mat4x4& oldTransform, const glm::mat4x4& Projection,
                                         glm::mat4x4& newTransform, const int downscale)
 {
+	m_failPixel    = 0;
+	m_failDistance = 0;
+	m_failNormal   = 0;
+
 	const int WIDTH  = 640 / downscale;
 	const int HEIGHT = 480 / downscale;
+	const int W2     = WIDTH / 2;
+	const int H2     = HEIGHT / 2;
 	const int SIZE   = WIDTH * HEIGHT;
 
 	// Copy
 	newTransform = glm::mat4x4(oldTransform);
 
+	//https://gist.github.com/podgorskiy/04a3cb36a27159e296599183215a71b0
+	
+	glm::mat4x4 viewProjection = Projection * glm::inverse(oldTransform);
+	glm::mat3x3 oldRotMatrix   = glm::mat3x3(oldTransform);
+	glm::mat3x3 newRotMatrix   = glm::mat3x3(newTransform);
+
 	/// ..........................
 	for (int i = 0; i < SIZE; i++)
 	{
-
-		int x, y;
-		getXYfromIndex(i, WIDTH, &x, &y);
-
 		glm::vec3 newVertex = newVertices[i];
-		glm::vec3 newNormal = newNormals[i];
 
-		solveLinearEquation(newVertex, newNormal, oldVertices, oldNormals, oldTransform, oldTransformProjection,
-		                    newTransform, WIDTH, HEIGHT, SIZE);
+		// Check if there was a valid depth at that vertex
+		if (newVertex.z == 0)
+		{
+			m_failPixel++;
+			continue;
+		}
+
+		// NOTE: transform from world to camera -> project
+		glm::vec4 clipSpacePos = viewProjection * glm::vec4(newVertex, 1);
+
+		if (clipSpacePos.w <= 0)
+		{
+			m_failPixel++;
+			continue;
+		}
+
+		glm::vec3      ndc = glm::vec3(clipSpacePos) / clipSpacePos.w;
+		if (ndc.x < -1 || ndc.x > 1 || ndc.y < -1 || ndc.y > 1)
+		{
+			m_failPixel++;
+			continue;
+		}
+
+		// OPENGL
+		ndc.y               = -ndc.y;
+		int       x_proj    = round((ndc.x + 1) * W2);
+		int       y_proj    = round((ndc.y + 1) * H2);
+
+		int index = y_proj * WIDTH + x_proj;
+		if (index > SIZE)
+		{
+			continue;
+		}
+
+		int x_ori, y_ori;
+		getXYfromIndex(i, WIDTH, &x_ori, &y_ori);
+
+		// transform to camera rotation
+		glm::vec3 newNormal = oldRotMatrix * newNormals[i];
+		
+		const glm::vec4 referenceVertex = glm::vec4(oldVertices[index], 1);
+		const glm::vec3 referenceNormal = oldRotMatrix * oldNormals[index];
+
 	}
 }
 
@@ -48,30 +96,9 @@ bool IterativeClostestPointCPU::solveLinearEquation(const glm::vec3 newVertex,
                                                     const glm::mat4x4& oldTransformProjection,
                                                     glm::mat4x4& newTransform, int w, int h, int size)
 {
-	if (newVertex.z == 0)
-	{
-		m_failPixel++;
-		return false;
-	}
 
-	glm::vec3 ndc = glm::vec4(newVertex, 1) * oldTransform;
-	if (ndc.x < -1 || ndc.x > 1 || ndc.y < -1 || ndc.y > 1)
-	{
-		m_failPixel++;
-		return false;
-	}
-
-	// OPENGL
-	ndc.y = -ndc.y;
-	int x = (ndc.x + 1) * w / 2;
-	int y = (ndc.y + 1) * h / 2;
-
-	// COORD y = 0-> top
-	int index = y * w + x;
-	if (index > size)
-	{
-		return false;
-	}
+	// Check if the vertex, projected onto our screen by our old MVP is visible on screen even
+	/*
 
 	const glm::vec4 referenceVertex = glm::vec4(oldVertices[index], 1);
 	const glm::vec3 referenceNormal = oldNormals[index];
@@ -151,7 +178,9 @@ bool IterativeClostestPointCPU::solveLinearEquation(const glm::vec3 newVertex,
 
 	// Cholesky is symmetric!
 
+	*/
 	return true;
+	
 }
 
 //----------------------------------------------------------------------------------------------------------

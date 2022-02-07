@@ -1,5 +1,6 @@
 #pragma once
 #include <ofMain.h>
+#include <../deps/Eigen/Dense>
 
 class IterativeClostestPointCPU
 {
@@ -8,7 +9,7 @@ class IterativeClostestPointCPU
 
 	void compute(const glm::vec3* newVertices, const glm::vec3* newNormals, const glm::vec3* oldVertices,
 	             const glm::vec3* oldNormals, const glm::mat4x4& oldTransform,
-	             const glm::mat4x4& oldTransformProjection, glm::mat4x4& newTransform, const int downscale);
+	             const glm::mat4x4& Projection, glm::mat4x4& newTransform, const int downscale);
 
   private:
 	bool  solveLinearEquation(const glm::vec3 newVertex, const glm::vec3 newNormal,

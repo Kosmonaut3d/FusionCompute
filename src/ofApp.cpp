@@ -29,6 +29,7 @@ void ofApp::setup()
 	m_camera.setFov(48.6f);
 	m_camera.setNearClip(0.01); // 10 cm
 	m_camera.setFarClip(1000);
+	m_camera.setAspectRatio(4. / 3);
 	m_camera.setTranslationKey(32); // space
 
 	// enable depth->video image calibration

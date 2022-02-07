@@ -159,9 +159,6 @@
     <Filter Include="addons\ofxKinect\libs\libusb\include">
       <UniqueIdentifier>{DE5A1C38-1832-3CB6-57BA-5B69}</UniqueIdentifier>
     </Filter>
-    <Filter Include="shaders">
-      <UniqueIdentifier>{8de03219-945f-4271-af35-4ef2f6ac04c2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="src\compute">
       <UniqueIdentifier>{9c9ffd7f-b3eb-481b-9df7-2c5c70e173a8}</UniqueIdentifier>
     </Filter>
@@ -173,6 +170,9 @@
     </Filter>
     <Filter Include="src\cpuReference">
       <UniqueIdentifier>{02eb1219-0536-4c63-9b0c-9d429a6aa81a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{a195749c-3232-411c-a9e7-8da172e9fb9e}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -304,31 +304,31 @@
     <ResourceCompile Include="icon.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="bin\data\resources\fragShader.frag">
+    <None Include="resources\data\resources\computeModelPCL.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\vertShader.vert">
+    <None Include="resources\data\resources\computeNormalPCL.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\sliceFragShader.frag">
+    <None Include="resources\data\resources\fragShader.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\computeModelPCL.comp">
+    <None Include="resources\data\resources\fullScreenQuad.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\fullScreenQuad.frag">
+    <None Include="resources\data\resources\fullScreenQuad.vert">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\fullScreenQuad.vert">
+    <None Include="resources\data\resources\pointCloud.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\pointCloud.frag">
+    <None Include="resources\data\resources\pointCloud.vert">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\pointCloud.vert">
+    <None Include="resources\data\resources\sliceFragShader.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="bin\data\resources\computeNormalPCL.comp">
+    <None Include="resources\data\resources\vertShader.vert">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>
