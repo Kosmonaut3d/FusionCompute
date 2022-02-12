@@ -18,6 +18,7 @@ class PointCloudScene //: public SceneImpl
 	void draw(ofCamera& camera);
 	void drawOutline();
 	void drawTest(ofxKinect& kinect);
+	void drawCameraOrientation();
 
   private:
 	PointCloudComp            m_pointCloudComp;
@@ -28,6 +29,8 @@ class PointCloudScene //: public SceneImpl
 	ofTexture                 m_texDepthRaw;
 	ofTexture*                m_texColorPtr;
 	bool                      m_isPCL_0;
-	glm::mat4x4               m_kinectView;
+	glm::mat4x4               m_kinectViewFirst;
+	glm::mat4x4               m_kinectViewCurrent;
+	glm::mat4x4               m_kinectViewToWorldCurrent;
 	glm::mat4x4               m_kinectProjection;
 };

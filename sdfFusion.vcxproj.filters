@@ -299,6 +299,9 @@
     <ClInclude Include="src\cpuReference\IterativeClosestPointCPU.h">
       <Filter>src\cpuReference</Filter>
     </ClInclude>
+    <ClInclude Include="src\helper\eigen2glm.h">
+      <Filter>src\helper</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />

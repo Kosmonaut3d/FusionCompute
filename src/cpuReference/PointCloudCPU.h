@@ -7,18 +7,18 @@ class PointCloudCPU
 public: 
 	PointCloudCPU();
 
-	void fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals);
+	void fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals, glm::mat4x4 viewToWorld);
 
-	void draw(bool drawNormals);
+	void draw(bool drawNormals, glm::mat4x4 viewToWorld);
 
-	glm::vec3* getPoints();
-	glm::vec3* getNormals();
+	std::vector<glm::vec3>& getPoints();
+	std::vector<glm::vec3>& getNormals();
 	int getSize();
 	ofMesh& getMesh();
 
 private:
-	glm::vec3 m_points[640 * 480];
-	glm::vec3 m_normals[640 * 480 * 2];
+	std::vector<glm::vec3> m_points;
+	std::vector<glm::vec3> m_normals;
 	int m_size;
 
 	ofMesh m_meshPoints;

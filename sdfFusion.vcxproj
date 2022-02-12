@@ -125,6 +125,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -220,6 +221,7 @@
     <ClInclude Include="src\cpuReference\IterativeClosestPointCPU.h" />
     <ClInclude Include="src\cpuReference\PointCloudCPU.h" />
     <ClInclude Include="src\helper\dataStorageHelper.h" />
+    <ClInclude Include="src\helper\eigen2glm.h" />
     <ClInclude Include="src\helper\fullScreenQuadRender.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="..\..\..\addons\ofxImGui\src\BaseEngine.h" />

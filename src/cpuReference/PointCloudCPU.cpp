@@ -3,26 +3,31 @@
 
 //----------------------------------------------------------------------------------------------------------
 PointCloudCPU::PointCloudCPU()
-    : m_meshPoints{}
+    : m_points(640*480)
+    , m_normals(640*480*2)
+    , m_meshPoints{}
     , m_generated{false}
 {
-	m_size = sizeof(m_points) / sizeof(m_points[0]);
+	m_size = 640 * 480;
 	m_meshPoints.setMode(OF_PRIMITIVE_POINTS);
 	m_meshNormals.setMode(OF_PRIMITIVE_LINES);
 }
 
 //----------------------------------------------------------------------------------------------------------
-void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals)
+void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals, glm::mat4x4 viewToWorld)
 {
 	const int w = 640 / downsample;
 	const int h = 480 / downsample;
 
-	m_meshPoints.clearVertices();
-	m_meshPoints.clearColors();
 	int step = downsample;
 
 	float     scaleToMeters = 0.001;
 	glm::vec3 trafo         = glm::vec3(1, -1, -1) * scaleToMeters;
+
+	glm::vec3 zero = glm::vec3(0,0,0);
+	std::fill(m_points.begin(), m_points.end(), zero);
+	m_meshPoints.clearVertices();
+	m_meshPoints.clearColors();
 
 	if (!compNormals)
 	{
@@ -37,6 +42,7 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 					int index = y * w + x;
 
 					glm::vec3 pos   = kinect.getWorldCoordinateAt(x_, y_) * trafo;
+					pos             = viewToWorld * glm::vec4(pos, 1);
 					m_points[index] = pos;
 
 					m_meshPoints.addColor(kinect.getColorAt(x_, y_));
@@ -47,6 +53,7 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 	}
 	else
 	{
+		std::fill(m_normals.begin(), m_normals.end(), zero);
 		m_meshNormals.clearVertices();
 		m_meshNormals.clearColors();
 
@@ -67,6 +74,11 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 					glm::vec3 pos_x = kinect.getWorldCoordinateAt(x_ + 1, y_) * trafo;
 					glm::vec3 pos_y = kinect.getWorldCoordinateAt(x_, y_ + 1) * trafo;
 
+					
+					pos = viewToWorld * glm::vec4(pos, 1);
+					pos_x = viewToWorld * glm::vec4(pos_x, 1);
+					pos_y = viewToWorld * glm::vec4(pos_y, 1);
+					
 					m_points[index] = pos;
 
 					m_meshPoints.addColor(kinect.getColorAt(x_, y_));
@@ -91,7 +103,7 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 }
 
 //----------------------------------------------------------------------------------------------------------
-void PointCloudCPU::draw(bool drawNormals)
+void PointCloudCPU::draw(bool drawNormals, glm::mat4x4 viewToWorld)
 {
 	if (!m_generated)
 	{
@@ -107,16 +119,17 @@ void PointCloudCPU::draw(bool drawNormals)
 	{
 		m_meshPoints.drawVertices();
 	}
+
 }
 
 //----------------------------------------------------------------------------------------------------------
-glm::vec3* PointCloudCPU::getPoints()
+std::vector<glm::vec3>& PointCloudCPU::getPoints()
 {
 	return m_points;
 }
 
 //----------------------------------------------------------------------------------------------------------
-glm::vec3* PointCloudCPU::getNormals()
+std::vector<glm::vec3>& PointCloudCPU::getNormals()
 {
 	return m_normals;
 }
