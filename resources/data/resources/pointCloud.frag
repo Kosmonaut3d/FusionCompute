@@ -1,4 +1,4 @@
-#version 420
+#version 440
 
 out vec4 outputColor;
 uniform sampler2D worldTex;
@@ -8,5 +8,5 @@ in vec2 texcoords; // texcoords are in the normalized [0,1] range for the viewpo
 
 void main() {
    vec3 tex = texture(colorTex,texcoords).rgb;
-   outputColor =  vec4(tex, 1);
+   outputColor =  vec4(tex, 1) ;
 }

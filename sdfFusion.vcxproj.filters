@@ -103,6 +103,12 @@
     <ClCompile Include="src\cpuReference\IterativeClosestPointCPU.cpp">
       <Filter>src\cpuReference</Filter>
     </ClCompile>
+    <ClCompile Include="src\scenes\PreprocessDepthScene.cpp">
+      <Filter>src\scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\compute\BilateralBlurCompute.cpp">
+      <Filter>src\compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -302,6 +308,12 @@
     <ClInclude Include="src\helper\eigen2glm.h">
       <Filter>src\helper</Filter>
     </ClInclude>
+    <ClInclude Include="src\scenes\PreprocessDepthScene.h">
+      <Filter>src\scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compute\BilateralBlurCompute.h">
+      <Filter>src\compute</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
@@ -332,6 +344,9 @@
       <Filter>shaders</Filter>
     </None>
     <None Include="resources\data\resources\vertShader.vert">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="resources\data\resources\computeBilateralBlur.comp">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

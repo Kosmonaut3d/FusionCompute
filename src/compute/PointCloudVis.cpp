@@ -23,8 +23,7 @@ void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bo
 	glUniform1i(m_shader.getUniformLocation("worldTex"), 0);
 	glUniform1i(m_shader.getUniformLocation("colorTex"), 1);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, pointCloudTexId);
+	glBindImageTexture(0, pointCloudTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, rgbTexId);
 

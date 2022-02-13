@@ -64,7 +64,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 		for (int i = 0; i < SIZE; i++)
 		{
 			// TEST MANIPULATION
-			glm::vec3 newVertexWorld = viewToWorld_iter * glm::vec4(newVertices[i], 1);
+			glm::vec3 newVertexWorld = glm::vec4(newVertices[i], 1);
 
 			// TODO FIX
 			// Check if there was a valid depth at that vertex
@@ -75,7 +75,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			}
 
 			// NOTE: transform from world to camera -> project
-			glm::vec4 clipSpacePos = viewProjection_prev * glm::vec4(newVertexWorld, 1);
+			glm::vec4 clipSpacePos = projection * worldToViewNew * glm::vec4(newVertexWorld, 1);
 
 			/* if (clipSpacePos.w <= 0)
 			{
@@ -106,7 +106,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			getXYfromIndex(i, WIDTH, &x_ori, &y_ori);
 
 			// transform to camera rotation
-			glm::vec3 newNormalWorld = viewToWorldRot_iter * newNormals[i];
+			glm::vec3 newNormalWorld = newNormals[i];
 
 			// Reference Vertices in world space
 			const glm::vec3 oldVertex = oldVertices[index];

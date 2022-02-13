@@ -6,6 +6,7 @@
 #include "ofxKinect.h"
 #include "scenes/GUIScene.h"
 #include "scenes/PointCloudScene.h"
+#include "scenes/PreprocessDepthScene.h"
 
 class ofApp : public ofBaseApp
 {
@@ -31,14 +32,17 @@ class ofApp : public ofBaseApp
 	void gotMessage(ofMessage msg);
 
   private:
-	void drawKinectPointCloud(ofxKinect &kinect);
-	void drawFullScreenImage(ofImage &image);
+	void drawKinectPointCloud(ofxKinect& kinect);
+	void drawFullScreenImage(ofImage& image);
 
   private:
-	GUIScene        m_guiScene;
-	PointCloudScene m_pointCloudScene;
+	GUIScene             m_guiScene;
+	PointCloudScene      m_pointCloudScene;
+	PreprocessDepthScene m_blurScene;
 
 	ofxKinect m_kinect;
 	ofImage   m_depthImage; // grayscale depth image
 	ofEasyCam m_camera;
+
+	ofImage m_screenShotImage;
 };

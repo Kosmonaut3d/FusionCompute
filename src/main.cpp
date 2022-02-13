@@ -9,7 +9,8 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n", "** GL ERROR **", type,
 		        severity, message);
 	}
-	else if (severity != GL_DEBUG_SEVERITY_NOTIFICATION && id != 131218)
+	// 0x8250 = pixel path perf warning when taking screenshots
+	else if (severity != GL_DEBUG_SEVERITY_NOTIFICATION && id != 131218 && id != 0x8250)
 	{
 		fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n", "** NO GL ERROR **", type,
 		        severity, message);

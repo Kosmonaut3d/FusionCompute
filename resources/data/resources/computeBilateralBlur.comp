@@ -1,0 +1,90 @@
+#version 440 core
+
+layout(local_size_x = 8, local_size_y = 5) in;
+
+layout(r16ui, binding = 0) uniform readonly uimage2D rawDepthImage;
+layout(r32f, binding = 1) uniform writeonly image2D depthImageBlurred;
+
+// Note could be replaced with global invocation size
+const float WIDTH = 480; //halfed
+const float HEIGHT = 640;
+
+// sig = 1
+const float gaussWeightBox[5][5] = 
+{{0.003765,	0.015019,	0.023792,	0.015019,	0.003765},
+ {0.015019,	0.059912,	0.094907,	0.059912,	0.015019},
+ {0.023792,	0.094907,	0.150342,	0.094907,	0.023792},
+ {0.015019,	0.059912,	0.094907,	0.059912,	0.015019},
+ {0.003765,	0.015019,	0.023792,	0.015019,	0.003765}}; 
+
+ /*
+ // sig = 2
+ const float gaussWeightBox[5][5] = 
+{{0.023262386301397102601,	0.033832130972371159893,	0.038331083146481478059,	0.033832130972371159893,	0.023262386301397102601},
+ {0.033832130972371159893,	0.04920445698483359165,	0.055747600805972561348,	0.04920445698483359165,	0.033832130972371159893},
+ {0.038331083146481478059,	0.055747600805972561348,	0.063160843266291826212	,	0.055747600805972561348,	0.038331083146481478059},
+ {0.033832130972371159893,	0.04920445698483359165,	0.055747600805972561348,	0.04920445698483359165,	0.033832130972371159893},
+ {0.023262386301397102601,	0.033832130972371159893,	0.038331083146481478059,	0.033832130972371159893,	0.023262386301397102601}};
+ */
+
+uniform bool blur = true;
+
+float diffFunc(float x)
+{
+    // Total range => 4m -> clip range = 4 / 10 = 40cm;
+    float z = x*10;
+    float y = 1.f - (3.f*z*z*z*z);
+    return max(y, 0);
+    //float y = 1.f - (3.f*x*x - 2.f*x*x*x);
+    //return y*y;
+
+    //float y = x*4;
+    //return 1 - y*y;
+
+    //return (1.0f / (0.001f + x));
+}
+
+void main() {
+  // base pixel colour for image
+  ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+  float referenceValue = imageLoad(rawDepthImage, pixel_coords).r / 2048.0f;
+
+  if(blur && referenceValue > 0)
+  {
+      float result = referenceValue * gaussWeightBox[2][2];
+      float weightSum = gaussWeightBox[2][2];
+
+      for(int y = -2; y <=2; y++)
+      {
+          for(int x = -2; x <=2; x++)
+          {
+                if(x == 0 && y == 0)
+                {
+                    continue;
+                }
+                ivec2 samplePos = pixel_coords + ivec2(x,y);
+                float compareValue = imageLoad(rawDepthImage, samplePos).r / 2048.0f;
+         
+                if(compareValue <= 0)
+                {
+                    continue;
+                }
+
+                //float weight = (1.0f / (0.0001f + abs(referenceValue - compareValue))) * gaussWeightBox[x][y];
+                float weight = diffFunc(abs(referenceValue -compareValue)) * gaussWeightBox[x+2][y+2];
+
+                result += compareValue * weight;
+        
+                weightSum += weight;
+          }
+      }
+  
+      result /= weightSum;
+  
+      imageStore(depthImageBlurred, pixel_coords, result.rrrr);
+  }
+  else
+  {
+      imageStore(depthImageBlurred, pixel_coords, referenceValue.rrrr);
+  }
+}

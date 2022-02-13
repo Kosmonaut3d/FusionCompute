@@ -5,7 +5,8 @@
 
 //---------------------------------------------------
 PointCloudScene::PointCloudScene()
-    : m_pointCloudComp{}
+    : m_bilateralBlurComp{} 
+	,m_pointCloudComp{}
     , m_pointCloudVis{}
     , m_pointCloudCPU_0{}
     , m_pointCloudCPU_1{}
@@ -23,7 +24,7 @@ PointCloudScene::PointCloudScene()
 
 	glm::vec3   kinectOrigin = glm::vec3(0, 0, 0);
 	auto        ori          = ofVec3f(kinectOrigin);
-	auto        tar          = ofVec3f(kinectOrigin + glm::vec3(0, -1, -1));
+	auto        tar          = ofVec3f(kinectOrigin + glm::vec3(0, 0, -1));
 	auto        upv          = ofVec3f(glm::vec3(0, 1, 0));
 	ofMatrix4x4 view;
 	view.makeLookAtViewMatrix(ori, tar, upv);
@@ -48,7 +49,9 @@ void PointCloudScene::setup(ofxKinect& kinect)
 	m_texDepthRaw.allocate(kinect.getRawDepthPixels());
 	m_texColorPtr = &kinect.getTexture();
 
-	m_pointCloudComp.compute(m_texDepthRaw);
+	m_bilateralBlurComp.compute(m_texDepthRaw, GUIScene::s_bilateralBlurCompute);
+
+	m_pointCloudComp.compute(m_bilateralBlurComp.getTextureID());
 	m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, m_kinectViewToWorldCurrent);
 	m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, m_kinectViewToWorldCurrent);
 }
@@ -56,12 +59,14 @@ void PointCloudScene::setup(ofxKinect& kinect)
 //----------------------------------------------------------------------------------------------------------
 void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect)
 {
-	if (kinectUpdate || GUIScene::s_pointCloudCPUForceUpdate || false)
+	if (kinectUpdate || GUIScene::s_pointCloudCPUForceUpdate)
 	{
+		m_texDepthRaw.loadData(kinect.getRawDepthPixels());
+		m_bilateralBlurComp.compute(m_texDepthRaw, GUIScene::s_bilateralBlurCompute);
+
 		if (GUIScene::s_computePointCloud)
 		{
-			m_texDepthRaw.loadData(kinect.getRawDepthPixels());
-			m_pointCloudComp.compute(m_texDepthRaw);
+			m_pointCloudComp.compute(m_bilateralBlurComp.getTextureID());
 		}
 
 		if (GUIScene::s_computePointCloudCPU)

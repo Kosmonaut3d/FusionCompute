@@ -61,14 +61,15 @@ void PointCloudComp::setUpOutputTexture()
 }
 
 //----------------------------------------------------------------------------------------------------------
-void PointCloudComp::compute(ofTexture &depthImage)
+void PointCloudComp::compute(unsigned int depthTexID)
 {
 	// Worlds
 	m_computeModelShader.begin();
 
-	m_computeModelShader.setUniform1f("_zeroPlaneDist", m_planeDist);
-	m_computeModelShader.setUniform1f("_zeroPixelSize", m_pixelSize);
-	glBindImageTexture(0, depthImage.getTextureData().textureID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16UI);
+	m_computeModelShader.setUniform1f("_zeroPlaneDistInv", 1.0 / m_planeDist);
+	m_computeModelShader.setUniform1f("_zeroPixelSizeDouble", 2.* m_pixelSize);
+	glBindImageTexture(0, depthTexID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+	glBindImageTexture(1, m_texModelID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	m_computeModelShader.dispatchCompute(640, 480, 1);
 	m_computeModelShader.end();

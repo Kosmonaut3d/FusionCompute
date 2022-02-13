@@ -1,21 +1,26 @@
 #include "GUIScene.h"
 
-bool   GUIScene::s_isKinectDeliveringData = false;
-bool   GUIScene::s_updateKinectData       = true;
-ImVec4 GUIScene::s_backgroundColor        = ImVec4(0.2, 0.2, 0.2, 1);
-bool   GUIScene::s_computePointCloud      = false;
-bool   GUIScene::s_drawPointCloud         = false;
-bool   GUIScene::s_drawPointCloudTex      = false;
-bool   GUIScene::s_drawPointCloudNorm     = false;
-bool   GUIScene::s_computePointCloudCPU   = true;
-bool   GUIScene::s_pointCloudCPUForceUpdate   = false;
-bool   GUIScene::s_drawPointCloudCPU      = true;
-bool   GUIScene::s_drawPointCloudNormCPU  = true;
-int    GUIScene::s_pointCloudDownscaleExp = 3;
-int    GUIScene::s_pointCloudDownscale    = 8;
-bool   GUIScene::s_computeICPCPU          = false;
-bool   GUIScene::s_quickDebug             = false;
-bool   GUIScene::s_drawDepthBackground    = false;
+GUIScene::SceneSelection GUIScene::s_sceneSelection = GUIScene::SceneSelection::Blur;
+
+bool   GUIScene::s_isKinectDeliveringData   = false;
+bool   GUIScene::s_updateKinectData         = true;
+ImVec4 GUIScene::s_backgroundColor          = ImVec4(0.2, 0.2, 0.2, 1);
+bool     GUIScene::s_computePointCloud        = true;
+bool     GUIScene::s_drawPointCloud           = true;
+bool   GUIScene::s_drawPointCloudTex        = false;
+bool     GUIScene::s_drawPointCloudNorm       = true;
+bool     GUIScene::s_computePointCloudCPU     = false;
+bool   GUIScene::s_pointCloudCPUForceUpdate = false;
+bool     GUIScene::s_drawPointCloudCPU        = false;
+bool     GUIScene::s_drawPointCloudNormCPU    = false;
+int    GUIScene::s_pointCloudDownscaleExp   = 3;
+int    GUIScene::s_pointCloudDownscale      = 8;
+bool   GUIScene::s_computeICPCPU            = false;
+bool   GUIScene::s_quickDebug               = false;
+bool   GUIScene::s_drawDepthBackground      = false;
+bool   GUIScene::s_bilateralBlurCompute     = true;
+bool   GUIScene::s_bilateralBlurDraw        = true;
+GLuint64 GUIScene::s_bilateralBlurTime        = 0;
 
 //---------------------------------------------------
 GUIScene::GUIScene()
@@ -76,6 +81,16 @@ void GUIScene::draw(ofEasyCam& camera)
 		{
 			if (ImGui::BeginTabItem("Point Cloud"))
 			{
+				s_sceneSelection    = SceneSelection::PointCloud;
+
+				const ImVec4 blurCol = (ImVec4)ImColor(170.5, 170.5f, 0.5f);
+				ImGui::PushStyleColor(ImGuiCol_CheckMark, blurCol);
+				ImGui::TextColored(blurCol, "Pre process");
+				ImGui::Checkbox("Compute Bilateral Blur", &s_bilateralBlurCompute);
+				ImGui::PopStyleColor(1);
+
+				ImGui::Separator();
+
 				const ImVec4 gpuCol = (ImVec4)ImColor(0.5, 170.5f, 0.5f);
 				ImGui::PushStyleColor(ImGuiCol_CheckMark, gpuCol);
 				ImGui::TextColored(gpuCol, "Point Cloud GPU Compute");
@@ -96,7 +111,7 @@ void GUIScene::draw(ofEasyCam& camera)
 
 				if (ImGui::SliderInt("PCL CPU downscale", &s_pointCloudDownscaleExp, 0, 4))
 				{
-					s_pointCloudDownscale = pow(2, s_pointCloudDownscaleExp);
+					s_pointCloudDownscale      = pow(2, s_pointCloudDownscaleExp);
 					s_pointCloudCPUForceUpdate = true;
 				}
 				ImGui::SameLine();
@@ -108,10 +123,20 @@ void GUIScene::draw(ofEasyCam& camera)
 			}
 			if (ImGui::BeginTabItem("ICP"))
 			{
+				s_sceneSelection = SceneSelection::PointCloud;
 				if (ImGui::Button("Compute ICP CPU"))
 				{
 					s_computeICPCPU = true;
 				}
+				ImGui::EndTabItem();
+			}
+			if (ImGui::BeginTabItem("Blur"))
+			{
+				s_sceneSelection = SceneSelection::Blur;
+				ImGui::Checkbox("Compute Bilateral Blur", &s_bilateralBlurCompute);
+				ImGui::Checkbox("Draw Bilateral Blur", &s_bilateralBlurDraw);
+				ImGui::Separator();
+				ImGui::Text("Blur time %f", s_bilateralBlurTime / 1000000.0);
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();

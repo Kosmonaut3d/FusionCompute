@@ -6,6 +6,7 @@
 #include "compute/PointCloudVis.h"
 #include "cpuReference/IterativeClosestPointCPU.h"
 #include "cpuReference/PointCloudCPU.h"
+#include "compute/BilateralBlurCompute.h"
 #include "ofMain.h"
 #include "ofxKinect.h"
 
@@ -21,6 +22,7 @@ class PointCloudScene //: public SceneImpl
 	void drawCameraOrientation();
 
   private:
+	BilateralBlurCompute      m_bilateralBlurComp;
 	PointCloudComp            m_pointCloudComp;
 	PointCloudVis             m_pointCloudVis;
 	PointCloudCPU             m_pointCloudCPU_0;

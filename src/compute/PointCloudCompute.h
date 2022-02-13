@@ -6,13 +6,14 @@ class PointCloudComp
 {
   public:
 	PointCloudComp();
-	void         compute(ofTexture &depthImage);
+	void         compute(unsigned int depthTexID);
 	unsigned int getModelTextureID();
 	unsigned int getNormalTextureID();
 	void         registerKinectData(float planeDist, float pixelSize);
 
   private:
 	void setUpOutputTexture();
+
 
   private:
 	ofShader       m_computeModelShader;

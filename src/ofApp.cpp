@@ -6,6 +6,8 @@ ofApp::ofApp()
     : ofBaseApp()
     , m_guiScene()
     , m_pointCloudScene()
+    , m_blurScene{}
+    , m_screenShotImage{}
 // m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
 {
 }
@@ -51,6 +53,7 @@ void ofApp::setup()
 
 	m_guiScene.setup();
 	m_pointCloudScene.setup(m_kinect);
+	m_blurScene.setup(m_kinect);
 }
 
 //--------------------------------------------------------------
@@ -60,7 +63,7 @@ void ofApp::exit()
 }
 
 //--------------------------------------------------------------
-void ofApp::drawKinectPointCloud(ofxKinect &kinect)
+void ofApp::drawKinectPointCloud(ofxKinect& kinect)
 {
 	int    w = 640;
 	int    h = 480;
@@ -90,7 +93,7 @@ void ofApp::drawKinectPointCloud(ofxKinect &kinect)
 }
 
 //--------------------------------------------------------------
-void ofApp::drawFullScreenImage(ofImage &image)
+void ofApp::drawFullScreenImage(ofImage& image)
 {
 	int width  = ofGetViewportWidth();
 	int height = ofGetViewportHeight();
@@ -128,7 +131,21 @@ void ofApp::update()
 		m_depthImage.update();
 	}
 
-	m_pointCloudScene.update(updateKinect, m_kinect);
+	switch (GUIScene::s_sceneSelection)
+	{
+	case GUIScene::SceneSelection::Blur: {
+		m_blurScene.update(updateKinect, m_kinect);
+		break;
+	}
+	case GUIScene::SceneSelection::PointCloud: {
+		m_pointCloudScene.update(updateKinect, m_kinect);
+		break;
+	}
+	default: {
+
+		break;
+	}
+	}
 	m_guiScene.update();
 
 	/*if (m_drawSDFAlgorithm)
@@ -179,11 +196,25 @@ void ofApp::draw()
 	if (GUIScene::s_drawDepthBackground)
 	{
 		ofSetColor(ofColor::white * 0.2);
-        FullScreenQuadRender::get().draw(m_depthImage.getTexture());
+		FullScreenQuadRender::get().draw(m_depthImage.getTexture());
 		// drawFullScreenImage(m_depthImage);
 	}
 
-	m_pointCloudScene.draw(m_camera);
+	switch (GUIScene::s_sceneSelection)
+	{
+	case GUIScene::SceneSelection::Blur: {
+		m_blurScene.draw();
+		break;
+	}
+	case GUIScene::SceneSelection::PointCloud: {
+		m_pointCloudScene.draw(m_camera);
+		break;
+	}
+	default: {
+
+		break;
+	}
+	}
 	/*
 	ofDisableDepthTest();
 
@@ -220,6 +251,13 @@ void ofApp::draw()
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
 {
+	if (key == 'p')
+	{
+		static int i = 0;
+		m_screenShotImage.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+		std::string name = "screenshot" + std::to_string(++i) + std::string(".png");
+		m_screenShotImage.save(name);
+	}
 }
 
 //--------------------------------------------------------------
