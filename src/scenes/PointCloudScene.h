@@ -14,12 +14,11 @@ class PointCloudScene //: public SceneImpl
 {
   public:
 	PointCloudScene();
-	void setup(ofxKinect& kinect);
-	void update(bool kinectUpdate, ofxKinect& kinect);
-	void draw(ofCamera& camera);
-	void drawOutline();
-	void drawTest(ofxKinect& kinect);
-	void drawCameraOrientation();
+	void setup(ofxKinect& kinect, glm::mat4x4 viewToWorld);
+	void update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& viewToWorld, glm::mat4x4& worldToView,
+	            glm::mat4x4& projection);
+	void draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4x4& worldToView, glm::mat4x4& projection);
+	void drawCameraOrientation(glm::mat4x4& viewToWorld, glm::mat4x4& worldToView, glm::mat4x4& projection);
 
   private:
 	BilateralBlurCompute      m_bilateralBlurComp;
@@ -31,8 +30,5 @@ class PointCloudScene //: public SceneImpl
 	ofTexture                 m_texDepthRaw;
 	ofTexture*                m_texColorPtr;
 	bool                      m_isPCL_0;
-	glm::mat4x4               m_kinectViewFirst;
-	glm::mat4x4               m_kinectViewCurrent;
-	glm::mat4x4               m_kinectViewToWorldCurrent;
-	glm::mat4x4               m_kinectProjection;
+	glm::mat4x4               m_viewToWorldFirst;
 };

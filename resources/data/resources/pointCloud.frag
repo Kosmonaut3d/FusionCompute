@@ -1,7 +1,6 @@
 #version 440
 
 out vec4 outputColor;
-uniform sampler2D worldTex;
 uniform sampler2D colorTex;
 
 in vec2 texcoords; // texcoords are in the normalized [0,1] range for the viewport-filling quad part of the triangle

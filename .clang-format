@@ -8,11 +8,12 @@ BreakConstructorInitializers: BeforeComma
 ConstructorInitializerAllOnOneLineOrOnePerLine: 'false'
 Cpp11BracedListStyle: 'true'
 FixNamespaceComments: 'true'
+IndentCaseLabels: 'true'
 Language: Cpp
+PointerAlignment: Left
 SortIncludes: 'true'
 Standard: Cpp11
 TabWidth: '4'
 UseTab: ForIndentation
-PointerAlignment: Left
 
 ...

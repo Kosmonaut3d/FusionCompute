@@ -1,6 +1,7 @@
 #pragma once
 
 #include "GUIScene.h"
+#include "PointCloudScene.h"
 #include "SceneImpl.h"
 #include "ofMain.h"
 #include "ofxKinect.h"

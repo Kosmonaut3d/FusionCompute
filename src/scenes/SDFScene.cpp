@@ -4,7 +4,10 @@
 
 //---------------------------------------------------
 SDFScene::SDFScene()
-    : m_sdfCompute{}
+    : m_sdfCompute{
+          glm::vec3(-2, -2, -4),
+          GUIScene::s_sdfResolution, 4
+      }
 {
 	
 }
@@ -22,5 +25,6 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect)
 //----------------------------------------------------------------------------------------------------------
 void SDFScene::draw()
 {
+	m_sdfCompute.drawOutline();
 }
 

@@ -2,8 +2,8 @@
 
 //----------------------------------------------------------------------------------------------------------
 IterativeClostestPointCPU::IterativeClostestPointCPU()
-    : m_epsilonDistance(0.4f)
-    , m_epsilonNormal(0.8f)
+    : m_epsilonDistance(1.4f) // TJODDDDDDDDDDDDDDDDD
+    , m_epsilonNormal(0.0f)
     , m_failPixel(0)
     , m_failDistance(0)
     , m_failNormal(0)
@@ -32,7 +32,10 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 
 	// https://gist.github.com/podgorskiy/04a3cb36a27159e296599183215a71b0
 
+	///\brief T_g_k-1
 	glm::mat4x4 viewToWorld_prev    = glm::inverse(worldToViewOld);
+
+	///\brief pi * T_g_k
 	glm::mat4x4 viewProjection_prev = projection * worldToViewOld;
 	glm::mat3x3 viewToWorldRot_prev = glm::mat3x3(viewToWorld_prev);
 
@@ -44,6 +47,9 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 	int MAX_IT = 10;
 	for (int it = 0; it < MAX_IT; it++)
 	{
+		//\brief Camera space new to camera space old, unneeded in first frame
+		glm::mat4x4 Tz_k1_k             = glm::inverse(viewToWorld_prev) * worldToViewNew;
+
 
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
 
@@ -64,7 +70,8 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 		for (int i = 0; i < SIZE; i++)
 		{
 			// TEST MANIPULATION
-			glm::vec3 newVertexWorld = glm::vec4(newVertices[i], 1);
+			// TODO Need to work with camera space coordinates
+			glm::vec3 newVertexWorld = newVertices[i];
 
 			// TODO FIX
 			// Check if there was a valid depth at that vertex
@@ -123,8 +130,8 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 				int test = 1;
 			}
 
-			const glm::vec3 referenceVertexWorld = viewToWorld_prev * glm::vec4(oldVertex, 1);
-			const glm::vec3 referenceNormalWorld = viewToWorldRot_prev * oldNormals[index];
+			const glm::vec3 referenceVertexWorld = glm::vec4(oldVertex, 1);
+			const glm::vec3 referenceNormalWorld = oldNormals[index];
 
 			glm::vec3 distance = newVertexWorld - referenceVertexWorld;
 			if (glm::length(distance) > m_epsilonDistance)
@@ -133,6 +140,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 				continue;
 			}
 
+			// TODO CHECK EPSILONS
 			if (glm::dot(referenceNormalWorld, newNormalWorld) < m_epsilonNormal)
 			{
 				m_failNormal++;

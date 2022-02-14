@@ -7,9 +7,26 @@ ofApp::ofApp()
     , m_guiScene()
     , m_pointCloudScene()
     , m_blurScene{}
+    , m_sdfScene{}
     , m_screenShotImage{}
+    , m_kinectWorldToView{}
+    , m_kinectViewToWorld{}
+    , m_kinectProjection{}
 // m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
 {
+	constexpr float fovy       = glm::radians(45.25); // Got this value by testing
+	glm::mat4x4     projection = glm::perspective(fovy, 4.0f / 3.0f, 0.1f, 40.0f);
+
+	glm::vec3   kinectOrigin = glm::vec3(0, 0, 0);
+	auto        ori          = ofVec3f(kinectOrigin);
+	auto        tar          = ofVec3f(kinectOrigin + glm::vec3(0, 0, -1));
+	auto        upv          = ofVec3f(glm::vec3(0, 1, 0));
+	ofMatrix4x4 view;
+	view.makeLookAtViewMatrix(ori, tar, upv);
+
+	m_kinectWorldToView = view;
+	m_kinectProjection  = projection;
+	m_kinectViewToWorld = view.getInverse();
 }
 
 //--------------------------------------------------------------
@@ -52,8 +69,9 @@ void ofApp::setup()
 	DataStorageHelper::loadImage("depth.bin", m_depthImage);
 
 	m_guiScene.setup();
-	m_pointCloudScene.setup(m_kinect);
+	m_pointCloudScene.setup(m_kinect, m_kinectViewToWorld);
 	m_blurScene.setup(m_kinect);
+	m_sdfScene.setup(m_kinect);
 }
 
 //--------------------------------------------------------------
@@ -133,18 +151,24 @@ void ofApp::update()
 
 	switch (GUIScene::s_sceneSelection)
 	{
-	case GUIScene::SceneSelection::Blur: {
-		m_blurScene.update(updateKinect, m_kinect);
-		break;
-	}
-	case GUIScene::SceneSelection::PointCloud: {
-		m_pointCloudScene.update(updateKinect, m_kinect);
-		break;
-	}
-	default: {
+		case GUIScene::SceneSelection::Blur: {
+			m_blurScene.update(updateKinect, m_kinect);
+			break;
+		}
+		case GUIScene::SceneSelection::PointCloud: {
+			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+			break;
+		}
+		case GUIScene::SceneSelection::SDF: {
+			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
+			                         m_kinectProjection);
+			m_sdfScene.update(updateKinect, m_kinect);
+			break;
+		}
+		default: {
 
-		break;
-	}
+			break;
+		}
 	}
 	m_guiScene.update();
 
@@ -202,18 +226,23 @@ void ofApp::draw()
 
 	switch (GUIScene::s_sceneSelection)
 	{
-	case GUIScene::SceneSelection::Blur: {
-		m_blurScene.draw();
-		break;
-	}
-	case GUIScene::SceneSelection::PointCloud: {
-		m_pointCloudScene.draw(m_camera);
-		break;
-	}
-	default: {
+		case GUIScene::SceneSelection::Blur: {
+			m_blurScene.draw();
+			break;
+		}
+		case GUIScene::SceneSelection::PointCloud: {
+			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+			break;
+		}
+		case GUIScene::SceneSelection::SDF: {
+			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+			m_sdfScene.draw();
+			break;
+		}
+		default: {
 
-		break;
-	}
+			break;
+		}
 	}
 	/*
 	ofDisableDepthTest();

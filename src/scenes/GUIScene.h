@@ -10,7 +10,8 @@ class GUIScene //: public SceneImpl
 	enum SceneSelection
 	{
 		PointCloud,
-		Blur
+		Blur, 
+		SDF
 	};
 
 	GUIScene();
@@ -38,6 +39,8 @@ class GUIScene //: public SceneImpl
 	static bool           s_bilateralBlurCompute;
 	static bool           s_bilateralBlurDraw;
 	static GLuint64       s_bilateralBlurTime;
+	static bool           s_sdfCompute;
+	static int            s_sdfResolution;
 
   private:
 	ofxImGui::Gui m_gui;

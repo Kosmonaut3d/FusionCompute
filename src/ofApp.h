@@ -7,6 +7,7 @@
 #include "scenes/GUIScene.h"
 #include "scenes/PointCloudScene.h"
 #include "scenes/PreprocessDepthScene.h"
+#include "scenes/SDFScene.h"
 
 class ofApp : public ofBaseApp
 {
@@ -39,6 +40,11 @@ class ofApp : public ofBaseApp
 	GUIScene             m_guiScene;
 	PointCloudScene      m_pointCloudScene;
 	PreprocessDepthScene m_blurScene;
+	SDFScene             m_sdfScene;
+
+	glm::mat4x4 m_kinectWorldToView;
+	glm::mat4x4 m_kinectViewToWorld;
+	glm::mat4x4 m_kinectProjection;
 
 	ofxKinect m_kinect;
 	ofImage   m_depthImage; // grayscale depth image

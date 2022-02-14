@@ -2,25 +2,27 @@
 
 GUIScene::SceneSelection GUIScene::s_sceneSelection = GUIScene::SceneSelection::Blur;
 
-bool   GUIScene::s_isKinectDeliveringData   = false;
-bool   GUIScene::s_updateKinectData         = true;
-ImVec4 GUIScene::s_backgroundColor          = ImVec4(0.2, 0.2, 0.2, 1);
+bool     GUIScene::s_isKinectDeliveringData   = false;
+bool     GUIScene::s_updateKinectData         = true;
+ImVec4   GUIScene::s_backgroundColor          = ImVec4(0.2, 0.2, 0.2, 1);
 bool     GUIScene::s_computePointCloud        = true;
 bool     GUIScene::s_drawPointCloud           = true;
-bool   GUIScene::s_drawPointCloudTex        = false;
+bool     GUIScene::s_drawPointCloudTex        = false;
 bool     GUIScene::s_drawPointCloudNorm       = true;
 bool     GUIScene::s_computePointCloudCPU     = false;
-bool   GUIScene::s_pointCloudCPUForceUpdate = false;
+bool     GUIScene::s_pointCloudCPUForceUpdate = false;
 bool     GUIScene::s_drawPointCloudCPU        = false;
 bool     GUIScene::s_drawPointCloudNormCPU    = false;
-int    GUIScene::s_pointCloudDownscaleExp   = 3;
-int    GUIScene::s_pointCloudDownscale      = 8;
-bool   GUIScene::s_computeICPCPU            = false;
-bool   GUIScene::s_quickDebug               = false;
-bool   GUIScene::s_drawDepthBackground      = false;
-bool   GUIScene::s_bilateralBlurCompute     = true;
-bool   GUIScene::s_bilateralBlurDraw        = true;
+int      GUIScene::s_pointCloudDownscaleExp   = 3;
+int      GUIScene::s_pointCloudDownscale      = 8;
+bool     GUIScene::s_computeICPCPU            = false;
+bool     GUIScene::s_quickDebug               = false;
+bool     GUIScene::s_drawDepthBackground      = false;
+bool     GUIScene::s_bilateralBlurCompute     = true;
+bool     GUIScene::s_bilateralBlurDraw        = true;
 GLuint64 GUIScene::s_bilateralBlurTime        = 0;
+bool     GUIScene::s_sdfCompute               = true;
+int      GUIScene::s_sdfResolution            = 64;
 
 //---------------------------------------------------
 GUIScene::GUIScene()
@@ -79,9 +81,24 @@ void GUIScene::draw(ofEasyCam& camera)
 		ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
 		if (ImGui::BeginTabBar("Render Options", tab_bar_flags))
 		{
+			if (ImGui::BeginTabItem("SDF"))
+			{
+				s_sceneSelection = SceneSelection::SDF;
+				ImGui::Checkbox("Compute SDF", &s_bilateralBlurCompute);
+
+				static int sdfResExp = static_cast<int>(log2(s_sdfResolution));
+				if (ImGui::SliderInt("SDF Resolution", &sdfResExp, 4, 9))
+				{
+					s_sdfResolution = pow(2, sdfResExp);
+				}
+				ImGui::SameLine();
+				ImGui::Text("eff. %d", s_sdfResolution);
+
+				ImGui::EndTabItem();
+			}
 			if (ImGui::BeginTabItem("Point Cloud"))
 			{
-				s_sceneSelection    = SceneSelection::PointCloud;
+				s_sceneSelection = SceneSelection::PointCloud;
 
 				const ImVec4 blurCol = (ImVec4)ImColor(170.5, 170.5f, 0.5f);
 				ImGui::PushStyleColor(ImGuiCol_CheckMark, blurCol);

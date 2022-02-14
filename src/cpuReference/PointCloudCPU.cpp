@@ -21,7 +21,8 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 
 	int step = downsample;
 
-	float     scaleToMeters = 0.001;
+	float scaleToMeters = .001;
+	 //0.001;
 	glm::vec3 trafo         = glm::vec3(1, -1, -1) * scaleToMeters;
 
 	glm::vec3 zero = glm::vec3(0,0,0);

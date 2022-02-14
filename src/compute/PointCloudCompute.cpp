@@ -2,7 +2,9 @@
 #include "scenes/GUIScene.h"
 
 //---------------------------------------------------
-PointCloudComp::PointCloudComp()
+PointCloudComp::PointCloudComp():
+    m_planeDist(120),
+    m_pixelSize(.104f)
 {
 	int result;
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &result);
@@ -80,7 +82,8 @@ void PointCloudComp::compute(unsigned int depthTexID)
 	m_computeNormalShader.begin();
 	glBindImageTexture(1, m_texModelID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	glBindImageTexture(2, m_texNormalID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-	m_computeNormalShader.dispatchCompute(640, 480, 1);
+	// Do not compute the last row, since a fetch outside is super expensive
+	m_computeNormalShader.dispatchCompute(639, 479, 1);
 	m_computeNormalShader.end();
 }
 
