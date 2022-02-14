@@ -2,7 +2,9 @@
 #include "scenes/GUIScene.h"
 
 //---------------------------------------------------
-PointCloudComp::PointCloudComp()
+PointCloudComp::PointCloudComp():
+    m_planeDist(120),
+    m_pixelSize(.104f)
 {
 	int result;
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &result);

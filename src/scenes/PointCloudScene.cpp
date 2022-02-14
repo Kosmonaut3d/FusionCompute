@@ -43,6 +43,9 @@ void PointCloudScene::setup(ofxKinect& kinect)
 	if (kinect.isConnected())
 	{
 		m_pointCloudComp.registerKinectData(kinect.getZeroPlaneDistance(), kinect.getZeroPlanePixelSize());
+
+        m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, m_kinectViewToWorldCurrent);
+        m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, m_kinectViewToWorldCurrent);
 	}
 
 	DataStorageHelper::loadData("depthRaw.bin", kinect.getRawDepthPixels().getData(), 640 * 480);
@@ -51,9 +54,7 @@ void PointCloudScene::setup(ofxKinect& kinect)
 
 	m_bilateralBlurComp.compute(m_texDepthRaw, GUIScene::s_bilateralBlurCompute);
 
-	m_pointCloudComp.compute(m_bilateralBlurComp.getTextureID());
-	m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, m_kinectViewToWorldCurrent);
-	m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, m_kinectViewToWorldCurrent);
+    m_pointCloudComp.compute(m_bilateralBlurComp.getTextureID());
 }
 
 //----------------------------------------------------------------------------------------------------------
