@@ -109,6 +109,18 @@
     <ClCompile Include="src\compute\BilateralBlurCompute.cpp">
       <Filter>src\compute</Filter>
     </ClCompile>
+    <ClCompile Include="src\compute\sdfCompute.cpp">
+      <Filter>src\compute</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scenes\SDFScene.cpp">
+      <Filter>src\scenes</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpuReference\sdf.cpp">
+      <Filter>src\cpuReference</Filter>
+    </ClCompile>
+    <ClCompile Include="src\cpuReference\slice.cpp">
+      <Filter>src\cpuReference</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -313,6 +325,18 @@
     </ClInclude>
     <ClInclude Include="src\compute\BilateralBlurCompute.h">
       <Filter>src\compute</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compute\sdfCompute.h">
+      <Filter>src\compute</Filter>
+    </ClInclude>
+    <ClInclude Include="src\scenes\SDFScene.h">
+      <Filter>src\scenes</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpuReference\sdf.h">
+      <Filter>src\cpuReference</Filter>
+    </ClInclude>
+    <ClInclude Include="src\cpuReference\slice.h">
+      <Filter>src\cpuReference</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

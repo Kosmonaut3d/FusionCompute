@@ -1,6 +1,7 @@
 #include "BilateralBlurCompute.h"
 #include "scenes/GUIScene.h"
 
+//----------------------------------------------------------------------------------------------------------
 BilateralBlurCompute::BilateralBlurCompute()
     : m_computeBlurShader{}
     , m_texID{}
@@ -21,6 +22,7 @@ BilateralBlurCompute::BilateralBlurCompute()
 	glBindImageTexture(1, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 }
 
+//----------------------------------------------------------------------------------------------------------
 void BilateralBlurCompute::compute(ofTexture& depthImage, bool blur)
 {
 	GLuint   query;
@@ -49,6 +51,7 @@ void BilateralBlurCompute::compute(ofTexture& depthImage, bool blur)
 	}
 }
 
+//----------------------------------------------------------------------------------------------------------
 unsigned int BilateralBlurCompute::getTextureID()
 {
 	return m_texID;

@@ -20,7 +20,7 @@ PointCloudScene::PointCloudScene()
     , m_kinectProjection{}
 {
 	constexpr float fovy       = glm::radians(45.25); // Got this value by testing
-	glm::mat4x4     projection = glm::perspective(fovy, 4.0f / 3.0f, 0.1f, 1000.0f);
+	glm::mat4x4     projection = glm::perspective(fovy, 4.0f / 3.0f, 0.1f, 40.0f);
 
 	glm::vec3   kinectOrigin = glm::vec3(0, 0, 0);
 	auto        ori          = ofVec3f(kinectOrigin);
@@ -153,8 +153,6 @@ void PointCloudScene::drawOutline()
 
 	ofPushStyle();
 	ofGetCurrentRenderer()->setFillMode(ofFillFlag::OF_OUTLINE);
-	ofSetColor(255, 0, 0);
-	ofDrawBox(glm::vec3(0, 0, 0), 1, 1, 1);
 	ofSetColor(200, 100, 200);
 	ofDrawBox(origin + glm::vec3(scalehalf, scalehalf, scalehalf), scale, scale, scale);
 	ofPopStyle();
@@ -213,4 +211,18 @@ void PointCloudScene::drawCameraOrientation()
 	ofDrawArrow(viewTransform * zero, viewTransform * target, 0.02);
 	ofSetColor(0, 255, 0);
 	ofDrawArrow(viewTransformCurr * zero, viewTransformCurr * target, 0.03);
+
+	glm::mat4 clipSpaceToWorld = glm::inverse(m_kinectProjection * m_kinectViewCurrent);
+
+	// Move into Clip Space - this matrix will transform anything we
+	// draw from Clip Space to World Space
+	ofMultMatrix(clipSpaceToWorld);
+
+	// Anything we draw now is transformed from Clip Space back to World Space
+
+	ofPushStyle();
+	ofNoFill();
+	ofDrawBox(0, 0, 0, 2.f, 2.f,
+	          2.f); // In Clip Space, the frustum is standardised to be a box of dimensions -1,1 in each axis
+	ofPopStyle();
 }

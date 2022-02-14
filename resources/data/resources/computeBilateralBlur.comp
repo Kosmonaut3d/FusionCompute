@@ -9,6 +9,7 @@ layout(r32f, binding = 1) uniform writeonly image2D depthImageBlurred;
 const float WIDTH = 480; //halfed
 const float HEIGHT = 640;
 
+
 // sig = 1
 const float gaussWeightBox[5][5] = 
 {{0.003765,	0.015019,	0.023792,	0.015019,	0.003765},

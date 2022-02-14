@@ -185,8 +185,11 @@
     <ClCompile Include="src\compute\BilateralBlurCompute.cpp" />
     <ClCompile Include="src\compute\PointCloudCompute.cpp" />
     <ClCompile Include="src\compute\PointCloudVis.cpp" />
+    <ClCompile Include="src\compute\sdfCompute.cpp" />
     <ClCompile Include="src\cpuReference\IterativeClosestPointCPU.cpp" />
     <ClCompile Include="src\cpuReference\PointCloudCPU.cpp" />
+    <ClCompile Include="src\cpuReference\sdf.cpp" />
+    <ClCompile Include="src\cpuReference\slice.cpp" />
     <ClCompile Include="src\helper\dataStorageHelper.cpp" />
     <ClCompile Include="src\helper\fullScreenQuadRender.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -216,13 +219,17 @@
     <ClCompile Include="src\scenes\GUIScene.cpp" />
     <ClCompile Include="src\scenes\PointCloudScene.cpp" />
     <ClCompile Include="src\scenes\PreprocessDepthScene.cpp" />
+    <ClCompile Include="src\scenes\SDFScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\compute\BilateralBlurCompute.h" />
     <ClInclude Include="src\compute\PointCloudCompute.h" />
     <ClInclude Include="src\compute\PointCloudVis.h" />
+    <ClInclude Include="src\compute\sdfCompute.h" />
     <ClInclude Include="src\cpuReference\IterativeClosestPointCPU.h" />
     <ClInclude Include="src\cpuReference\PointCloudCPU.h" />
+    <ClInclude Include="src\cpuReference\sdf.h" />
+    <ClInclude Include="src\cpuReference\slice.h" />
     <ClInclude Include="src\helper\dataStorageHelper.h" />
     <ClInclude Include="src\helper\eigen2glm.h" />
     <ClInclude Include="src\helper\fullScreenQuadRender.h" />
@@ -261,6 +268,7 @@
     <ClInclude Include="src\scenes\PointCloudScene.h" />
     <ClInclude Include="src\scenes\PreprocessDepthScene.h" />
     <ClInclude Include="src\scenes\SceneImpl.h" />
+    <ClInclude Include="src\scenes\SDFScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
