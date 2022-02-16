@@ -56,9 +56,6 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 		m_failNormal   = 0;
 		int fail_z     = 0;
 
-		//\brief Camera space new to camera space old, unneeded in first frame
-		glm::mat4x4 Tz_k1_k = glm::inverse(viewToWorld_prev) * glm::mat4x4(worldToView_iter);
-
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
 
 		/* Eigen::Matrix4Xf eiProjection   = GLM2E<float, 4, 4>(projection);
@@ -90,12 +87,15 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 		}
 		else
 		{
-			if (E_sum > E_sum_first)
+			if (E_sum >= E_sum_first)
 			{
 				// abort!
-				printf("Iteration: went the wrong way!\n", it, E_sum, found, m_failPixel, m_failDistance, m_failNormal);
+				//printf("Iteration: went the wrong way!\n", it, E_sum, found, m_failPixel, m_failDistance, m_failNormal);
+
+				worldToView_out = worldToView_iter;
 				return;
 			}
+			E_sum_first = E_sum;
 		}
 
 		// Solve
@@ -117,7 +117,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			b(i)     = n_i.dot(d_i) - n_i.dot(s_i);
 		}
 
-		if (correspondences.size() < 0)
+		if (correspondences.empty())
 		{
 			return;
 		}
@@ -146,17 +146,36 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			double beta  = result[1];
 			double gamma = result[2];
 
-			Eigen::Matrix4d transformation{{1, alpha * beta - gamma, alpha * gamma + beta, result[3]},
+			/* Eigen::Matrix4d transformation{{1, alpha * beta - gamma, alpha * gamma + beta, result[3]},
 			                               {gamma, alpha * beta * gamma + 1, beta * gamma - alpha, result[4]},
+			                               {-beta, alpha, 1, result[5]},
+			                               {0, 0, 0, 1}};*/
+
+			 Eigen::Matrix4d transformation{{1, - gamma, beta, result[3]},
+			                               {gamma, 1, - alpha, result[4]},
 			                               {-beta, alpha, 1, result[5]},
 			                               {0, 0, 0, 1}};
 
+			
+
+			/*
+			Eigen::Vector3d   translation = result.tail(3);
+			Eigen::Matrix3d rotation = Eigen::AngleAxisd(alpha, Eigen::Vector3d::UnitX()).toRotationMatrix() *
+			                           Eigen::AngleAxisd(beta, Eigen::Vector3d::UnitY()).toRotationMatrix() *
+			                           Eigen::AngleAxisd(gamma, Eigen::Vector3d::UnitZ()).toRotationMatrix();
+
+			Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
+
+			pose.block(0, 0, 3, 3) = rotation;
+			pose.block(0, 3, 3, 1) = translation;
+			*/
+			/*
 			transformation << 1, alpha * beta - gamma, alpha * gamma + beta, result[3], gamma, alpha * beta * gamma + 1,
 			    beta * gamma - alpha, result[4], -beta, alpha, 1, result[5], 0, 0, 0, 1;
-
+				*/
 			Eigen::Matrix<double, 4, 4> T_z = GLM2E(viewToWorld_iter);
 
-			T_z = T_inc * T_z;
+			T_z = transformation * T_z;
 
 			// Increment
 			viewToWorld_iter = E2GLM(T_z);

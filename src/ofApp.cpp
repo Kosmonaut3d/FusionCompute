@@ -241,11 +241,19 @@ void ofApp::draw()
 		}
 		case GUIScene::SceneSelection::PointCloud: {
 			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+
+			m_camera.begin();
+			drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+			m_camera.end();
 			break;
 		}
 		case GUIScene::SceneSelection::SDF: {
 			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
-			m_sdfScene.draw();
+
+			m_camera.begin();
+			m_sdfScene.draw(m_camera);
+			drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+			m_camera.end();
 			break;
 		}
 		default: {
@@ -253,10 +261,6 @@ void ofApp::draw()
 			break;
 		}
 	}
-
-	m_camera.begin();
-	drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
-	m_camera.end();
 
 	/*
 	ofDisableDepthTest();

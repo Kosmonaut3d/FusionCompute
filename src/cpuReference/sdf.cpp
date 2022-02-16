@@ -18,7 +18,7 @@ SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float
 		throw std::exception();//"could not load shaders");
 	}
 
-	const bool load = true;
+	const bool load = false;
 	if (load)
 	{
 		ifstream fin(ofToDataPath("test.bin").c_str(), ios::binary);
@@ -45,7 +45,7 @@ void SignedDistanceField::drawOutline()
 	ofPopStyle();
 }
 
-void SignedDistanceField::drawRaymarch(ofCamera& camera)
+void SignedDistanceField::drawRaymarch(ofCamera& camera, unsigned int texID)
 {
 	ofPushStyle();
 	m_raymarchShader.begin();
@@ -53,7 +53,7 @@ void SignedDistanceField::drawRaymarch(ofCamera& camera)
 	float scalehalf = m_scale / 2;
 	glCullFace(GL_CCW);
 
-	glBindTexture(GL_TEXTURE_3D, m_textureID);
+	glBindTexture(GL_TEXTURE_3D, texID);
 
 	m_raymarchShader.setUniform3f("cameraWorld", camera.getPosition());
 	m_raymarchShader.setUniformMatrix4f("sdfBaseTransform", m_worldInv);

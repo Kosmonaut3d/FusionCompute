@@ -7,7 +7,7 @@ out vec4 outputColor;
 in vec3 world;
 uniform mat4 sdfBaseTransform;
 
-uniform sampler2D tex2D;
+//uniform sampler2D tex2D;
 uniform sampler3D tex3D;
 
 void main()
@@ -16,8 +16,8 @@ void main()
 	
 	float valSDF = texture(tex3D, relPos).r;
 
-	vec3 valCompute =  texture(tex2D, relPos.zy).rbg;
-	outputColor =  vec4(valCompute.rg, valSDF ,1); //
+	//vec3 valCompute =  texture(tex2D, relPos.zy).rbg;
+	outputColor =  vec4(vec3(valSDF),1); //
 }
 /*
 #define SURFACE_DIST .01

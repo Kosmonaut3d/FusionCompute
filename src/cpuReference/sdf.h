@@ -8,7 +8,7 @@ public:
 	SignedDistanceField(int resolution, glm::vec3 position, float scale, float truncationDistance);
 
 	void drawOutline();
-	void drawRaymarch(ofCamera& camera);
+	void         drawRaymarch(ofCamera& camera, unsigned int texID);
 	void drawGrid(float minDistance);
 	void move(float x, float y, float z);
     glm::vec3 getXYZFromIndex(int index);

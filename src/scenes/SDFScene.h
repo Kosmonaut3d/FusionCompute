@@ -3,9 +3,11 @@
 #include "GUIScene.h"
 #include "PointCloudScene.h"
 #include "SceneImpl.h"
+#include "compute/sdfCompute.h"
+#include "cpuReference/sdf.h"
+#include "cpuReference/slice.h"
 #include "ofMain.h"
 #include "ofxKinect.h"
-#include "compute/sdfCompute.h"
 
 class SDFScene //: public SceneImpl
 {
@@ -13,8 +15,10 @@ class SDFScene //: public SceneImpl
 	SDFScene();
 	void setup(ofxKinect& kinect);
 	void update(bool kinectUpdate, ofxKinect& kinect);
-	void draw();
+	void draw(ofCamera& camera);
 
   private:
-	SDFCompute m_sdfCompute;
+	SDFCompute          m_sdfCompute;
+	SignedDistanceField m_sdfCPU;
+	Slice               m_slice;
 };

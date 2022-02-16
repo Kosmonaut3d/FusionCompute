@@ -7,7 +7,7 @@ Slice::Slice(ofVec3f position, float size):
 	m_size(size),
 	m_sliceShader()
 {
-	m_mesh.set(20, 20);
+	m_mesh.set(size, size);
 	m_mesh.setPosition(position);
 	m_mesh.setScale(1);
 	m_mesh.setOrientation(glm::vec3(0, 90, 0));
@@ -31,12 +31,12 @@ void Slice::draw(ofMatrix4x4& sdfInvWorld, unsigned int sdfTextureID, unsigned i
 {
 	m_sliceShader.begin();
 
-	m_sliceShader.setUniform1i("tex2D", 0);
-	m_sliceShader.setUniform1i("tex3D", 1);
+	//m_sliceShader.setUniform1i("tex2D", 0);
+	//m_sliceShader.setUniform1i("tex3D", 1);
 
+	//glActiveTexture(GL_TEXTURE0);
+	//glBindTexture(GL_TEXTURE_2D, computeShaderTexID);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, computeShaderTexID);
-	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_3D, sdfTextureID);
 
 	m_sliceShader.setUniformMatrix4f("sdfBaseTransform", sdfInvWorld);

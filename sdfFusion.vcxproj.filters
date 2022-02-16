@@ -373,5 +373,8 @@
     <None Include="resources\data\resources\computeBilateralBlur.comp">
       <Filter>shaders</Filter>
     </None>
+    <None Include="resources\data\resources\computeSDF.comp">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
