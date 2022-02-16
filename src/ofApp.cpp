@@ -12,6 +12,7 @@ ofApp::ofApp()
     , m_kinectWorldToView{}
     , m_kinectViewToWorld{}
     , m_kinectProjection{}
+    , m_kinectViewToWorld_Init{}
 // m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
 {
 	constexpr float fovy       = glm::radians(45.25); // Got this value by testing
@@ -27,6 +28,8 @@ ofApp::ofApp()
 	m_kinectWorldToView = view;
 	m_kinectProjection  = projection;
 	m_kinectViewToWorld = view.getInverse();
+
+	m_kinectViewToWorld_Init = m_kinectViewToWorld;
 }
 
 //--------------------------------------------------------------
@@ -134,6 +137,12 @@ void ofApp::drawFullScreenImage(ofImage& image)
 //--------------------------------------------------------------
 void ofApp::update()
 {
+	if (GUIScene::s_resetView)
+	{
+		m_kinectViewToWorld = m_kinectViewToWorld_Init;
+		m_kinectWorldToView = glm::inverse(m_kinectViewToWorld);
+		GUIScene::s_resetView = false;
+	}
 
 	m_kinect.update();
 
@@ -244,6 +253,11 @@ void ofApp::draw()
 			break;
 		}
 	}
+
+	m_camera.begin();
+	drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+	m_camera.end();
+
 	/*
 	ofDisableDepthTest();
 
@@ -275,6 +289,35 @@ void ofApp::draw()
 
 	// Draw GUI
 	m_guiScene.draw(m_camera);
+}
+
+//----------------------------------------------------------------------------------------------------------
+void ofApp::drawCameraOrientation(glm::mat4x4& viewToWorld, glm::mat4x4& worldToView, glm::mat4x4& projection)
+{
+	ofPushMatrix();
+	auto      viewTransform     = m_kinectViewToWorld_Init;
+	auto      viewTransformCurr = viewToWorld;
+	glm::vec4 zero(0, 0, 0, 1);
+	glm::vec4 target(0, 0, -1, 1);
+	ofSetColor(255, 0, 0);
+	ofDrawArrow(viewTransform * zero, viewTransform * target, 0.02);
+	ofSetColor(0, 255, 0);
+	ofDrawArrow(viewTransformCurr * zero, viewTransformCurr * target, 0.03);
+
+	glm::mat4 clipSpaceToWorld = glm::inverse(projection * worldToView);
+
+	// Move into Clip Space - this matrix will transform anything we
+	// draw from Clip Space to World Space
+	ofMultMatrix(clipSpaceToWorld);
+
+	// Anything we draw now is transformed from Clip Space back to World Space
+
+	ofPushStyle();
+	ofNoFill();
+	ofDrawBox(0, 0, 0, 2.f, 2.f,
+	          2.f); // In Clip Space, the frustum is standardised to be a box of dimensions -1,1 in each axis
+	ofPopStyle();
+	ofPopMatrix();
 }
 
 //--------------------------------------------------------------

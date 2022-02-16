@@ -18,6 +18,7 @@ class ofApp : public ofBaseApp
 	void setup();
 	void update();
 	void draw();
+	void drawCameraOrientation(glm::mat4x4& viewToWorld, glm::mat4x4& worldToView, glm::mat4x4& projection);
 	void exit();
 
 	void keyPressed(int key);
@@ -45,6 +46,7 @@ class ofApp : public ofBaseApp
 	glm::mat4x4 m_kinectWorldToView;
 	glm::mat4x4 m_kinectViewToWorld;
 	glm::mat4x4 m_kinectProjection;
+	glm::mat4x4 m_kinectViewToWorld_Init;
 
 	ofxKinect m_kinect;
 	ofImage   m_depthImage; // grayscale depth image

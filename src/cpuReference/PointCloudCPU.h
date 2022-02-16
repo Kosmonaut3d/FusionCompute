@@ -7,7 +7,7 @@ class PointCloudCPU
 public: 
 	PointCloudCPU();
 
-	void fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals, glm::mat4x4 viewToWorld);
+	void fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals, glm::mat4x4 viewToWorld, bool worldSpace = false);
 
 	void draw(bool drawNormals, glm::mat4x4 viewToWorld);
 

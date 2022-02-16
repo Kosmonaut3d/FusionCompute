@@ -1,9 +1,10 @@
 #include "IterativeClosestPointCPU.h"
+#include "scenes/GUIScene.h"
 
 //----------------------------------------------------------------------------------------------------------
 IterativeClostestPointCPU::IterativeClostestPointCPU()
-    : m_epsilonDistance(1.4f) // TJODDDDDDDDDDDDDDDDD
-    , m_epsilonNormal(0.0f)
+    : m_epsilonDistance(0.1f) // TJODDDDDDDDDDDDDDDDD
+    , m_epsilonNormal(0.8f)
     , m_failPixel(0)
     , m_failDistance(0)
     , m_failNormal(0)
@@ -16,17 +17,16 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 
                                         const std::vector<glm::vec3>& oldVertices,
                                         const std::vector<glm::vec3>& oldNormals, const glm::mat4x4 & worldToViewOld,
-                                        const glm::mat4x4& projection, glm::mat4x4 & worldToViewNew, const int downscale)
+                                        const glm::mat4x4& projection, glm::mat4x4 & worldToView_out, const int downscale)
 {
-	m_failPixel    = 0;
-	m_failDistance = 0;
-	m_failNormal   = 0;
-
 	const int WIDTH  = 640 / downscale;
 	const int HEIGHT = 480 / downscale;
 	const int W2     = WIDTH / 2;
 	const int H2     = HEIGHT / 2;
 	const int SIZE   = WIDTH * HEIGHT;
+
+	m_epsilonDistance = GUIScene::s_ICP_epsilonDist;
+	m_epsilonNormal = GUIScene::s_ICP_epsilonNor;
 
 	// Copy
 
@@ -37,18 +37,27 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 
 	///\brief pi * T_g_k
 	glm::mat4x4 viewProjection_prev = projection * worldToViewOld;
+
+
 	glm::mat3x3 viewToWorldRot_prev = glm::mat3x3(viewToWorld_prev);
 
-	glm::mat4x4 viewToWorld_iter = glm::inverse(worldToViewOld);
-	worldToViewNew               = worldToViewOld;
+	glm::mat<4, 4, double, glm::precision::highp> viewToWorld_iter = glm::inverse(worldToViewOld);
+	glm::mat<4, 4, double, glm::precision::highp> worldToView_iter = worldToViewOld;
 	static int  computationCount = 0;
 	computationCount++;
+
+	double E_sum_first = 0.0;
 
 	int MAX_IT = 10;
 	for (int it = 0; it < MAX_IT; it++)
 	{
+		m_failPixel    = 0;
+		m_failDistance = 0;
+		m_failNormal   = 0;
+		int fail_z     = 0;
+
 		//\brief Camera space new to camera space old, unneeded in first frame
-		glm::mat4x4 Tz_k1_k             = glm::inverse(viewToWorld_prev) * worldToViewNew;
+		glm::mat4x4 Tz_k1_k             = glm::inverse(viewToWorld_prev) * glm::mat4x4(worldToView_iter);
 
 
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
@@ -66,34 +75,35 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 		double E_sum = 0.0;
 
 		int found = 0;
+
 		/// ..........................
 		for (int i = 0; i < SIZE; i++)
 		{
 			// TEST MANIPULATION
 			// TODO Need to work with camera space coordinates
-			glm::vec3 newVertexWorld = newVertices[i];
+			glm::vec3 newVertexWorld = viewToWorld_iter * glm::vec4(newVertices[i], 1);
 
 			// TODO FIX
 			// Check if there was a valid depth at that vertex
 			if (newVertexWorld.z == 0)
 			{
-				m_failPixel++;
+				fail_z++;
 				continue;
 			}
 
 			// NOTE: transform from world to camera -> project
-			glm::vec4 clipSpacePos = projection * worldToViewNew * glm::vec4(newVertexWorld, 1);
+			glm::vec4 clipSpacePos = projection * glm::mat4x4(worldToView_iter) * glm::vec4(newVertexWorld, 1);
 
-			/* if (clipSpacePos.w <= 0)
+			if (clipSpacePos.w == 0)
 			{
 				m_failPixel++;
 				continue;
-			}*/
+			}
 
 			glm::vec3 ndc = glm::vec3(clipSpacePos) / clipSpacePos.w;
 			if (ndc.x < -1 || ndc.x > 1 || ndc.y < -1 || ndc.y > 1)
 			{
-				m_failPixel++;
+				//m_failPixel++;
 				continue;
 			}
 
@@ -103,7 +113,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			int y_proj = round((ndc.y + 1) * H2);
 
 			int index = y_proj * WIDTH + x_proj;
-			if (index > SIZE)
+			if (index < 0 || index >= SIZE)
 			{
 				continue;
 			}
@@ -113,7 +123,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			getXYfromIndex(i, WIDTH, &x_ori, &y_ori);
 
 			// transform to camera rotation
-			glm::vec3 newNormalWorld = newNormals[i];
+			glm::vec3 newNormalWorld = viewToWorldRot_iter * newNormals[i];
 
 			// Reference Vertices in world space
 			const glm::vec3 oldVertex = oldVertices[index];
@@ -121,7 +131,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			// TODO: FIX should be before world transform
 			if (oldVertex.z == 0)
 			{
-				m_failPixel++;
+				fail_z++;
 				continue;
 			}
 
@@ -130,8 +140,8 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 				int test = 1;
 			}
 
-			const glm::vec3 referenceVertexWorld = glm::vec4(oldVertex, 1);
-			const glm::vec3 referenceNormalWorld = oldNormals[index];
+			const glm::vec3 referenceVertexWorld = viewToWorld_prev * glm::vec4(oldVertex, 1);
+			const glm::vec3 referenceNormalWorld = viewToWorldRot_prev * oldNormals[index];
 
 			glm::vec3 distance = newVertexWorld - referenceVertexWorld;
 			if (glm::length(distance) > m_epsilonDistance)
@@ -156,24 +166,39 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			float v3 = newVertexWorld.z;
 
 			// Build G(u)
-			Eigen::Matrix<float, 3, 6> G_U{
+			Eigen::Matrix<double, 3, 6> G_U{
 			    {0.f, -v3, v2, 1.f, 0.f, 0.f}, {v3, 0.f, -v1, 0.f, 1.f, 0.f}, {-v2, v1, 0.f, 0.f, 0.f, 1.f}}; // OK
 
-			Eigen::Matrix<float, 6, 3> G_U_T = G_U.transpose(); // OK
+			Eigen::Matrix<double, 6, 3> G_U_T = G_U.transpose(); // OK
 
-			Eigen::Vector3f Ng     = GLM2E<float, 3>(referenceNormalWorld);
-			Eigen::Vector3f Vg_old = GLM2E<float, 3>(referenceVertexWorld);
-			Eigen::Vector3f Vg_it  = GLM2E<float, 3>(newVertexWorld);
+			Eigen::Vector3d Ng     = GLM2E<double, 3>(referenceNormalWorld);
+			Eigen::Vector3d Vg_old = GLM2E<double, 3>(referenceVertexWorld);
+			Eigen::Vector3d Vg_it  = GLM2E<double, 3>(newVertexWorld);
 
-			Eigen::Matrix<float, 6, 1> A_T = G_U_T * Ng;
+			Eigen::Matrix<double, 6, 1> A_T = G_U_T * Ng;
 
 			float b = Ng.transpose() * (Vg_old - Vg_it);
 
-			A_T_sum += A_T.cast<double>();
+			A_T_sum += A_T;
 			b_sum += b;
 		}
 
-		printf("Iteration: %d E_sum %f, matches %d\n", it, E_sum, found);
+		//printf("Iteration: %d E_sum %f, matches %d, fail %d, fail dist %d, fail nor %d\n", it, E_sum, found, m_failPixel, m_failDistance, m_failNormal);
+
+		if (it == 0)
+		{
+			E_sum_first = E_sum;
+		}
+		else
+		{
+			if (E_sum > E_sum_first)
+			{
+				// abort!
+				printf("Iteration: went the wrong way!\n", it, E_sum, found,
+				       m_failPixel, m_failDistance, m_failNormal);
+				return;
+			}
+		}
 
 		/* if (E_sum < 1)
 		{
@@ -186,29 +211,48 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 
 		Eigen::Matrix<double, 6, 1> A_b = A_T_sum * b_sum;
 
-		//Eigen::JacobiSVD<Eigen::Matrix<double, 6, 6>> svd(A_T_A, Eigen::ComputeFullU | Eigen::ComputeFullV);
-		//Eigen::Matrix<double, 6, 1> result = svd.solve(A_b);
-		Eigen::Matrix<double, 6, 1> result = A_T_A.bdcSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(A_b);
+		Eigen::JacobiSVD<Eigen::Matrix<double, 6, 6>> svd(A_T_A, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		Eigen::Matrix<double, 6, 1> result = svd.solve(A_b);
+		//Eigen::Matrix<double, 6, 1> result = A_T_A.bdcSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(A_b);
 		//Eigen::Matrix<double, 6, 1> result = A_T_A.llt().solve(A_b);
 
 		if (!isnan(result[0]))
 		{
 			int test = 1;
 
-			float a = result[0];
-			float b = result[1];
-			float g = result[2];
+			float b  = result[0];
+			float g  = result[1];
+			float a  = result[2];
 			float tx = result[3];
 			float ty = result[4];
 			float tz = result[5];
 
+			//std::cout << result << std::endl;
+
 			// Update the transformation matrix
-			Eigen::Matrix4f T_inc{{1, a, -g, tx}, {-a, 1, b, ty}, {g, -b, 1, tz}, {0, 0, 0, 1}};
-			viewToWorld_iter = E2GLM(T_inc) * viewToWorld_iter;
-			worldToViewNew   = glm::inverse(viewToWorld_iter);
+			//Eigen::Matrix4f T_inc{{1, a, -g, tx}, {-a, 1, b, ty}, {g, -b, 1, tz}, {0, 0, 0, 1}};
+			//viewToWorld_iter = E2GLM(T_inc) * viewToWorld_iter;
+			
+			Eigen::Matrix<double, 4, 4> T_inc{
+				{1, a, -g, tx}, 
+				{-a, 1, b, ty}, 
+				{g, -b, 1, tz}, 
+				{0, 0, 0, 1}};
+			Eigen::Matrix<double, 4, 4> T_z = GLM2E(viewToWorld_iter);
+			
+			T_z = T_inc * T_z;
+			glm::mat<4, 4, double, glm::precision::highp> t_z_glm = E2GLM(T_z);
 
-			// Calculate E function:
 
+			// Sanity
+			glm::mat4x4 inc{{1, -a, g, 0}, {a, 1, -b, 0}, {-g, b, 1, 0}, {tx, tz, ty, 1}};
+			glm::mat4x4 t_z_prev = viewToWorld_iter;
+			glm::mat4x4 t_z_inc  = inc * t_z_prev;
+
+
+			// Increment
+			viewToWorld_iter = E2GLM(T_z);
+			worldToView_iter = glm::inverse(worldToView_iter);
 		}
 	}
 

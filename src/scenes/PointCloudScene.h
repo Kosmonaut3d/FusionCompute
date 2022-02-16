@@ -30,5 +30,4 @@ class PointCloudScene //: public SceneImpl
 	ofTexture                 m_texDepthRaw;
 	ofTexture*                m_texColorPtr;
 	bool                      m_isPCL_0;
-	glm::mat4x4               m_viewToWorldFirst;
 };

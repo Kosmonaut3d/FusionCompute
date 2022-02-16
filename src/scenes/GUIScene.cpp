@@ -5,17 +5,19 @@ GUIScene::SceneSelection GUIScene::s_sceneSelection = GUIScene::SceneSelection::
 bool     GUIScene::s_isKinectDeliveringData   = false;
 bool     GUIScene::s_updateKinectData         = true;
 ImVec4   GUIScene::s_backgroundColor          = ImVec4(0.2, 0.2, 0.2, 1);
-bool     GUIScene::s_computePointCloud        = true;
-bool     GUIScene::s_drawPointCloud           = true;
+bool     GUIScene::s_computePointCloud        = false;
+bool     GUIScene::s_drawPointCloud           = false;
 bool     GUIScene::s_drawPointCloudTex        = false;
-bool     GUIScene::s_drawPointCloudNorm       = true;
-bool     GUIScene::s_computePointCloudCPU     = false;
+bool     GUIScene::s_drawPointCloudNorm       = false;
+bool     GUIScene::s_computePointCloudCPU     = true;
 bool     GUIScene::s_pointCloudCPUForceUpdate = false;
-bool     GUIScene::s_drawPointCloudCPU        = false;
+bool     GUIScene::s_drawPointCloudCPU        = true;
 bool     GUIScene::s_drawPointCloudNormCPU    = false;
 int      GUIScene::s_pointCloudDownscaleExp   = 3;
 int      GUIScene::s_pointCloudDownscale      = 8;
 bool     GUIScene::s_computeICPCPU            = false;
+float    GUIScene::s_ICP_epsilonDist          = .2;
+float    GUIScene::s_ICP_epsilonNor           = .8;
 bool     GUIScene::s_quickDebug               = false;
 bool     GUIScene::s_drawDepthBackground      = false;
 bool     GUIScene::s_bilateralBlurCompute     = true;
@@ -23,6 +25,7 @@ bool     GUIScene::s_bilateralBlurDraw        = true;
 GLuint64 GUIScene::s_bilateralBlurTime        = 0;
 bool     GUIScene::s_sdfCompute               = true;
 int      GUIScene::s_sdfResolution            = 64;
+bool     GUIScene::s_resetView                = false;
 
 //---------------------------------------------------
 GUIScene::GUIScene()
@@ -141,10 +144,14 @@ void GUIScene::draw(ofEasyCam& camera)
 			if (ImGui::BeginTabItem("ICP"))
 			{
 				s_sceneSelection = SceneSelection::PointCloud;
-				if (ImGui::Button("Compute ICP CPU"))
+				ImGui::Checkbox("Compute ICP CPU", &s_computeICPCPU);
+				if (ImGui::Button("Reset view"))
 				{
-					s_computeICPCPU = true;
+					s_resetView = true;
 				}
+				
+				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 4);
+				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
 				ImGui::EndTabItem();
 			}
 			if (ImGui::BeginTabItem("Blur"))

@@ -14,14 +14,12 @@ PointCloudScene::PointCloudScene()
     , m_texDepthRaw{}
     , m_texColorPtr{}
     , m_isPCL_0{false}
-    , m_viewToWorldFirst{}
 {
 }
 
 //----------------------------------------------------------------------------------------------------------
 void PointCloudScene::setup(ofxKinect& kinect, glm::mat4x4 viewToWorld)
 {
-	m_viewToWorldFirst = viewToWorld;
 	if (kinect.isConnected())
 	{
 		m_pointCloudComp.registerKinectData(kinect.getZeroPlaneDistance(), kinect.getZeroPlanePixelSize());
@@ -67,21 +65,21 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 				m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, viewToWorld);
 			}
 		}
-	}
 
-	if (GUIScene::s_computeICPCPU)
-	{
-		// GUIScene::s_computeICPCPU = false;
+		if (GUIScene::s_computeICPCPU)
+		{
+			// GUIScene::s_computeICPCPU = false;
 
-		auto& ptrNew = m_isPCL_0 ? m_pointCloudCPU_0 : m_pointCloudCPU_1;
-		auto& ptrOld = m_isPCL_0 ? m_pointCloudCPU_1 : m_pointCloudCPU_0;
+			auto& ptrNew = m_isPCL_0 ? m_pointCloudCPU_0 : m_pointCloudCPU_1;
+			auto& ptrOld = m_isPCL_0 ? m_pointCloudCPU_1 : m_pointCloudCPU_0;
 
-		glm::mat4x4 output;
-		m_icpCPU.compute(ptrNew.getPoints(), ptrNew.getNormals(), ptrOld.getPoints(), ptrOld.getNormals(), worldToView,
-		                 projection, output, GUIScene::s_pointCloudDownscale);
+			glm::mat4x4 output;
+			m_icpCPU.compute(ptrNew.getPoints(), ptrNew.getNormals(), ptrOld.getPoints(), ptrOld.getNormals(),
+			                 worldToView, projection, output, GUIScene::s_pointCloudDownscale);
 
-		worldToView = output;
-		viewToWorld = glm::inverse(worldToView);
+			worldToView = output;
+			viewToWorld = glm::inverse(worldToView);
+		}
 	}
 }
 
@@ -93,8 +91,6 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 
 	ofEnableDepthTest();
 
-	drawCameraOrientation(viewToWorld, worldToView, projection);
-
 	if (GUIScene::s_drawPointCloud)
 	{
 		m_pointCloudVis.draw(m_pointCloudComp.getModelTextureID(), m_texColorPtr->getTextureData().textureID, false,
@@ -105,6 +101,8 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 	{
 		if (GUIScene::s_drawPointCloudCPU)
 		{
+			ofPushMatrix();
+			ofMultMatrix(viewToWorld);
 			if (m_isPCL_0)
 			{
 				m_pointCloudCPU_0.draw(GUIScene::s_drawPointCloudNormCPU, viewToWorld);
@@ -113,6 +111,7 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 			{
 				m_pointCloudCPU_1.draw(GUIScene::s_drawPointCloudNormCPU, viewToWorld);
 			}
+			ofPopMatrix();
 		}
 
 		if (GUIScene::s_drawPointCloudNorm)
@@ -126,33 +125,4 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 	}
 
 	camera.end();
-}
-
-//----------------------------------------------------------------------------------------------------------
-void PointCloudScene::drawCameraOrientation(glm::mat4x4& viewToWorld, glm::mat4x4& worldToView, glm::mat4x4& projection)
-{
-	ofPushMatrix();
-	auto      viewTransform     = m_viewToWorldFirst;
-	auto      viewTransformCurr = viewToWorld;
-	glm::vec4 zero(0, 0, 0, 1);
-	glm::vec4 target(0, 0, -1, 1);
-	ofSetColor(255, 0, 0);
-	ofDrawArrow(viewTransform * zero, viewTransform * target, 0.02);
-	ofSetColor(0, 255, 0);
-	ofDrawArrow(viewTransformCurr * zero, viewTransformCurr * target, 0.03);
-
-	glm::mat4 clipSpaceToWorld = glm::inverse(projection * worldToView);
-
-	// Move into Clip Space - this matrix will transform anything we
-	// draw from Clip Space to World Space
-	ofMultMatrix(clipSpaceToWorld);
-
-	// Anything we draw now is transformed from Clip Space back to World Space
-
-	ofPushStyle();
-	ofNoFill();
-	ofDrawBox(0, 0, 0, 2.f, 2.f,
-	          2.f); // In Clip Space, the frustum is standardised to be a box of dimensions -1,1 in each axis
-	ofPopStyle();
-	ofPopMatrix();
 }

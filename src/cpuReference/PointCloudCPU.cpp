@@ -3,8 +3,8 @@
 
 //----------------------------------------------------------------------------------------------------------
 PointCloudCPU::PointCloudCPU()
-    : m_points(640*480)
-    , m_normals(640*480*2)
+    : m_points(640 * 480)
+    , m_normals(640 * 480 * 2)
     , m_meshPoints{}
     , m_generated{false}
 {
@@ -14,7 +14,8 @@ PointCloudCPU::PointCloudCPU()
 }
 
 //----------------------------------------------------------------------------------------------------------
-void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals, glm::mat4x4 viewToWorld)
+void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals, glm::mat4x4 viewToWorld,
+                                   bool worldSpace)
 {
 	const int w = 640 / downsample;
 	const int h = 480 / downsample;
@@ -22,10 +23,10 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 	int step = downsample;
 
 	float scaleToMeters = .001;
-	 //0.001;
-	glm::vec3 trafo         = glm::vec3(1, -1, -1) * scaleToMeters;
+	// 0.001;
+	glm::vec3 trafo = glm::vec3(1, -1, -1) * scaleToMeters;
 
-	glm::vec3 zero = glm::vec3(0,0,0);
+	glm::vec3 zero = glm::vec3(0, 0, 0);
 	std::fill(m_points.begin(), m_points.end(), zero);
 	m_meshPoints.clearVertices();
 	m_meshPoints.clearColors();
@@ -42,8 +43,13 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 				{
 					int index = y * w + x;
 
-					glm::vec3 pos   = kinect.getWorldCoordinateAt(x_, y_) * trafo;
-					pos             = viewToWorld * glm::vec4(pos, 1);
+					glm::vec3 pos = kinect.getWorldCoordinateAt(x_, y_) * trafo;
+
+					if (worldSpace)
+					{
+						pos = viewToWorld * glm::vec4(pos, 1);
+					}
+
 					m_points[index] = pos;
 
 					m_meshPoints.addColor(kinect.getColorAt(x_, y_));
@@ -75,11 +81,13 @@ void PointCloudCPU::fillPointCloud(ofxKinect& kinect, int downsample, bool compN
 					glm::vec3 pos_x = kinect.getWorldCoordinateAt(x_ + 1, y_) * trafo;
 					glm::vec3 pos_y = kinect.getWorldCoordinateAt(x_, y_ + 1) * trafo;
 
-					
-					pos = viewToWorld * glm::vec4(pos, 1);
-					pos_x = viewToWorld * glm::vec4(pos_x, 1);
-					pos_y = viewToWorld * glm::vec4(pos_y, 1);
-					
+					if (worldSpace)
+					{
+						pos   = viewToWorld * glm::vec4(pos, 1);
+						pos_x = viewToWorld * glm::vec4(pos_x, 1);
+						pos_y = viewToWorld * glm::vec4(pos_y, 1);
+					}
+
 					m_points[index] = pos;
 
 					m_meshPoints.addColor(kinect.getColorAt(x_, y_));
@@ -120,7 +128,6 @@ void PointCloudCPU::draw(bool drawNormals, glm::mat4x4 viewToWorld)
 	{
 		m_meshPoints.drawVertices();
 	}
-
 }
 
 //----------------------------------------------------------------------------------------------------------

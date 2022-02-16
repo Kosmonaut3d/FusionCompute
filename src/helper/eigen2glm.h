@@ -3,7 +3,7 @@
 #include <../deps/Eigen/Dense>
 
 template <typename T, int m, int n>
-inline Eigen::Matrix<T, m, n> GLM2E(const glm::mat<m, n, float, glm::precision::highp>& glm)
+inline Eigen::Matrix<T, m, n> GLM2E(const glm::mat<m, n, T, glm::precision::highp>& glm)
 {
 	Eigen::Matrix<T, m, n> em;
 	for (int i = 0; i < m; ++i)
@@ -16,7 +16,7 @@ inline Eigen::Matrix<T, m, n> GLM2E(const glm::mat<m, n, float, glm::precision::
 	return em;
 }
 
-template <typename T, int m> inline Eigen::Matrix<T, m, 1> GLM2E(const glm::vec<m, float, glm::precision::highp>& glm)
+template <typename T, int m> inline Eigen::Matrix<T, m, 1> GLM2E(const glm::vec<m, T, glm::precision::highp>& glm)
 {
 	Eigen::Matrix<T, m, 1> em;
 	for (int i = 0; i < m; ++i)
