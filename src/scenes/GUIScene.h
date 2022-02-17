@@ -10,7 +10,7 @@ class GUIScene //: public SceneImpl
 	enum SceneSelection
 	{
 		PointCloud,
-		Blur, 
+		Blur,
 		SDF
 	};
 
@@ -34,16 +34,20 @@ class GUIScene //: public SceneImpl
 	static int            s_pointCloudDownscaleExp;
 	static int            s_pointCloudDownscale;
 	static bool           s_computeICPCPU;
-	static float           s_ICP_epsilonDist;
-	static float           s_ICP_epsilonNor;
+	static float          s_ICP_epsilonDist;
+	static float          s_ICP_epsilonNor;
 	static bool           s_quickDebug;
 	static bool           s_drawDepthBackground;
 	static bool           s_bilateralBlurCompute;
 	static bool           s_bilateralBlurDraw;
-	static GLuint64       s_bilateralBlurTime;
+	static GLuint64       s_measureGPUTime;
 	static bool           s_sdfCompute;
 	static int            s_sdfResolution;
+	static float          s_sdfSliceX;
+	static bool           s_sdfDrawSlice;
+	static bool           s_sdfDrawRaytrace;
 	static bool           s_resetView;
+	static glm::vec3      s_testPointPos;
 
   private:
 	ofxImGui::Gui m_gui;

@@ -1,5 +1,5 @@
 #include "slice.h"
-#include "slice.h"
+#include <scenes/GUIScene.h>
 
 Slice::Slice(ofVec3f position, float size):
 	m_mesh(size, size, 2, 2),
@@ -29,6 +29,7 @@ void Slice::setPos(ofVec3f pos)
 
 void Slice::draw(ofMatrix4x4& sdfInvWorld, unsigned int sdfTextureID, unsigned int computeShaderTexID)
 {
+	m_mesh.setPosition(m_position + glm::vec3(GUIScene::s_sdfSliceX, 0, 0));
 	m_sliceShader.begin();
 
 	//m_sliceShader.setUniform1i("tex2D", 0);

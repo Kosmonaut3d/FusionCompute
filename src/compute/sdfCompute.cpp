@@ -24,13 +24,15 @@ void SDFCompute::setupTexture()
 {
 	glGenTextures(1, &m_texID);
 	glBindTexture(GL_TEXTURE_3D, m_texID);
+	std::vector<float> framedata(m_resolution * m_resolution * m_resolution);
+	std::fill(framedata.begin(), framedata.end(), 2.0f);
 	//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, m_resolution, m_resolution, m_resolution, 0, GL_RED, GL_FLOAT, NULL);
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, m_resolution, m_resolution, m_resolution, 0, GL_RED, GL_FLOAT, framedata.data());
 	//glTexImage3D(GL_TEXTURE_3D, 0, GL_RG32F, m_resolution, m_resolution, m_resolution, 0, GL_RG, GL_FLOAT, NULL);
 
 }
@@ -38,25 +40,49 @@ void SDFCompute::setupTexture()
 //----------------------------------------------------------------------------------------------------------
 void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNormalId)
 {
-	glm::vec3 point = glm::vec3(0, 0, 0);
+	GLuint   query;
+	GLuint64 elapsed_time;
+
+	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
+	{
+		glGenQueries(1, &query);
+		glBeginQuery(GL_TIME_ELAPSED, query);
+	}
+
+	if (GUIScene::s_sdfResolution != m_resolution)
+	{
+		m_resolution = GUIScene::s_sdfResolution;
+		glDeleteTextures(1, &m_texID);
+		setupTexture();
+	}
+
+	glm::vec3 point = GUIScene::s_testPointPos;
 
 	glm::vec3 pointLocal = m_modelMatInv * glm::vec4(point, 1);
+
 
 	m_computeSDFShader.begin();
 
 	m_computeSDFShader.setUniformMatrix4f("_modelMatrix", m_modelMat);
 	m_computeSDFShader.setUniform3f("_point", point);
 	m_computeSDFShader.setUniform1f("_stepSize", 1./m_resolution);
-	glBindImageTexture(0, m_texID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+	glBindImageTexture(0, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
 	m_computeSDFShader.dispatchCompute(m_resolution, m_resolution, m_resolution);
 	m_computeSDFShader.end();
 
-	std::vector<float> framedata(m_resolution * m_resolution * m_resolution);
+	/* std::vector<float> framedata(m_resolution * m_resolution * m_resolution);
 	glBindTexture(GL_TEXTURE_3D, m_texID);
 	glGetTextureImage(m_texID, 0, GL_RED, GL_FLOAT, framedata.size()*sizeof(float), &framedata[0]);
+	*/
 
 	int test = 1;
+
+	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
+	{
+		glEndQuery(GL_TIME_ELAPSED);
+		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_measureGPUTime);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------

@@ -16,8 +16,16 @@ void main()
 	
 	float valSDF = texture(tex3D, relPos).r;
 
+	if(valSDF < .4)
+	{
+		outputColor =  vec4(max(-valSDF*1000, 0.), valSDF.xx ,1.);
+	}
+	else
+	{
+		discard;
+	}
+
 	//vec3 valCompute =  texture(tex2D, relPos.zy).rbg;
-	outputColor =  vec4(vec3(valSDF),1); //
 }
 /*
 #define SURFACE_DIST .01

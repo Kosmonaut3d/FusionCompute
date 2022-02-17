@@ -47,11 +47,14 @@ void SignedDistanceField::drawOutline()
 
 void SignedDistanceField::drawRaymarch(ofCamera& camera, unsigned int texID)
 {
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
 	ofPushStyle();
 	m_raymarchShader.begin();
-	glPolygonMode(GL_BACK, GL_LINE);
+	//glPolygonMode(GL_BACK, GL_LINE);
 	float scalehalf = m_scale / 2;
-	glCullFace(GL_CCW);
+
 
 	glBindTexture(GL_TEXTURE_3D, texID);
 
@@ -69,6 +72,8 @@ void SignedDistanceField::drawRaymarch(ofCamera& camera, unsigned int texID)
 	ofDrawBox(m_origin + glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
 	m_raymarchShader.end();
 	ofPopStyle();
+
+	glDisable(GL_CULL_FACE);
 }
 
 

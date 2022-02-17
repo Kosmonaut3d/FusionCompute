@@ -1,8 +1,8 @@
 #version 440 core
 
-layout(local_size_x = 1, local_size_y = 1, local_size_z = 1) in;
+layout(local_size_x = 2, local_size_y = 2, local_size_z = 2) in;
 
-layout(r32f, binding = 0) uniform writeonly image3D model_output;
+layout(r32f, binding = 0) uniform image3D model_output;
 
 uniform float _stepSize;
 uniform vec3 _point;
@@ -14,10 +14,11 @@ void main() {
 
   vec3 worldPosition = (_modelMatrix * vec4((pixel_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
 
-  float value = distance(_point, worldPosition) - 2;
+  float value = distance(_point, worldPosition) - .2;
   value /= 2;
-
-  imageStore(model_output, pixel_coords, vec4(value));
+  
+  float currentValue = imageLoad(model_output, pixel_coords).r;
+  imageStore(model_output, pixel_coords,  min(value, currentValue).xxxx);
 
 
   // NOTE: Nvidia could use derivatives for normal maps;

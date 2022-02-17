@@ -22,10 +22,14 @@ bool     GUIScene::s_quickDebug               = false;
 bool     GUIScene::s_drawDepthBackground      = false;
 bool     GUIScene::s_bilateralBlurCompute     = true;
 bool     GUIScene::s_bilateralBlurDraw        = true;
-GLuint64 GUIScene::s_bilateralBlurTime        = 0;
+GLuint64 GUIScene::s_measureGPUTime        = 0;
 bool     GUIScene::s_sdfCompute               = true;
 int      GUIScene::s_sdfResolution            = 64;
+bool       GUIScene::s_sdfDrawSlice            = false;
+bool     GUIScene::s_sdfDrawRaytrace            = true;
+float      GUIScene::s_sdfSliceX            = 0.f;
 bool     GUIScene::s_resetView                = false;
+glm::vec3  GUIScene::s_testPointPos               = glm::vec3(-1, 0, -2);
 
 //---------------------------------------------------
 GUIScene::GUIScene()
@@ -90,12 +94,22 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Compute SDF", &s_bilateralBlurCompute);
 
 				static int sdfResExp = static_cast<int>(log2(s_sdfResolution));
-				if (ImGui::SliderInt("SDF Resolution", &sdfResExp, 4, 9))
+				if (ImGui::SliderInt2("SDF Resolution", &sdfResExp, 4, 9))
 				{
 					s_sdfResolution = pow(2, sdfResExp);
 				}
 				ImGui::SameLine();
 				ImGui::Text("eff. %d", s_sdfResolution);
+
+				ImGui::Text("Generate time %f", s_measureGPUTime / 1000000.0);
+
+				ImGui::Checkbox("Draw Raytrace", &s_sdfDrawRaytrace);
+				ImGui::Checkbox("Draw Slice", &s_sdfDrawSlice);
+				ImGui::SliderFloat("SDF Slice X", &s_sdfSliceX, -2.0f, 2.0f);
+
+				ImGui::SliderFloat("Point X", &s_testPointPos.x, -2.0f, 2.0f);
+				ImGui::SliderFloat("Point y", &s_testPointPos.y, -2.0f, 2.0f);
+				ImGui::SliderFloat("Point Z", &s_testPointPos.z, -4.0f, 0.0f);
 
 				ImGui::EndTabItem();
 			}
@@ -160,7 +174,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Compute Bilateral Blur", &s_bilateralBlurCompute);
 				ImGui::Checkbox("Draw Bilateral Blur", &s_bilateralBlurDraw);
 				ImGui::Separator();
-				ImGui::Text("Blur time %f", s_bilateralBlurTime / 1000000.0);
+				ImGui::Text("Blur time %f", s_measureGPUTime / 1000000.0);
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();
@@ -173,10 +187,6 @@ void GUIScene::draw(ofEasyCam& camera)
 		ImGui::Checkbox("Quick Debug Check", &s_quickDebug);
 
 		// ImGui::ShowDemoWindow();// ::ShowExampleAppDockSpace(true);
-		/*if (ImGui::SliderFloat("Float", &m_floatValue, -10.0f, 10.0f))
-		{
-		    m_slice.setPos(glm::vec3(m_floatValue, 0, -10));
-		};*/
 
 		/*if (ImGui::SliderFloat("PCL Size", &m_pclSizeValue, 0.0f, 1000.0f))
 

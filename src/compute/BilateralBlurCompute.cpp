@@ -47,7 +47,7 @@ void BilateralBlurCompute::compute(ofTexture& depthImage, bool blur)
 	if (GUIScene::SceneSelection::Blur == GUIScene::s_sceneSelection)
 	{
 		glEndQuery(GL_TIME_ELAPSED);
-		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_bilateralBlurTime);
+		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_measureGPUTime);
 	}
 }
 
