@@ -2,25 +2,71 @@
 
 layout(local_size_x = 2, local_size_y = 2, local_size_z = 2) in;
 
-layout(r32f, binding = 0) uniform image3D model_output;
+layout(rgba32f, binding = 0) uniform readonly image2D pcl_input;
+layout(rgba32f, binding = 1) uniform readonly image2D pcl_normal_input;
+layout(r32f, binding = 2) uniform image3D model_output;
 
 uniform float _stepSize;
-uniform vec3 _point;
 uniform mat4x4 _modelMatrix;
+uniform mat4x4 _pclWorldToClip;
+uniform float _truncationDistance;
+
+const float W2 = 320;
+const float H2 = 240;
+
+float worldToDistance(vec3 worldPos)
+{  
+	// NOTE: transform from world to camera -> project
+	vec4 clipSpacePos = _pclWorldToClip * vec4(worldPos, 1);
+
+	if (clipSpacePos.w == 0)
+	{
+		return _truncationDistance;
+	}
+
+	vec3 ndc = vec3(clipSpacePos) / clipSpacePos.w;
+	if (abs(ndc.x) >= 1 || abs(ndc.y) >= 1)
+	{
+		return _truncationDistance;
+	}
+
+	// OPENGL
+	ndc.y      = -ndc.y;
+	int x_proj = int( round((ndc.x + 1) * W2));
+	int y_proj = int(round((ndc.y + 1) * H2));
+		
+	vec3 pclPos = imageLoad(pcl_input, ivec2(x_proj, y_proj)).xyz;
+	vec3 dist = pclPos - worldPos;
+	float len = length(dist);
+
+	vec3 pclNor = imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
+	float dotProduct = dot(normalize(dist), pclNor);
+
+	if(len < _truncationDistance)
+	{
+		if(dotProduct > 0)
+		{
+			return -len;
+		}
+		else
+		{
+			return len;
+		}
+	}
+
+	return _truncationDistance;
+}
 
 void main() {
-  // base pixel colour for image
-  ivec3 pixel_coords = ivec3(gl_GlobalInvocationID.xyz);
+	// base pixel colour for image
+	ivec3 pixel_coords = ivec3(gl_GlobalInvocationID.xyz);
 
-  vec3 worldPosition = (_modelMatrix * vec4((pixel_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
+	vec3 worldVoxelPosition = (_modelMatrix * vec4((pixel_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
 
-  float value = distance(_point, worldPosition) - .2;
-  value /= 2;
+	float value = worldToDistance(worldVoxelPosition);
   
-  float currentValue = imageLoad(model_output, pixel_coords).r;
-  imageStore(model_output, pixel_coords,  min(value, currentValue).xxxx);
-
-
+	//float currentValue = imageLoad(model_output, pixel_coords).r;
+	imageStore(model_output, pixel_coords,  value.xxxx);//min(value, currentValue).xxxx);
   // NOTE: Nvidia could use derivatives for normal maps;
 
   // Problem: openGL reads textures from bottom

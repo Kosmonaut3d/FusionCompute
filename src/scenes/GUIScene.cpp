@@ -2,34 +2,34 @@
 
 GUIScene::SceneSelection GUIScene::s_sceneSelection = GUIScene::SceneSelection::Blur;
 
-bool     GUIScene::s_isKinectDeliveringData   = false;
-bool     GUIScene::s_updateKinectData         = true;
-ImVec4   GUIScene::s_backgroundColor          = ImVec4(0.2, 0.2, 0.2, 1);
-bool     GUIScene::s_computePointCloud        = false;
-bool     GUIScene::s_drawPointCloud           = false;
-bool     GUIScene::s_drawPointCloudTex        = false;
-bool     GUIScene::s_drawPointCloudNorm       = false;
-bool     GUIScene::s_computePointCloudCPU     = true;
-bool     GUIScene::s_pointCloudCPUForceUpdate = false;
-bool     GUIScene::s_drawPointCloudCPU        = true;
-bool     GUIScene::s_drawPointCloudNormCPU    = false;
-int      GUIScene::s_pointCloudDownscaleExp   = 3;
-int      GUIScene::s_pointCloudDownscale      = 8;
-bool     GUIScene::s_computeICPCPU            = false;
-float    GUIScene::s_ICP_epsilonDist          = .2;
-float    GUIScene::s_ICP_epsilonNor           = .8;
-bool     GUIScene::s_quickDebug               = false;
-bool     GUIScene::s_drawDepthBackground      = false;
-bool     GUIScene::s_bilateralBlurCompute     = true;
-bool     GUIScene::s_bilateralBlurDraw        = true;
-GLuint64 GUIScene::s_measureGPUTime        = 0;
-bool     GUIScene::s_sdfCompute               = true;
-int      GUIScene::s_sdfResolution            = 64;
-bool       GUIScene::s_sdfDrawSlice            = false;
-bool     GUIScene::s_sdfDrawRaytrace            = true;
-float      GUIScene::s_sdfSliceX            = 0.f;
-bool     GUIScene::s_resetView                = false;
-glm::vec3  GUIScene::s_testPointPos               = glm::vec3(-1, 0, -2);
+bool      GUIScene::s_isKinectDeliveringData   = false;
+bool      GUIScene::s_updateKinectData         = true;
+ImVec4    GUIScene::s_backgroundColor          = ImVec4(0.2, 0.2, 0.2, 1);
+bool      GUIScene::s_computePointCloud        = true;
+bool      GUIScene::s_drawPointCloud           = true;
+bool      GUIScene::s_drawPointCloudTex        = false;
+bool      GUIScene::s_drawPointCloudNorm       = false;
+bool      GUIScene::s_computePointCloudCPU     = false;
+bool      GUIScene::s_pointCloudCPUForceUpdate = false;
+bool      GUIScene::s_drawPointCloudCPU        = false;
+bool      GUIScene::s_drawPointCloudNormCPU    = false;
+int       GUIScene::s_pointCloudDownscaleExp   = 3;
+int       GUIScene::s_pointCloudDownscale      = 8;
+bool      GUIScene::s_computeICPCPU            = false;
+float     GUIScene::s_ICP_epsilonDist          = .2;
+float     GUIScene::s_ICP_epsilonNor           = .8;
+bool      GUIScene::s_quickDebug               = false;
+bool      GUIScene::s_drawDepthBackground      = false;
+bool      GUIScene::s_bilateralBlurCompute     = true;
+bool      GUIScene::s_bilateralBlurDraw        = true;
+GLuint64  GUIScene::s_measureGPUTime           = 0;
+bool      GUIScene::s_sdfCompute               = false;
+int       GUIScene::s_sdfResolution            = 64;
+bool      GUIScene::s_sdfDrawSlice             = false;
+bool      GUIScene::s_sdfDrawRaytrace          = true;
+float     GUIScene::s_sdfSliceX                = 0.f;
+bool      GUIScene::s_resetView                = false;
+glm::vec3 GUIScene::s_testPointPos             = glm::vec3(-1, 0, -2);
 
 //---------------------------------------------------
 GUIScene::GUIScene()
@@ -91,7 +91,7 @@ void GUIScene::draw(ofEasyCam& camera)
 			if (ImGui::BeginTabItem("SDF"))
 			{
 				s_sceneSelection = SceneSelection::SDF;
-				ImGui::Checkbox("Compute SDF", &s_bilateralBlurCompute);
+				ImGui::Checkbox("Compute SDF", &s_sdfCompute);
 
 				static int sdfResExp = static_cast<int>(log2(s_sdfResolution));
 				if (ImGui::SliderInt2("SDF Resolution", &sdfResExp, 4, 9))
@@ -163,7 +163,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				{
 					s_resetView = true;
 				}
-				
+
 				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 4);
 				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
 				ImGui::EndTabItem();

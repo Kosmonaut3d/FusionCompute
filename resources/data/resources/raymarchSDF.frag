@@ -15,7 +15,7 @@ uniform float far;
 
 #define PI 3.1415925359
 #define TWO_PI 6.2831852
-#define MAX_STEPS 100
+#define MAX_STEPS 200
 #define MAX_DIST 6
 #define SURFACE_DIST .01
 
@@ -45,21 +45,6 @@ float hash(float p)
 	vec3 p3  = fract(vec3(p) * HASHSCALE1);
     p3 += dot(p3, p3.yzx + 19.19);
     return fract((p3.x + p3.y) * p3.z);
-}
-
-float ambientOcclusion (vec3 pos, vec3 normal)
-{
-    float sum    = 0;
-    float maxSum = 0;
-    const float _AOSteps = 10;
-    const float _AOStepSize = .1;
-    for (int i = 0; i < _AOSteps; i ++)
-    {
-        vec3 p = pos + normal * (i+1) * _AOStepSize;
-        sum    += 1. / pow(2., i) * GetDistSDF(p);
-        maxSum += 1. / pow(2., i) * (i+1) * _AOStepSize;
-    }
-    return sum / maxSum;
 }
 
 float getDistanceSDFVolume(vec3 p)
@@ -110,14 +95,14 @@ void main()
     if(d.x < MAX_DIST)
     {
         // Hit point
-        vec3 pos = ro + rd * d.x;
-        vec3 nor = GetNormal(pos);
-        //float amb = ambientOcclusion(pos, nor);
+        //vec3 pos = ro + rd * d.x;
+        //vec3 nor = GetNormal(pos);
     
-        outputColor = vec4( nor, 1.0);
+        outputColor = vec4( d.yyy, 1.0);
     }
     else
-    {
+    { 
+        //outputColor = vec4( d.y, 0, 0 , 1.0);
         discard;
     }
 }

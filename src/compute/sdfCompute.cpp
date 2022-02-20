@@ -4,6 +4,7 @@
 //----------------------------------------------------------------------------------------------------------
 SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
     : m_computeSDFShader{}
+    , m_raymarchSDFShader{}
     , m_modelMat{}
     , m_modelMatInv{}
     , m_texID{}
@@ -11,6 +12,11 @@ SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
     , m_origin{origin}
     , m_scale{scale}
 {
+	if (!m_raymarchSDFShader.load("resources/vertShader.vert", "resources/raymarchSDF.frag"))
+	{
+		throw std::exception(); //"could not load shaders");
+	}
+
 	m_computeSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeSDF.comp");
 	m_computeSDFShader.linkProgram();
 
@@ -38,7 +44,7 @@ void SDFCompute::setupTexture()
 }
 
 //----------------------------------------------------------------------------------------------------------
-void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNormalId)
+void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNormalId, glm::mat4x4& viewToWorld, glm::mat4x4 worldToClipKinect)
 {
 	GLuint   query;
 	GLuint64 elapsed_time;
@@ -63,10 +69,14 @@ void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNorma
 
 	m_computeSDFShader.begin();
 
+	m_computeSDFShader.setUniform1f("_stepSize", 1. / m_resolution);
+	m_computeSDFShader.setUniformMatrix4f("_pclWorldToClip", worldToClipKinect);
 	m_computeSDFShader.setUniformMatrix4f("_modelMatrix", m_modelMat);
-	m_computeSDFShader.setUniform3f("_point", point);
-	m_computeSDFShader.setUniform1f("_stepSize", 1./m_resolution);
-	glBindImageTexture(0, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+	m_computeSDFShader.setUniform1f("_truncationDistance", .1);
+
+	glBindImageTexture(0, pointCloudId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	glBindImageTexture(1, pointCloudNormalId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	glBindImageTexture(2, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
 	m_computeSDFShader.dispatchCompute(m_resolution, m_resolution, m_resolution);
 	m_computeSDFShader.end();
@@ -107,14 +117,42 @@ void SDFCompute::drawOutline()
 	ofSetColor(200, 100, 200);
 	ofMultMatrix(m_modelMat);
 	ofNoFill();
-	ofDrawBox(0, 0, 0, .1f, .1f, .1f);
-	ofDrawBox(1, 1, 1, .1f, .1f, .1f);
+
+	ofSetColor(200, 0, 0);
+	ofDrawBox(glm::vec3(.5, .5, .5), 1);
 
 	ofPopMatrix();
 	ofPopStyle();
+}
 
-	//ofGetCurrentRenderer()->setFillMode(ofFillFlag::OF_OUTLINE);
-	//ofSetColor(10, 100, 200);
-	//float scalehalf = m_scale / 2;
-	//ofDrawBox(m_origin + glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
+//----------------------------------------------------------------------------------------------------------
+void SDFCompute::drawRaymarch(ofCamera& camera)
+{
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+
+	ofPushStyle();
+	m_raymarchSDFShader.begin();
+	// glPolygonMode(GL_BACK, GL_LINE);
+	float scalehalf = m_scale / 2;
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_3D, m_texID);
+
+	m_raymarchSDFShader.setUniform3f("cameraWorld", camera.getPosition());
+	m_raymarchSDFShader.setUniformMatrix4f("sdfBaseTransform", m_modelMatInv);
+	m_raymarchSDFShader.setUniform1f("sdfResolution", m_resolution);
+	auto    vp  = ofMatrix4x4(camera.getProjectionMatrix() * camera.getModelViewMatrix());
+	ofVec4f ori = ofVec4f(0, 0, 0, 1.0);
+	ori         = vp * ori;
+	auto res    = camera.worldToCamera(ofVec3f(0, 0, 0));
+	m_raymarchSDFShader.setUniformMatrix4f("viewprojection", camera.getModelViewProjectionMatrix());
+	m_raymarchSDFShader.setUniform1f("near", camera.getNearClip());
+	m_raymarchSDFShader.setUniform1f("far", camera.getFarClip());
+
+	ofDrawBox(m_origin + glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
+	m_raymarchSDFShader.end();
+	ofPopStyle();
+
+	glDisable(GL_CULL_FACE);
 }

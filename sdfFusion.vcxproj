@@ -287,7 +287,7 @@
     <None Include="resources\data\resources\computeModelPCL.comp" />
     <None Include="resources\data\resources\computeNormalPCL.comp" />
     <None Include="resources\data\resources\computeSDF.comp" />
-    <None Include="resources\data\resources\fragShader.frag" />
+    <None Include="resources\data\resources\raymarchSDF.frag" />
     <None Include="resources\data\resources\fullScreenQuad.frag" />
     <None Include="resources\data\resources\fullScreenQuad.vert" />
     <None Include="resources\data\resources\pointCloud.frag" />

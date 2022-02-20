@@ -94,7 +94,7 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 	if (GUIScene::s_drawPointCloud)
 	{
 		m_pointCloudVis.draw(m_pointCloudComp.getModelTextureID(), m_texColorPtr->getTextureData().textureID, false,
-		                     camera.getModelViewProjectionMatrix());
+		                     camera.getModelViewProjectionMatrix() * viewToWorld);
 	}
 
 	if (GUIScene::SceneSelection::PointCloud == GUIScene::s_sceneSelection)
@@ -125,4 +125,16 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 	}
 
 	camera.end();
+}
+
+//----------------------------------------------------------------------------------------------------------
+unsigned int PointCloudScene::getPCLWorld()
+{
+	return m_pointCloudComp.getModelTextureID();
+}
+
+//----------------------------------------------------------------------------------------------------------
+unsigned int PointCloudScene::getPCLNormal()
+{
+	return m_pointCloudComp.getNormalTextureID();
 }

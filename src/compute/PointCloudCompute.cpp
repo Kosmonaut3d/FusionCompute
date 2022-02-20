@@ -85,6 +85,7 @@ void PointCloudComp::compute(unsigned int depthTexID)
 	// Do not compute the last row, since a fetch outside is super expensive
 	m_computeNormalShader.dispatchCompute(639, 479, 1);
 	m_computeNormalShader.end();
+	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 }
 
 //----------------------------------------------------------------------------------------------------------

@@ -349,7 +349,7 @@
     <None Include="resources\data\resources\computeNormalPCL.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\fragShader.frag">
+    <None Include="resources\data\resources\raymarchSDF.frag">
       <Filter>shaders</Filter>
     </None>
     <None Include="resources\data\resources\fullScreenQuad.frag">

@@ -20,6 +20,9 @@ class PointCloudScene //: public SceneImpl
 	void draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4x4& worldToView, glm::mat4x4& projection);
 	void drawCameraOrientation(glm::mat4x4& viewToWorld, glm::mat4x4& worldToView, glm::mat4x4& projection);
 
+	unsigned int getPCLWorld();
+	unsigned int getPCLNormal();
+
   private:
 	BilateralBlurCompute      m_bilateralBlurComp;
 	PointCloudComp            m_pointCloudComp;

@@ -4,7 +4,7 @@
 
 //---------------------------------------------------
 SDFScene::SDFScene()
-    : m_sdfCompute{glm::vec3(-2, -2, -4), GUIScene::s_sdfResolution, 4}
+    : m_sdfCompute{glm::vec3(-1, -1, -2), GUIScene::s_sdfResolution, 2}
     , m_sdfCPU{GUIScene::s_sdfResolution, glm::vec3(-2, -2, -4), 4, 2}
     , m_slice(glm::vec3(0, 0, -2), 4)
 {
@@ -16,11 +16,12 @@ void SDFScene::setup(ofxKinect& kinect)
 }
 
 //----------------------------------------------------------------------------------------------------------
-void SDFScene::update(bool kinectUpdate, ofxKinect& kinect)
+void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldToClip,
+                      unsigned int m_pointsCloudWorldTex, unsigned int m_pointsCloudNormalTex)
 {
 	if (GUIScene::s_sdfCompute)
 	{
-		m_sdfCompute.compute(0, 0);
+		m_sdfCompute.compute(m_pointsCloudWorldTex, m_pointsCloudNormalTex, glm::mat4x4(), worldToClip);
 	}
 }
 
@@ -30,7 +31,7 @@ void SDFScene::draw(ofCamera& camera)
 	m_sdfCompute.drawOutline();
 	if (GUIScene::s_sdfDrawRaytrace)
 	{
-		m_sdfCPU.drawRaymarch(camera, m_sdfCompute.getTextureID());
+		m_sdfCompute.drawRaymarch(camera);
 	}
 	if (GUIScene::s_sdfDrawSlice)
 	{
