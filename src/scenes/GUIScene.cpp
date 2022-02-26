@@ -94,7 +94,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Compute SDF", &s_sdfCompute);
 
 				static int sdfResExp = static_cast<int>(log2(s_sdfResolution));
-				if (ImGui::SliderInt2("SDF Resolution", &sdfResExp, 4, 9))
+				if (ImGui::SliderInt("SDF Resolution", &sdfResExp, 4, 9))
 				{
 					s_sdfResolution = pow(2, sdfResExp);
 				}
@@ -107,9 +107,10 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Draw Slice", &s_sdfDrawSlice);
 				ImGui::SliderFloat("SDF Slice X", &s_sdfSliceX, -2.0f, 2.0f);
 
-				ImGui::SliderFloat("Point X", &s_testPointPos.x, -2.0f, 2.0f);
+				/* ImGui::SliderFloat("Point X", &s_testPointPos.x, -2.0f, 2.0f);
 				ImGui::SliderFloat("Point y", &s_testPointPos.y, -2.0f, 2.0f);
 				ImGui::SliderFloat("Point Z", &s_testPointPos.z, -4.0f, 0.0f);
+				*/
 
 				ImGui::EndTabItem();
 			}
