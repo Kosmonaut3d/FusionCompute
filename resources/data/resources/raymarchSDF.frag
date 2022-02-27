@@ -19,7 +19,7 @@ uniform float _truncationDistance;
 #define PI 3.1415925359
 #define TWO_PI 6.2831852
 #define MAX_STEPS 200
-#define MAX_DIST 6
+#define MAX_DIST 8
 #define SURFACE_DIST .01
 
 uniform sampler3D volume_tex;
@@ -59,6 +59,12 @@ float getDistanceSDFVolume(vec3 p)
 
 float GetDistSDF(vec3 p)
 {
+    float dist = getDistanceSDFVolume(p);
+    if(dist > 0)
+    {
+        discard;
+    }
+
     // IDEA: Transform the p first to sdfBase and trace from there
     // Transform world position to SDF Base
     vec3 relPos = (sdfBaseTransform * vec4(p, 1)).xyz; 
@@ -91,17 +97,25 @@ void main()
 {
     vec3 ro = cameraWorld; // works for backface, too
     vec3 rd = normalize(world - cameraWorld);
+    
+    if(getDistanceSDFVolume(cameraWorld) > 0)
+    {
+        ro = world;
+    }
+    
 
-    float dInit = max(getDistanceSDFVolume(ro), 0.0); //max(distanceBox, 0.0); //Distance 
+    float dInit = 0.001;
     vec2 d = RayMarchSDF(ro+rd*dInit, rd);
     
     if(d.x < MAX_DIST)
     {
         // Hit point
-        //vec3 pos = ro + rd * d.x;
-        //vec3 nor = GetNormal(pos);
+        vec3 pos = ro + rd * d.x;
+        vec3 nor = GetNormal(pos);
     
-        outputColor = vec4( d.yyy, 1.0);
+        // beautify normal
+        nor = (nor + vec3(1)) * .5;
+        outputColor = vec4( nor, 1.0);
     }
     else
     { 

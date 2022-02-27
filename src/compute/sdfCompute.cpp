@@ -37,8 +37,10 @@ void SDFCompute::setupTexture()
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	std::vector<float> framedata(m_resolution * m_resolution * m_resolution * 2);
-	std::fill(framedata.begin(), framedata.end(), m_scale/m_resolution);
+	std::vector<glm::vec2> framedata(m_resolution * m_resolution * m_resolution);
+
+	const float truncationScaled = m_scale / m_resolution * GUIScene::s_sdfTruncation;
+	std::fill(framedata.begin(), framedata.end(), glm::vec2(truncationScaled, 0));
 
 	//glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, m_resolution, m_resolution, m_resolution, 0, GL_RED, GL_FLOAT, framedata.data());
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RG32F, m_resolution, m_resolution, m_resolution, 0, GL_RG, GL_FLOAT, framedata.data());
@@ -132,8 +134,8 @@ void SDFCompute::drawOutline()
 //----------------------------------------------------------------------------------------------------------
 void SDFCompute::drawRaymarch(ofCamera& camera)
 {
-	glEnable(GL_CULL_FACE);
-	glCullFace(GL_BACK);
+	//glEnable(GL_CULL_FACE);
+	//glCullFace(GL_BACK);
 
 	ofPushStyle();
 	m_raymarchSDFShader.begin();

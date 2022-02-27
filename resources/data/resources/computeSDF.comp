@@ -17,20 +17,22 @@ const float H2 = 240;
 
 #define FLT_MAX 10000
 
-float worldToDistance(vec3 worldPos)
+vec2 worldToDistance(vec3 worldPos)
 {  
 	// NOTE: transform from world to camera -> project
 	vec4 clipSpacePos = _pclWorldToClip * vec4(worldPos, 1);
 
+	vec2 outputValueWeight = vec2(FLT_MAX, 0.000000001);
+
 	if (clipSpacePos.w == 0)
 	{
-		return FLT_MAX;
+		return outputValueWeight;
 	}
 
 	vec3 ndc = vec3(clipSpacePos) / clipSpacePos.w;
 	if (abs(ndc.x) >= 1 || abs(ndc.y) >= 1)
 	{
-		return FLT_MAX;
+		return outputValueWeight;
 	}
 
 	// OPENGL
@@ -42,17 +44,15 @@ float worldToDistance(vec3 worldPos)
 	vec3 dist = pclPos - worldPos;
 	float len = length(dist);
 
-	vec3 pclNor = imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
-	float dotProduct = dot(normalize(dist), pclNor);
-
 	if(abs(len) < _truncationDistance)
 	{
-		float scaledLen = len * FLT_MAX /_truncationDistance ;
-
-		return sign(dotProduct)*scaledLen;
+		vec3 pclNor = imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
+		float dotProduct = dot(normalize(dist), pclNor);
+		float scaledLen = len * FLT_MAX /_truncationDistance;
+		return vec2(sign(dotProduct)*scaledLen, 1);
 	}
 
-	return FLT_MAX;
+	return outputValueWeight;
 }
 
 void main() {
@@ -61,16 +61,17 @@ void main() {
 
 	vec3 worldVoxelPosition = (_modelMatrix * vec4((pixel_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
 
-	float value = worldToDistance(worldVoxelPosition);
-  
-	vec2 previousData = imageLoad(model_output, pixel_coords).rg;
+	vec2 valueWeigth = worldToDistance(worldVoxelPosition);
 
-	float currWeight = 1;
+	if(valueWeigth.y > 0)
+	{
+		vec2 previousData = imageLoad(model_output, pixel_coords).rg;
 
-	float accValue = (previousData.y * previousData.x + currWeight * value) / (currWeight + previousData.y);
-	float accWeight = min(currWeight + previousData.y, _maxWeight);
+		float accValue = (previousData.y * previousData.x + valueWeigth.x * valueWeigth.y) / (valueWeigth.y + previousData.y);
+		float accWeight = min(valueWeigth.y + previousData.y, _maxWeight);
 
-	imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
+		imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
+	}
   // NOTE: Nvidia could use derivatives for normal maps;
 
   // Problem: openGL reads textures from bottom
