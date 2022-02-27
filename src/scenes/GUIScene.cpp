@@ -23,6 +23,7 @@ bool      GUIScene::s_drawDepthBackground      = false;
 bool      GUIScene::s_bilateralBlurCompute     = true;
 bool      GUIScene::s_bilateralBlurDraw        = true;
 GLuint64  GUIScene::s_measureGPUTime           = 0;
+GLuint64  GUIScene::s_measureGPUTime2           = 0;
 bool      GUIScene::s_sdfCompute               = false;
 int       GUIScene::s_sdfResolution            = 64;
 bool      GUIScene::s_sdfDrawSlice             = false;
@@ -93,7 +94,6 @@ void GUIScene::draw(ofEasyCam& camera)
 			if (ImGui::BeginTabItem("SDF"))
 			{
 				s_sceneSelection = SceneSelection::SDF;
-				ImGui::Checkbox("Compute SDF", &s_sdfCompute);
 
 				static int sdfResExp = static_cast<int>(log2(s_sdfResolution));
 				if (ImGui::SliderInt("SDF Resolution", &sdfResExp, 4, 9))
@@ -103,9 +103,10 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::SameLine();
 				ImGui::Text("eff. %d", s_sdfResolution);
 
-				ImGui::Text("Generate time %f", s_measureGPUTime / 1000000.0);
-
+				ImGui::Checkbox("Compute SDF", &s_sdfCompute);
+				ImGui::Text("Compute time %f", s_measureGPUTime / 1000000.0);
 				ImGui::Checkbox("Draw Raytrace", &s_sdfDrawRaytrace);
+				ImGui::Text("Draw time %f", s_measureGPUTime2 / 1000000.0);
 				ImGui::Checkbox("Draw Slice", &s_sdfDrawSlice);
 				ImGui::SliderFloat("SDF Slice X", &s_sdfSliceX, -2.0f, 2.0f);
 				ImGui::SliderFloat("SDF Truncation", &s_sdfTruncation, 0, 10);

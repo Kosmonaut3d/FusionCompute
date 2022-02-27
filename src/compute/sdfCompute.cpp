@@ -92,7 +92,6 @@ void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNorma
 	glBindTexture(GL_TEXTURE_3D, m_texID);
 	glGetTextureImage(m_texID, 0, GL_RED, GL_FLOAT, framedata.size() * sizeof(glm::vec2), &framedata[0]);
 	*/
-	int test = 1;
 
 	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
 	{
@@ -134,6 +133,15 @@ void SDFCompute::drawOutline()
 //----------------------------------------------------------------------------------------------------------
 void SDFCompute::drawRaymarch(ofCamera& camera)
 {
+	GLuint   query;
+	GLuint64 elapsed_time;
+
+	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
+	{
+		glGenQueries(1, &query);
+		glBeginQuery(GL_TIME_ELAPSED, query);
+	}
+
 	//glEnable(GL_CULL_FACE);
 	//glCullFace(GL_BACK);
 
@@ -160,5 +168,11 @@ void SDFCompute::drawRaymarch(ofCamera& camera)
 	m_raymarchSDFShader.end();
 	ofPopStyle();
 
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
+
+	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
+	{
+		glEndQuery(GL_TIME_ELAPSED);
+		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_measureGPUTime2);
+	}
 }

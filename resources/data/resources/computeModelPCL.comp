@@ -15,7 +15,7 @@ const float HEIGHT = 240;
 
 vec3 kinectDepthToWorld(ivec2 pixel_coords)
 {
-	float wz = imageLoad(rawDepthImage, pixel_coords).r * 2.048; // to meters
+	float wz = imageLoad(rawDepthImage, pixel_coords).r * 2.048; // to 
 	float factor = _zeroPixelSizeDouble * wz * _zeroPlaneDistInv;//2 * _zeroPixelSize * wz / _zeroPlaneDist;
 	float wx = (pixel_coords.x - WIDTH) * factor;
 	float wy = (pixel_coords.y - HEIGHT) * factor;

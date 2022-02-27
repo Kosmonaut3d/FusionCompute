@@ -41,6 +41,7 @@ class GUIScene //: public SceneImpl
 	static bool           s_bilateralBlurCompute;
 	static bool           s_bilateralBlurDraw;
 	static GLuint64       s_measureGPUTime;
+	static GLuint64       s_measureGPUTime2;
 	static bool           s_sdfCompute;
 	static int            s_sdfResolution;
 	static float          s_sdfSliceX;

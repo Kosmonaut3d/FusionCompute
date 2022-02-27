@@ -24,7 +24,7 @@ vec2 worldToDistance(vec3 worldPos)
 
 	vec2 outputValueWeight = vec2(FLT_MAX, 0.000000001);
 
-	if (clipSpacePos.w == 0)
+	if (clipSpacePos.w == 0 || clipSpacePos.z == 0)
 	{
 		return outputValueWeight;
 	}
@@ -40,7 +40,14 @@ vec2 worldToDistance(vec3 worldPos)
 	int x_proj = int( round((ndc.x + 1) * W2));
 	int y_proj = int(round((ndc.y + 1) * H2));
 		
+	// STILL VIEWSPACE
 	vec3 pclPos = imageLoad(pcl_input, ivec2(x_proj, y_proj)).xyz;
+
+	if(pclPos.z >= 0)
+	{
+		return outputValueWeight;
+	}
+
 	vec3 dist = pclPos - worldPos;
 	float len = length(dist);
 
@@ -52,7 +59,8 @@ vec2 worldToDistance(vec3 worldPos)
 		return vec2(sign(dotProduct)*scaledLen, 1);
 	}
 
-	return outputValueWeight;
+	// We are not close enough, but our pixel is legit - weight = 1
+	return vec2(FLT_MAX, 1);
 }
 
 void main() {
