@@ -46,6 +46,8 @@ class GUIScene //: public SceneImpl
 	static float          s_sdfSliceX;
 	static bool           s_sdfDrawSlice;
 	static bool           s_sdfDrawRaytrace;
+	static float          s_sdfWeightTruncation;
+	static float          s_sdfTruncation;
 	static bool           s_resetView;
 	static glm::vec3      s_testPointPos;
 

@@ -28,6 +28,8 @@ int       GUIScene::s_sdfResolution            = 64;
 bool      GUIScene::s_sdfDrawSlice             = false;
 bool      GUIScene::s_sdfDrawRaytrace          = true;
 float     GUIScene::s_sdfSliceX                = 0.f;
+float     GUIScene::s_sdfWeightTruncation      = 20.f;
+float     GUIScene::s_sdfTruncation      = 1.f;
 bool      GUIScene::s_resetView                = false;
 glm::vec3 GUIScene::s_testPointPos             = glm::vec3(-1, 0, -2);
 
@@ -106,6 +108,8 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Draw Raytrace", &s_sdfDrawRaytrace);
 				ImGui::Checkbox("Draw Slice", &s_sdfDrawSlice);
 				ImGui::SliderFloat("SDF Slice X", &s_sdfSliceX, -2.0f, 2.0f);
+				ImGui::SliderFloat("SDF Truncation", &s_sdfTruncation, 0, 10);
+				ImGui::SliderFloat("SDF Weight Truncation", &s_sdfWeightTruncation, 0, 1000);
 
 				/* ImGui::SliderFloat("Point X", &s_testPointPos.x, -2.0f, 2.0f);
 				ImGui::SliderFloat("Point y", &s_testPointPos.y, -2.0f, 2.0f);

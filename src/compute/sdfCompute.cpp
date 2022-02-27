@@ -30,16 +30,18 @@ void SDFCompute::setupTexture()
 {
 	glGenTextures(1, &m_texID);
 	glBindTexture(GL_TEXTURE_3D, m_texID);
-	std::vector<float> framedata(m_resolution * m_resolution * m_resolution);
-	std::fill(framedata.begin(), framedata.end(), 2.0f);
 	//glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, m_resolution, m_resolution, m_resolution, 0, GL_RED, GL_FLOAT, framedata.data());
-	//glTexImage3D(GL_TEXTURE_3D, 0, GL_RG32F, m_resolution, m_resolution, m_resolution, 0, GL_RG, GL_FLOAT, NULL);
+
+	std::vector<float> framedata(m_resolution * m_resolution * m_resolution * 2);
+	std::fill(framedata.begin(), framedata.end(), m_scale/m_resolution);
+
+	//glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, m_resolution, m_resolution, m_resolution, 0, GL_RED, GL_FLOAT, framedata.data());
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RG32F, m_resolution, m_resolution, m_resolution, 0, GL_RG, GL_FLOAT, framedata.data());
 
 }
 
@@ -66,26 +68,28 @@ void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNorma
 
 	glm::vec3 pointLocal = m_modelMatInv * glm::vec4(point, 1);
 
+	// Make the truncation distance dependent on the minimum distance between 2 tiles
+	const float truncationScaled = m_scale / m_resolution * GUIScene::s_sdfTruncation;
 
 	m_computeSDFShader.begin();
 
 	m_computeSDFShader.setUniform1f("_stepSize", 1. / m_resolution);
 	m_computeSDFShader.setUniformMatrix4f("_pclWorldToClip", worldToClipKinect);
 	m_computeSDFShader.setUniformMatrix4f("_modelMatrix", m_modelMat);
-	m_computeSDFShader.setUniform1f("_truncationDistance", .1);
+	m_computeSDFShader.setUniform1f("_truncationDistance", truncationScaled);
+	m_computeSDFShader.setUniform1f("_maxWeight", GUIScene::s_sdfWeightTruncation);
 
 	glBindImageTexture(0, pointCloudId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	glBindImageTexture(1, pointCloudNormalId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-	glBindImageTexture(2, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
+	glBindImageTexture(2, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
 
 	m_computeSDFShader.dispatchCompute(m_resolution, m_resolution, m_resolution);
 	m_computeSDFShader.end();
-
-	/* std::vector<float> framedata(m_resolution * m_resolution * m_resolution);
+	/*
+	std::vector<glm::vec2> framedata(m_resolution * m_resolution * m_resolution);
 	glBindTexture(GL_TEXTURE_3D, m_texID);
-	glGetTextureImage(m_texID, 0, GL_RED, GL_FLOAT, framedata.size()*sizeof(float), &framedata[0]);
+	glGetTextureImage(m_texID, 0, GL_RED, GL_FLOAT, framedata.size() * sizeof(glm::vec2), &framedata[0]);
 	*/
-
 	int test = 1;
 
 	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
@@ -139,13 +143,13 @@ void SDFCompute::drawRaymarch(ofCamera& camera)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, m_texID);
 
+	// Make the truncation distance dependent on the minimum distance between 2 tiles
+	const float truncationScaled = m_scale / m_resolution * GUIScene::s_sdfTruncation;
+
 	m_raymarchSDFShader.setUniform3f("cameraWorld", camera.getPosition());
 	m_raymarchSDFShader.setUniformMatrix4f("sdfBaseTransform", m_modelMatInv);
 	m_raymarchSDFShader.setUniform1f("sdfResolution", m_resolution);
-	auto    vp  = ofMatrix4x4(camera.getProjectionMatrix() * camera.getModelViewMatrix());
-	ofVec4f ori = ofVec4f(0, 0, 0, 1.0);
-	ori         = vp * ori;
-	auto res    = camera.worldToCamera(ofVec3f(0, 0, 0));
+	m_raymarchSDFShader.setUniform1f("_truncationDistance", truncationScaled);
 	m_raymarchSDFShader.setUniformMatrix4f("viewprojection", camera.getModelViewProjectionMatrix());
 	m_raymarchSDFShader.setUniform1f("near", camera.getNearClip());
 	m_raymarchSDFShader.setUniform1f("far", camera.getFarClip());

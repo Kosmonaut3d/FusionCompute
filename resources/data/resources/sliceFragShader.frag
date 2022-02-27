@@ -14,11 +14,11 @@ void main()
 {
     vec3 relPos = (sdfBaseTransform * vec4(world, 1)).xyz; 
 	
-	float valSDF = texture(tex3D, relPos).r;
+	vec2 valSDF = texture(tex3D, relPos).rg;
 
-	if(valSDF < .4)
+	if(valSDF.x < .4)
 	{
-		outputColor =  vec4(max(-valSDF*1000, 0.), valSDF.xx ,1.);
+		outputColor =  vec4(max(-valSDF.x*1000, 0.), valSDF.xx ,1.);
 	}
 	else
 	{

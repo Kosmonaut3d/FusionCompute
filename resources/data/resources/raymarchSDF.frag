@@ -13,6 +13,9 @@ uniform mat4 viewprojection;
 uniform float near;
 uniform float far;
 
+uniform float _truncationDistance;
+#define FLT_MAX 10000
+
 #define PI 3.1415925359
 #define TWO_PI 6.2831852
 #define MAX_STEPS 200
@@ -64,9 +67,9 @@ float GetDistSDF(vec3 p)
     {
         return .1;
     }
-
+    
     // Replace by uniform
-    return texture(volume_tex, relPos).r;
+    return texture(volume_tex, relPos).r / FLT_MAX * _truncationDistance;
 }
 
 vec2 RayMarchSDF(vec3 ro, vec3 rd) 

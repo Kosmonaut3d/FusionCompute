@@ -4,15 +4,18 @@ layout(local_size_x = 4, local_size_y = 4, local_size_z = 4) in;
 
 layout(rgba32f, binding = 0) uniform readonly image2D pcl_input;
 layout(rgba32f, binding = 1) uniform readonly image2D pcl_normal_input;
-layout(r32f, binding = 2) uniform image3D model_output;
+layout(rg32f, binding = 2) uniform image3D model_output;
 
 uniform float _stepSize;
 uniform mat4x4 _modelMatrix;
 uniform mat4x4 _pclWorldToClip;
 uniform float _truncationDistance;
+uniform float _maxWeight = 20;
 
 const float W2 = 320;
 const float H2 = 240;
+
+#define FLT_MAX 10000
 
 float worldToDistance(vec3 worldPos)
 {  
@@ -21,13 +24,13 @@ float worldToDistance(vec3 worldPos)
 
 	if (clipSpacePos.w == 0)
 	{
-		return _truncationDistance;
+		return FLT_MAX;
 	}
 
 	vec3 ndc = vec3(clipSpacePos) / clipSpacePos.w;
 	if (abs(ndc.x) >= 1 || abs(ndc.y) >= 1)
 	{
-		return _truncationDistance;
+		return FLT_MAX;
 	}
 
 	// OPENGL
@@ -42,19 +45,14 @@ float worldToDistance(vec3 worldPos)
 	vec3 pclNor = imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
 	float dotProduct = dot(normalize(dist), pclNor);
 
-	if(len < _truncationDistance)
+	if(abs(len) < _truncationDistance)
 	{
-		if(dotProduct > 0)
-		{
-			return -len;
-		}
-		else
-		{
-			return len;
-		}
+		float scaledLen = len * FLT_MAX /_truncationDistance ;
+
+		return sign(dotProduct)*scaledLen;
 	}
 
-	return _truncationDistance;
+	return FLT_MAX;
 }
 
 void main() {
@@ -65,8 +63,14 @@ void main() {
 
 	float value = worldToDistance(worldVoxelPosition);
   
-	//float currentValue = imageLoad(model_output, pixel_coords).r;
-	imageStore(model_output, pixel_coords,  value.xxxx);//min(value, currentValue).xxxx);
+	vec2 previousData = imageLoad(model_output, pixel_coords).rg;
+
+	float currWeight = 1;
+
+	float accValue = (previousData.y * previousData.x + currWeight * value) / (currWeight + previousData.y);
+	float accWeight = min(currWeight + previousData.y, _maxWeight);
+
+	imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
   // NOTE: Nvidia could use derivatives for normal maps;
 
   // Problem: openGL reads textures from bottom
