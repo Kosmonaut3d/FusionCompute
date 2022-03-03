@@ -18,7 +18,7 @@ uniform float _truncationDistance;
 
 #define PI 3.1415925359
 #define TWO_PI 6.2831852
-#define MAX_STEPS 200
+#define MAX_STEPS 100
 #define MAX_DIST 8
 #define SURFACE_DIST .01
 

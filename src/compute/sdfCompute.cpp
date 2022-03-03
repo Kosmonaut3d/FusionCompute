@@ -77,6 +77,8 @@ void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNorma
 
 	m_computeSDFShader.setUniform1f("_stepSize", 1. / m_resolution);
 	m_computeSDFShader.setUniformMatrix4f("_pclWorldToClip", worldToClipKinect);
+	m_computeSDFShader.setUniformMatrix4f("_viewToWorld", viewToWorld);
+	m_computeSDFShader.setUniformMatrix3f("_viewToWorldRot", glm::mat3(viewToWorld));
 	m_computeSDFShader.setUniformMatrix4f("_modelMatrix", m_modelMat);
 	m_computeSDFShader.setUniform1f("_truncationDistance", truncationScaled);
 	m_computeSDFShader.setUniform1f("_maxWeight", GUIScene::s_sdfWeightTruncation);

@@ -9,6 +9,8 @@ layout(rg32f, binding = 2) uniform image3D model_output;
 uniform float _stepSize;
 uniform mat4x4 _modelMatrix;
 uniform mat4x4 _pclWorldToClip;
+uniform mat4x4 _viewToWorld;
+uniform mat3x3 _viewToWorldRot;
 uniform float _truncationDistance;
 uniform float _maxWeight = 20;
 
@@ -48,13 +50,14 @@ vec2 worldToDistance(vec3 worldPos)
 		return outputValueWeight;
 	}
 
-	vec3 dist = pclPos - worldPos;
+	vec3 pclWorldPos = vec4(_viewToWorld * vec4(pclPos, 1)).xyz;
+	vec3 dist = worldPos - pclWorldPos;
 	float len = length(dist);
 
 	if(abs(len) < _truncationDistance)
 	{
-		vec3 pclNor = imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
-		float dotProduct = dot(normalize(dist), pclNor);
+		vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
+		float dotProduct = dot(normalize(dist), normalize(pclNor));
 		float scaledLen = len * FLT_MAX /_truncationDistance;
 		return vec2(sign(dotProduct)*scaledLen, 1);
 	}

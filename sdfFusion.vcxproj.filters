@@ -376,5 +376,8 @@
     <None Include="resources\data\resources\computeSDF.comp">
       <Filter>shaders</Filter>
     </None>
+    <None Include="resources\data\resources\computeICP.comp">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

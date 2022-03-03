@@ -11,6 +11,7 @@ IterativeClostestPointCPU::IterativeClostestPointCPU()
 {
 }
 
+// https://eigen.tuxfamily.org/dox/TopicMultiThreading.html
 void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertices,
 
                                         const std::vector<glm::vec3>& newNormals,
@@ -37,7 +38,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 	glm::mat4x4 viewToWorld_prev = glm::inverse(worldToViewOld);
 
 	///\brief pi * T_g_k
-	glm::mat4x4 viewProjection_prev = projection * worldToViewOld;
+	//glm::mat4x4 viewProjection_prev = worldToViewOld * projection;
 
 	glm::mat3x3 viewToWorldRot_prev = glm::mat3x3(viewToWorld_prev);
 
@@ -194,6 +195,8 @@ void IterativeClostestPointCPU::getCorrespondences(
     const int& SIZE, int& fail_z, double& E_sum, int& found,
     std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec3>>& correspondences)
 {
+	glm::mat4x4 viewProjection_iter = (projection *glm::mat4x4(worldToView_iter));
+
 	/// ..........................
 	for (int i = 0; i < SIZE; i++)
 	{
@@ -210,7 +213,7 @@ void IterativeClostestPointCPU::getCorrespondences(
 		}
 
 		// NOTE: transform from world to camera -> project
-		glm::vec4 clipSpacePos = projection * glm::mat4x4(worldToView_iter) * glm::vec4(newVertexWorld, 1);
+		glm::vec4 clipSpacePos = viewProjection_iter * glm::vec4(newVertexWorld, 1);
 
 		if (clipSpacePos.w == 0)
 		{

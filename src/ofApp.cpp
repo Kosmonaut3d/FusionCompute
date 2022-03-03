@@ -20,7 +20,7 @@ ofApp::ofApp()
 
 	glm::vec3   kinectOrigin = glm::vec3(0, 0, 0);
 	auto        ori          = ofVec3f(kinectOrigin);
-	auto        tar          = ofVec3f(kinectOrigin + glm::vec3(0, 0, -1));
+	auto        tar          = ofVec3f(kinectOrigin + glm::vec3(.1, 0, -1));
 	auto        upv          = ofVec3f(glm::vec3(0, 1, 0));
 	ofMatrix4x4 view;
 	view.makeLookAtViewMatrix(ori, tar, upv);
@@ -171,7 +171,8 @@ void ofApp::update()
 		case GUIScene::SceneSelection::SDF: {
 			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
 			                         m_kinectProjection);
-			m_sdfScene.update(updateKinect, m_kinect, m_kinectProjection * m_kinectWorldToView, m_pointCloudScene.getPCLWorld(), m_pointCloudScene.getPCLNormal());
+			m_sdfScene.update(updateKinect, m_kinect, m_kinectProjection * m_kinectWorldToView, m_kinectViewToWorld,
+			                  m_pointCloudScene.getPCLWorld(), m_pointCloudScene.getPCLNormal());
 			break;
 		}
 		default: {

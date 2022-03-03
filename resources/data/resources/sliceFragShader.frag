@@ -16,13 +16,13 @@ void main()
 	
 	vec2 valSDF = texture(tex3D, relPos).rg;
 
-	if(valSDF.x < .4)
+	if(valSDF.x < .0)
 	{
-		outputColor =  vec4(max(-valSDF.x*1000, 0.), valSDF.xx ,1.);
+		outputColor =  vec4(-valSDF.x, valSDF.xx ,1.);
 	}
 	else
 	{
-		discard;
+		outputColor =  vec4(0, valSDF.x, 0 ,1.);
 	}
 
 	//vec3 valCompute =  texture(tex2D, relPos.zy).rbg;

@@ -284,6 +284,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="resources\data\resources\computeBilateralBlur.comp" />
+    <None Include="resources\data\resources\computeICP.comp" />
     <None Include="resources\data\resources\computeModelPCL.comp" />
     <None Include="resources\data\resources\computeNormalPCL.comp" />
     <None Include="resources\data\resources\computeSDF.comp" />

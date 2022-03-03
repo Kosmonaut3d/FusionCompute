@@ -24,8 +24,8 @@ void PointCloudScene::setup(ofxKinect& kinect, glm::mat4x4 viewToWorld)
 	{
 		m_pointCloudComp.registerKinectData(kinect.getZeroPlaneDistance(), kinect.getZeroPlanePixelSize());
 
-		m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, viewToWorld);
-		m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, viewToWorld);
+		m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, glm::mat4() /*viewToWorld*/);
+		m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, glm::mat4() /*viewToWorld*/);
 	}
 
 	DataStorageHelper::loadData("depthRaw.bin", kinect.getRawDepthPixels().getData(), 640 * 480);
@@ -58,11 +58,11 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 			// Keep 2 PCL buffers
 			if (m_isPCL_0)
 			{
-				m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, viewToWorld);
+				m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, glm::mat4() /*viewToWorld*/);
 			}
 			else
 			{
-				m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, viewToWorld);
+				m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, glm::mat4());
 			}
 		}
 
