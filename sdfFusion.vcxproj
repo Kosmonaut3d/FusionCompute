@@ -183,6 +183,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\compute\BilateralBlurCompute.cpp" />
+    <ClCompile Include="src\compute\icpCompute.cpp" />
     <ClCompile Include="src\compute\PointCloudCompute.cpp" />
     <ClCompile Include="src\compute\PointCloudVis.cpp" />
     <ClCompile Include="src\compute\sdfCompute.cpp" />
@@ -223,6 +224,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\compute\BilateralBlurCompute.h" />
+    <ClInclude Include="src\compute\icpCompute.h" />
     <ClInclude Include="src\compute\PointCloudCompute.h" />
     <ClInclude Include="src\compute\PointCloudVis.h" />
     <ClInclude Include="src\compute\sdfCompute.h" />

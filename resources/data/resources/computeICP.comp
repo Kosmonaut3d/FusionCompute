@@ -4,11 +4,34 @@ layout(local_size_x = 1, local_size_y = 1) in;
 
 layout(rgba32f, binding = 0) uniform readonly coherent image2D vertex_old;
 layout(rgba32f, binding = 1) uniform readonly coherent image2D vertex_new;
+layout(rgba32f, binding = 2) uniform writeonly coherent image2D correspondence;
+
+uniform mat3x3 viewToWorldItRot;
+uniform mat4x4 viewToWorldIt; // View To World
+uniform mat4x4 viewProjectionIt; // Current iteration view projection
+
 
 void main() {
 	// base pixel colour for image
 	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
 
-	vec3 vertex_new = imageLoad(model_output, pixel_coords).xyz;
+	vec3 vertexNewWorld = (viewToWorldIt * vec4(imageLoad(vertex_new, pixel_coords).xyz, 1)).xyz;
+	if(vertexNewWorld.z == 0)
+	{
+		return;
+	}
 
+	vec4 vertexNewClip = viewProjectionIt * vec4(vertexNewWorld, 1);
+	if(vertexNewClip.w == 0)
+	{
+		return;
+	}
+
+	vec3 vertexNdc = vertexNewClip.xyz / vertexNewClip.w;
+	if(clamp(vertexNdc, -1., 1.) != vertexNdc)
+	{
+		return;
+	}
+	
+	imageStore(correspondence, pixel_coords, vec4(vertexNewWorld, 1));
 }

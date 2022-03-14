@@ -121,6 +121,9 @@
     <ClCompile Include="src\cpuReference\slice.cpp">
       <Filter>src\cpuReference</Filter>
     </ClCompile>
+    <ClCompile Include="src\compute\icpCompute.cpp">
+      <Filter>src\compute</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -337,6 +340,9 @@
     </ClInclude>
     <ClInclude Include="src\cpuReference\slice.h">
       <Filter>src\cpuReference</Filter>
+    </ClInclude>
+    <ClInclude Include="src\compute\icpCompute.h">
+      <Filter>src\compute</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
