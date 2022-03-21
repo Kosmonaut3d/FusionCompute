@@ -27,7 +27,7 @@ void Slice::setPos(ofVec3f pos)
 	m_mesh.setPosition(pos);
 }
 
-void Slice::draw(ofMatrix4x4& sdfInvWorld, unsigned int sdfTextureID, unsigned int computeShaderTexID)
+void Slice::draw(const ofMatrix4x4& sdfInvWorld, unsigned int sdfTextureID, unsigned int computeShaderTexID)
 {
 	m_mesh.setPosition(m_position + glm::vec3(GUIScene::s_sdfSliceX, 0, 0));
 	m_sliceShader.begin();

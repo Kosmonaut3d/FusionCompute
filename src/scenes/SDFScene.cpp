@@ -35,6 +35,6 @@ void SDFScene::draw(ofCamera& camera)
 	}
 	if (GUIScene::s_sdfDrawSlice)
 	{
-		m_slice.draw(ofMatrix4x4(m_sdfCompute.getWorldInv()), m_sdfCompute.getTextureID(), 0);
+        m_slice.draw(m_sdfCompute.getWorldInv(), m_sdfCompute.getTextureID(), 0);
 	}
 }

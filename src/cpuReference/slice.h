@@ -6,7 +6,7 @@ class Slice
 public:
 	Slice(ofVec3f position, float size);
 	void setPos(ofVec3f pos);
-	void draw(ofMatrix4x4& sdfInvWorld, unsigned int boundTextureID3d, unsigned int boundTextureID);
+    void draw(const ofMatrix4x4& sdfInvWorld, unsigned int boundTextureID3d, unsigned int boundTextureID);
 
 private:
 	ofPlanePrimitive m_mesh;

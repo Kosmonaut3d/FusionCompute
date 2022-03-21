@@ -171,7 +171,8 @@ void ofApp::update()
 		case GUIScene::SceneSelection::SDF: {
 			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
 			                         m_kinectProjection);
-			m_sdfScene.update(updateKinect, m_kinect, m_kinectProjection * m_kinectWorldToView, m_kinectViewToWorld,
+            glm::mat4x4 kinectViewProjection = m_kinectProjection * m_kinectWorldToView;
+            m_sdfScene.update(updateKinect, m_kinect, kinectViewProjection, m_kinectViewToWorld,
 			                  m_pointCloudScene.getPCLWorld(), m_pointCloudScene.getPCLNormal());
 			break;
 		}
