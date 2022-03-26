@@ -5,9 +5,9 @@
 class ICPCompute
 {
   public:
-	ICPCompute(glm::vec3 origin, int resolution, float scale);
-	void         setupTexture();
-	void         ICPCompute::compute(unsigned int newVertexWorldTex);
+	ICPCompute();
+	void setupTexture();
+	void ICPCompute::compute(unsigned int newVertexWorldTex, glm::mat4x4& viewWorldIt, glm::mat4x4& viewProjectionIt);
 	unsigned int getTexID();
 
   private:

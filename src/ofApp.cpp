@@ -139,8 +139,8 @@ void ofApp::update()
 {
 	if (GUIScene::s_resetView)
 	{
-		m_kinectViewToWorld = m_kinectViewToWorld_Init;
-		m_kinectWorldToView = glm::inverse(m_kinectViewToWorld);
+		m_kinectViewToWorld   = m_kinectViewToWorld_Init;
+		m_kinectWorldToView   = glm::inverse(m_kinectViewToWorld);
 		GUIScene::s_resetView = false;
 	}
 
@@ -165,15 +165,17 @@ void ofApp::update()
 			break;
 		}
 		case GUIScene::SceneSelection::PointCloud: {
-			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
+			                         m_kinectProjection);
 			break;
 		}
 		case GUIScene::SceneSelection::SDF: {
 			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
 			                         m_kinectProjection);
-            glm::mat4x4 kinectViewProjection = m_kinectProjection * m_kinectWorldToView;
-            m_sdfScene.update(updateKinect, m_kinect, kinectViewProjection, m_kinectViewToWorld,
-			                  m_pointCloudScene.getPCLWorld(), m_pointCloudScene.getPCLNormal());
+			glm::mat4x4 kinectViewProjection = m_kinectProjection * m_kinectWorldToView;
+			m_sdfScene.update(updateKinect, m_kinect, kinectViewProjection, m_kinectViewToWorld,
+			                  m_kinectProjection * m_kinectWorldToView, m_pointCloudScene.getPCLWorld(),
+			                  m_pointCloudScene.getPCLNormal());
 			break;
 		}
 		default: {
@@ -252,8 +254,9 @@ void ofApp::draw()
 		case GUIScene::SceneSelection::SDF: {
 			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
 
-			m_camera.begin();
 			m_sdfScene.draw(m_camera);
+
+			m_camera.begin();
 			drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
 			m_camera.end();
 			break;

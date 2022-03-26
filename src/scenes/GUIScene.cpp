@@ -23,14 +23,16 @@ bool      GUIScene::s_drawDepthBackground      = false;
 bool      GUIScene::s_bilateralBlurCompute     = true;
 bool      GUIScene::s_bilateralBlurDraw        = true;
 GLuint64  GUIScene::s_measureGPUTime           = 0;
-GLuint64  GUIScene::s_measureGPUTime2           = 0;
+GLuint64  GUIScene::s_measureGPUTime2          = 0;
 bool      GUIScene::s_sdfCompute               = false;
 int       GUIScene::s_sdfResolution            = 64;
 bool      GUIScene::s_sdfDrawSlice             = false;
 bool      GUIScene::s_sdfDrawRaytrace          = true;
 float     GUIScene::s_sdfSliceX                = 0.f;
 float     GUIScene::s_sdfWeightTruncation      = 20.f;
-float     GUIScene::s_sdfTruncation      = 3.f;
+float     GUIScene::s_sdfTruncation            = 3.f;
+bool      GUIScene::s_computeICPGPU            = true;
+bool      GUIScene::s_drawICPGPU               = true;
 bool      GUIScene::s_resetView                = false;
 glm::vec3 GUIScene::s_testPointPos             = glm::vec3(-1, 0, -2);
 
@@ -112,6 +114,15 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::SliderFloat("SDF Truncation", &s_sdfTruncation, 0, 10);
 				ImGui::SliderFloat("SDF Weight Truncation", &s_sdfWeightTruncation, 0, 1000);
 				ImGui::Checkbox("Compute Bilateral Blur", &s_bilateralBlurCompute);
+
+				ImGui::Separator();
+
+				const ImVec4 gpuCol = (ImVec4)ImColor(0.5, 170.5f, 0.5f);
+				ImGui::PushStyleColor(ImGuiCol_CheckMark, gpuCol);
+				ImGui::TextColored(gpuCol, "ICP Compute");
+				ImGui::Checkbox("Compute ICP", &s_computeICPGPU);
+				ImGui::Checkbox("Draw ICP", &s_drawICPGPU);
+				ImGui::PopStyleColor(1);
 
 				/* ImGui::SliderFloat("Point X", &s_testPointPos.x, -2.0f, 2.0f);
 				ImGui::SliderFloat("Point y", &s_testPointPos.y, -2.0f, 2.0f);

@@ -3,6 +3,7 @@
 #include "GUIScene.h"
 #include "PointCloudScene.h"
 #include "SceneImpl.h"
+#include "compute/icpCompute.h"
 #include "compute/sdfCompute.h"
 #include "cpuReference/sdf.h"
 #include "cpuReference/slice.h"
@@ -15,12 +16,12 @@ class SDFScene //: public SceneImpl
 	SDFScene();
 	void setup(ofxKinect& kinect);
 	void update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldToClip, glm::mat4x4& viewToWorld,
-	            unsigned int m_pointsCloudWorldTex,
-	            unsigned int m_pointsCloudNormalTex);
+	            glm::mat4x4& viewProjection, unsigned int m_pointsCloudWorldTex, unsigned int m_pointsCloudNormalTex);
 	void draw(ofCamera& camera);
 
   private:
 	SDFCompute          m_sdfCompute;
 	SignedDistanceField m_sdfCPU;
 	Slice               m_slice;
+	ICPCompute          m_icpCompute;
 };

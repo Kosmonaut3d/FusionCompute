@@ -49,6 +49,8 @@ class GUIScene //: public SceneImpl
 	static bool           s_sdfDrawRaytrace;
 	static float          s_sdfWeightTruncation;
 	static float          s_sdfTruncation;
+	static bool           s_computeICPGPU;
+	static bool           s_drawICPGPU;
 	static bool           s_resetView;
 	static glm::vec3      s_testPointPos;
 

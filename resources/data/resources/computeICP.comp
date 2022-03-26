@@ -10,7 +10,6 @@ uniform mat3x3 viewToWorldItRot;
 uniform mat4x4 viewToWorldIt; // View To World
 uniform mat4x4 viewProjectionIt; // Current iteration view projection
 
-
 void main() {
 	// base pixel colour for image
 	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
