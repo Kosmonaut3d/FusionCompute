@@ -16,7 +16,9 @@ class SDFScene //: public SceneImpl
 	SDFScene();
 	void setup(ofxKinect& kinect);
 	void update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldToClip, glm::mat4x4& viewToWorld,
-	            glm::mat4x4& viewProjection, unsigned int m_pointsCloudWorldTex, unsigned int m_pointsCloudNormalTex);
+	            glm::mat4x4& viewProjection, unsigned int m_pointsCloudWorldTexNew,
+	            unsigned int m_pointsCloudNormalTexNew, unsigned int m_pointsCloudWorldTexOld,
+	            unsigned int m_pointsCloudNormalTexOld);
 	void draw(ofCamera& camera);
 
   private:

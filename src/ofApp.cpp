@@ -13,6 +13,7 @@ ofApp::ofApp()
     , m_kinectViewToWorld{}
     , m_kinectProjection{}
     , m_kinectViewToWorld_Init{}
+    , m_isFrame0{false}
 // m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
 {
 	constexpr float fovy       = glm::radians(45.25); // Got this value by testing
@@ -152,6 +153,7 @@ void ofApp::update()
 	if (updateKinect) //&& !m_computeSDF && m_updateKinect)
 	{
 		GUIScene::s_isKinectDeliveringData = true;
+		m_isFrame0                         = !m_isFrame0;
 
 		// TODO maybe use the kinect internal one instead, or make this a reference
 		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
@@ -166,16 +168,22 @@ void ofApp::update()
 		}
 		case GUIScene::SceneSelection::PointCloud: {
 			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
-			                         m_kinectProjection);
+			                         m_kinectProjection, m_isFrame0);
 			break;
 		}
 		case GUIScene::SceneSelection::SDF: {
 			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
-			                         m_kinectProjection);
+			                         m_kinectProjection, m_isFrame0);
 			glm::mat4x4 kinectViewProjection = m_kinectProjection * m_kinectWorldToView;
+
+			auto PCLWorldNew  = m_pointCloudScene.getPCLWorld(m_isFrame0);
+			auto PCLWorldOld  = m_pointCloudScene.getPCLWorld(!m_isFrame0);
+			auto PCLNormalNew = m_pointCloudScene.getPCLNormal(m_isFrame0);
+			auto PCLNormalOld = m_pointCloudScene.getPCLNormal(!m_isFrame0);
+
 			m_sdfScene.update(updateKinect, m_kinect, kinectViewProjection, m_kinectViewToWorld,
-			                  m_kinectProjection * m_kinectWorldToView, m_pointCloudScene.getPCLWorld(),
-			                  m_pointCloudScene.getPCLNormal());
+			                  m_kinectProjection * m_kinectWorldToView, PCLWorldNew, PCLNormalNew, PCLWorldOld,
+			                  PCLNormalOld);
 			break;
 		}
 		default: {
@@ -244,7 +252,7 @@ void ofApp::draw()
 			break;
 		}
 		case GUIScene::SceneSelection::PointCloud: {
-			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
 
 			m_camera.begin();
 			drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
@@ -252,7 +260,7 @@ void ofApp::draw()
 			break;
 		}
 		case GUIScene::SceneSelection::SDF: {
-			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
 
 			m_sdfScene.draw(m_camera);
 

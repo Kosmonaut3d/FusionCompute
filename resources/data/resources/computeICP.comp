@@ -8,6 +8,9 @@ layout(rgba32f, binding = 2) uniform writeonly coherent image2D correspondence;
 
 uniform mat3x3 viewToWorldItRot;
 uniform mat4x4 viewToWorldIt; // View To World
+
+uniform mat4x4 viewToWorldOld; // View To World previous
+
 uniform mat4x4 viewProjectionIt; // Current iteration view projection
 
 void main() {
@@ -31,6 +34,10 @@ void main() {
 	{
 		return;
 	}
+
+	ivec2 pixel_coord_projected = ivec2(vertexNdc.xy);
+
+	vec3 vertexOldWorld = (viewToWorldOld * vec4(imageLoad(vertex_old, pixel_coord_projected).xyz, 1)).xyz;
 	
-	imageStore(correspondence, pixel_coords, vec4(vertexNewWorld, 1));
+	imageStore(correspondence, pixel_coords, vec4(1,1,1,1));//vec4(vertexOldWorld, 1));
 }

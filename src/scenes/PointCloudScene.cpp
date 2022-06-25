@@ -13,7 +13,6 @@ PointCloudScene::PointCloudScene()
     , m_icpCPU{}
     , m_texDepthRaw{}
     , m_texColorPtr{}
-    , m_isPCL_0{false}
 {
 }
 
@@ -34,12 +33,12 @@ void PointCloudScene::setup(ofxKinect& kinect, glm::mat4x4 viewToWorld)
 
 	m_bilateralBlurComp.compute(m_texDepthRaw, GUIScene::s_bilateralBlurCompute);
 
-	m_pointCloudComp.compute(m_bilateralBlurComp.getTextureID());
+	m_pointCloudComp.compute(m_bilateralBlurComp.getTextureID(), true);
 }
 
 //----------------------------------------------------------------------------------------------------------
 void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& viewToWorld, glm::mat4x4& worldToView,
-                             glm::mat4x4& projection)
+                             glm::mat4x4& projection, bool isFrame0)
 {
 	if (kinectUpdate || GUIScene::s_pointCloudCPUForceUpdate)
 	{
@@ -48,17 +47,16 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 
 		if (GUIScene::s_computePointCloud)
 		{
-			m_pointCloudComp.compute(m_bilateralBlurComp.getTextureID());
+			m_pointCloudComp.compute(m_bilateralBlurComp.getTextureID(), isFrame0);
 		}
 
 		if (GUIScene::s_computePointCloudCPU)
 		{
-			m_isPCL_0 = !m_isPCL_0;
-
 			// Keep 2 PCL buffers
-			if (m_isPCL_0)
+			if (isFrame0)
 			{
-				m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true, glm::mat4() /*viewToWorld*/);
+				m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_pointCloudDownscale, true,
+				                                 glm::mat4() /*viewToWorld*/);
 			}
 			else
 			{
@@ -70,8 +68,8 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 		{
 			// GUIScene::s_computeICPCPU = false;
 
-			auto& ptrNew = m_isPCL_0 ? m_pointCloudCPU_0 : m_pointCloudCPU_1;
-			auto& ptrOld = m_isPCL_0 ? m_pointCloudCPU_1 : m_pointCloudCPU_0;
+			auto& ptrNew = isFrame0 ? m_pointCloudCPU_0 : m_pointCloudCPU_1;
+			auto& ptrOld = isFrame0 ? m_pointCloudCPU_1 : m_pointCloudCPU_0;
 
 			glm::mat4x4 output;
 			m_icpCPU.compute(ptrNew.getPoints(), ptrNew.getNormals(), ptrOld.getPoints(), ptrOld.getNormals(),
@@ -85,7 +83,7 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 
 //----------------------------------------------------------------------------------------------------------
 void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4x4& worldToView,
-                           glm::mat4x4& projection)
+                           glm::mat4x4& projection, bool isFrame0)
 {
 	camera.begin();
 
@@ -93,8 +91,8 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 
 	if (GUIScene::s_drawPointCloud)
 	{
-		m_pointCloudVis.draw(m_pointCloudComp.getModelTextureID(), m_texColorPtr->getTextureData().textureID, false,
-		                     camera.getModelViewProjectionMatrix() * viewToWorld);
+		m_pointCloudVis.draw(m_pointCloudComp.getModelTextureID(isFrame0), m_texColorPtr->getTextureData().textureID,
+		                     false, camera.getModelViewProjectionMatrix() * viewToWorld);
 	}
 
 	if (GUIScene::SceneSelection::PointCloud == GUIScene::s_sceneSelection)
@@ -103,7 +101,7 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 		{
 			ofPushMatrix();
 			ofMultMatrix(viewToWorld);
-			if (m_isPCL_0)
+			if (isFrame0)
 			{
 				m_pointCloudCPU_0.draw(GUIScene::s_drawPointCloudNormCPU, viewToWorld);
 			}
@@ -116,11 +114,11 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 
 		if (GUIScene::s_drawPointCloudNorm)
 		{
-			FullScreenQuadRender::get().draw(m_pointCloudComp.getNormalTextureID(), GL_TEXTURE_2D);
+			FullScreenQuadRender::get().draw(m_pointCloudComp.getNormalTextureID(isFrame0), GL_TEXTURE_2D);
 		}
 		else if (GUIScene::s_drawPointCloudTex)
 		{
-			FullScreenQuadRender::get().draw(m_pointCloudComp.getModelTextureID(), GL_TEXTURE_2D);
+			FullScreenQuadRender::get().draw(m_pointCloudComp.getModelTextureID(isFrame0), GL_TEXTURE_2D);
 		}
 	}
 
@@ -128,13 +126,13 @@ void PointCloudScene::draw(ofCamera& camera, glm::mat4x4& viewToWorld, glm::mat4
 }
 
 //----------------------------------------------------------------------------------------------------------
-unsigned int PointCloudScene::getPCLWorld()
+unsigned int PointCloudScene::getPCLWorld(bool isFrame0)
 {
-	return m_pointCloudComp.getModelTextureID();
+	return m_pointCloudComp.getModelTextureID(isFrame0);
 }
 
 //----------------------------------------------------------------------------------------------------------
-unsigned int PointCloudScene::getPCLNormal()
+unsigned int PointCloudScene::getPCLNormal(bool isFrame0)
 {
-	return m_pointCloudComp.getNormalTextureID();
+	return m_pointCloudComp.getNormalTextureID(isFrame0);
 }

@@ -7,7 +7,8 @@ class ICPCompute
   public:
 	ICPCompute();
 	void setupTexture();
-	void ICPCompute::compute(unsigned int newVertexWorldTex, glm::mat4x4& viewWorldIt, glm::mat4x4& viewProjectionIt);
+	void ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int oldVertexWorldTex, glm::mat4x4& viewWorldIt,
+	                         glm::mat4x4& viewProjectionIt);
 	unsigned int getTexID();
 
   private:

@@ -28,15 +28,23 @@ void ICPCompute::setupTexture()
 }
 
 //----------------------------------------------------------------------------------------------------------
-void ICPCompute::compute(unsigned int newVertexWorldTex, glm::mat4x4& viewWorldIt, glm::mat4x4& viewProjectionIt)
+void ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int oldVertexWorldTex, glm::mat4x4& viewWorldIt,
+                         glm::mat4x4& viewProjectionIt)
 {
+	// Clear buffer first
+	constexpr glm::vec4 empty{0, 0, 0, 0};
+	glClearTexImage(m_texID, 0, GL_RGBA, GL_FLOAT, &empty);
+
+	// Find correspondences
 	m_computeICPShader.begin();
 
 	m_computeICPShader.setUniformMatrix4f("viewToWorldIt", viewWorldIt);
+	m_computeICPShader.setUniformMatrix4f("viewToWorldOld", viewWorldIt);
 	m_computeICPShader.setUniformMatrix3f("viewToWorldItRot", viewWorldIt);
 	m_computeICPShader.setUniformMatrix4f("viewProjectionIt", viewProjectionIt);
 
 	// glBindImageTexture(0, depthTexID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+	glBindImageTexture(0, oldVertexWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 	glBindImageTexture(1, newVertexWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
 
 	// correspondance

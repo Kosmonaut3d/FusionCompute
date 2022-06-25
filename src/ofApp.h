@@ -53,4 +53,6 @@ class ofApp : public ofBaseApp
 	ofEasyCam m_camera;
 
 	ofImage m_screenShotImage;
+
+	bool m_isFrame0; // Flip the frames every other frame
 };
