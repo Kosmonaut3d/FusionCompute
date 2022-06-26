@@ -16,6 +16,7 @@ bool      GUIScene::s_drawPointCloudNormCPU    = false;
 int       GUIScene::s_pointCloudDownscaleExp   = 3;
 int       GUIScene::s_pointCloudDownscale      = 8;
 bool      GUIScene::s_computeICPCPU            = false;
+bool      GUIScene::s_computeICPCPU_Summed     = false;
 float     GUIScene::s_ICP_epsilonDist          = .2;
 float     GUIScene::s_ICP_epsilonNor           = .8;
 bool      GUIScene::s_quickDebug               = false;
@@ -35,6 +36,7 @@ bool      GUIScene::s_computeICPGPU            = true;
 bool      GUIScene::s_drawICPGPU               = true;
 bool      GUIScene::s_resetView                = false;
 glm::vec3 GUIScene::s_testPointPos             = glm::vec3(-1, 0, -2);
+GLuint    GUIScene::s_ICPGPU_correspondences   = 0;
 
 //---------------------------------------------------
 GUIScene::GUIScene()
@@ -121,6 +123,12 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::PushStyleColor(ImGuiCol_CheckMark, gpuCol);
 				ImGui::TextColored(gpuCol, "ICP Compute");
 				ImGui::Checkbox("Compute ICP", &s_computeICPGPU);
+
+				if (s_computeICPGPU)
+				{
+					ImGui::Text("correspondences %u", s_ICPGPU_correspondences);
+				}
+
 				ImGui::Checkbox("Draw ICP", &s_drawICPGPU);
 				ImGui::PopStyleColor(1);
 
@@ -177,6 +185,7 @@ void GUIScene::draw(ofEasyCam& camera)
 			{
 				s_sceneSelection = SceneSelection::PointCloud;
 				ImGui::Checkbox("Compute ICP CPU", &s_computeICPCPU);
+				ImGui::Checkbox("Sum ICP CPU", &s_computeICPCPU_Summed);
 				if (ImGui::Button("Reset view"))
 				{
 					s_resetView = true;

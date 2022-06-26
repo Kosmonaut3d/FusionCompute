@@ -1,0 +1,39 @@
+#version 440
+
+layout(local_size_x = 16) in;
+
+layout(std430, binding = 0) buffer data
+{
+	uint val[100];
+};
+
+uniform int iterations = 128;
+uniform int datasize = 100;
+
+const float WIDTH2 = 320; //halfed
+const float HEIGHT2 = 240;
+
+void main() {
+	uint id = gl_GlobalInvocationID.x;
+	// Fill in
+	val[id] = id+1;
+
+	memoryBarrier();
+
+	// Initial step, used for trees that are not power of 2
+	if (id < iterations && (id + iterations) < datasize) 
+	{
+		val[id] += val[id + iterations];
+	}
+
+	memoryBarrier();
+
+	for (unsigned int s=iterations/2; s>0; s>>=1)
+	{
+		if (id < s) 
+		{
+			val[id] += val[id + s];
+			memoryBarrier();
+		}
+	}
+}

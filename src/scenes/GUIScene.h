@@ -34,8 +34,10 @@ class GUIScene //: public SceneImpl
 	static int            s_pointCloudDownscaleExp;
 	static int            s_pointCloudDownscale;
 	static bool           s_computeICPCPU;
+	static bool           s_computeICPCPU_Summed;
 	static float          s_ICP_epsilonDist;
 	static float          s_ICP_epsilonNor;
+	static GLuint         s_ICPGPU_correspondences;
 	static bool           s_quickDebug;
 	static bool           s_drawDepthBackground;
 	static bool           s_bilateralBlurCompute;

@@ -13,5 +13,8 @@ class ICPCompute
 
   private:
 	ofShader     m_computeICPShader;
+	ofShader     m_computeICPReduction;
 	unsigned int m_texID;
+	unsigned int m_atomicCounterID;
+	unsigned int m_ssboID;
 };

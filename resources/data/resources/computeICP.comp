@@ -6,12 +6,17 @@ layout(rgba32f, binding = 0) uniform readonly coherent image2D vertex_old;
 layout(rgba32f, binding = 1) uniform readonly coherent image2D vertex_new;
 layout(rgba32f, binding = 2) uniform writeonly coherent image2D correspondence;
 
+layout(binding = 0, offset=0) uniform atomic_uint correspondence_counter;
+
 uniform mat3x3 viewToWorldItRot;
 uniform mat4x4 viewToWorldIt; // View To World
 
 uniform mat4x4 viewToWorldOld; // View To World previous
 
 uniform mat4x4 viewProjectionIt; // Current iteration view projection
+
+const float WIDTH2 = 320; //halfed
+const float HEIGHT2 = 240;
 
 void main() {
 	// base pixel colour for image
@@ -30,14 +35,20 @@ void main() {
 	}
 
 	vec3 vertexNdc = vertexNewClip.xyz / vertexNewClip.w;
-	if(clamp(vertexNdc, -1., 1.) != vertexNdc)
+	if(clamp(vertexNdc, -1.f, 1.f) != vertexNdc)
 	{
 		return;
 	}
 
-	ivec2 pixel_coord_projected = ivec2(vertexNdc.xy);
+	// Note: Flip y (OPENGL)
+	ivec2 pixel_coord_projected = ivec2(round((vertexNdc.x + 1.0f) * WIDTH2), round((-vertexNdc.y+1.0f) * HEIGHT2));
 
 	vec3 vertexOldWorld = (viewToWorldOld * vec4(imageLoad(vertex_old, pixel_coord_projected).xyz, 1)).xyz;
+
+	vec3 diff = vertexOldWorld-vertexNewWorld;
+
+	uint currentCount = atomicCounterIncrement(correspondence_counter);
+    //memoryBarrier();
 	
-	imageStore(correspondence, pixel_coords, vec4(1,1,1,1));//vec4(vertexOldWorld, 1));
+	imageStore(correspondence, pixel_coords, vec4(diff, 1));
 }

@@ -38,7 +38,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 	glm::mat4x4 viewToWorld_prev = glm::inverse(worldToViewOld);
 
 	///\brief pi * T_g_k
-	//glm::mat4x4 viewProjection_prev = worldToViewOld * projection;
+	// glm::mat4x4 viewProjection_prev = worldToViewOld * projection;
 
 	glm::mat3x3 viewToWorldRot_prev = glm::mat3x3(viewToWorld_prev);
 
@@ -91,7 +91,8 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			if (E_sum >= E_sum_first)
 			{
 				// abort!
-				//printf("Iteration: went the wrong way!\n", it, E_sum, found, m_failPixel, m_failDistance, m_failNormal);
+				// printf("Iteration: went the wrong way!\n", it, E_sum, found, m_failPixel, m_failDistance,
+				// m_failNormal);
 
 				worldToView_out = worldToView_iter;
 				return;
@@ -99,30 +100,64 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			E_sum_first = E_sum;
 		}
 
-		// Solve
-
-		const size_t    N = correspondences.size();
-		Eigen::MatrixXd A(N, 6);
-		Eigen::MatrixXd b(N, 1);
-
-		for (size_t i = 0; i < correspondences.size(); ++i)
-		{
-			const auto&     correspondence = correspondences[i];
-			Eigen::Vector3d s_i            = GLM2E(std::get<0>(correspondence)).cast<double>();
-			Eigen::Vector3d d_i            = GLM2E(std::get<1>(correspondence)).cast<double>();
-			Eigen::Vector3d n_i            = GLM2E(std::get<2>(correspondence)).cast<double>();
-
-			Eigen::Matrix<double, 6, 1> A_i;
-			A_i << s_i.cross(n_i), n_i;
-			A.row(i) = A_i;
-			b(i)     = n_i.dot(d_i) - n_i.dot(s_i);
-		}
-
 		if (correspondences.empty())
 		{
 			return;
 		}
-		Eigen::Matrix<double, 6, 1> result = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
+
+		// Solve
+		Eigen::Matrix<double, 6, 1> result;
+
+		if (GUIScene::s_computeICPCPU_Summed)
+		{
+			Eigen::Matrix<double, 6, 1> b_ = Eigen::Matrix<double, 6, 1>::Zero();
+			Eigen::Matrix<double, 6, 6> A_ = Eigen::Matrix<double, 6, 6>::Zero();
+
+			Eigen::Matrix<double, 6, 1> A__ = Eigen::Matrix<double, 6, 1>::Zero();
+
+			for (size_t i = 0; i < correspondences.size(); ++i)
+			{
+				const auto&     correspondence = correspondences[i];
+				Eigen::Vector3d s_i            = GLM2E(std::get<0>(correspondence)).cast<double>();
+				Eigen::Vector3d d_i            = GLM2E(std::get<1>(correspondence)).cast<double>();
+				Eigen::Vector3d n_i            = GLM2E(std::get<2>(correspondence)).cast<double>();
+
+				Eigen::Matrix<double, 6, 1> A_i;
+				A_i << s_i.cross(n_i), n_i;
+				A_ += A_i * A_i.transpose();
+
+				b_ += A_i * (n_i.dot(d_i) - n_i.dot(s_i));
+
+				//
+				A__ += A_i;
+			}
+
+			Eigen::Matrix<double, 6, 6> A___ = A__ * A__.transpose();
+
+			result = A_.bdcSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(b_);
+		}
+		else
+		{
+			const size_t    N = correspondences.size();
+			Eigen::MatrixXd A(N, 6);
+			Eigen::MatrixXd b(N, 1);
+
+			for (size_t i = 0; i < correspondences.size(); ++i)
+			{
+				const auto&     correspondence = correspondences[i];
+				Eigen::Vector3d s_i            = GLM2E(std::get<0>(correspondence)).cast<double>();
+				Eigen::Vector3d d_i            = GLM2E(std::get<1>(correspondence)).cast<double>();
+				Eigen::Vector3d n_i            = GLM2E(std::get<2>(correspondence)).cast<double>();
+
+				Eigen::Matrix<double, 6, 1> A_i;
+				A_i << s_i.cross(n_i), n_i;
+				A.row(i) = A_i;
+
+				b(i) = n_i.dot(d_i) - n_i.dot(s_i);
+			}
+
+			result = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(b);
+		}
 
 		if (!isnan(result[0]))
 		{
@@ -152,12 +187,10 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			                               {-beta, alpha, 1, result[5]},
 			                               {0, 0, 0, 1}};*/
 
-			 Eigen::Matrix4d transformation{{1, - gamma, beta, result[3]},
-			                               {gamma, 1, - alpha, result[4]},
+			Eigen::Matrix4d transformation{{1, -gamma, beta, result[3]},
+			                               {gamma, 1, -alpha, result[4]},
 			                               {-beta, alpha, 1, result[5]},
 			                               {0, 0, 0, 1}};
-
-			
 
 			/*
 			Eigen::Vector3d   translation = result.tail(3);
@@ -173,7 +206,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			/*
 			transformation << 1, alpha * beta - gamma, alpha * gamma + beta, result[3], gamma, alpha * beta * gamma + 1,
 			    beta * gamma - alpha, result[4], -beta, alpha, 1, result[5], 0, 0, 0, 1;
-				*/
+			    */
 			Eigen::Matrix<double, 4, 4> T_z = GLM2E(viewToWorld_iter);
 
 			T_z = transformation * T_z;
@@ -195,7 +228,7 @@ void IterativeClostestPointCPU::getCorrespondences(
     const int& SIZE, int& fail_z, double& E_sum, int& found,
     std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec3>>& correspondences)
 {
-	glm::mat4x4 viewProjection_iter = (projection *glm::mat4x4(worldToView_iter));
+	glm::mat4x4 viewProjection_iter = (projection * glm::mat4x4(worldToView_iter));
 
 	/// ..........................
 	for (int i = 0; i < SIZE; i++)
