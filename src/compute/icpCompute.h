@@ -15,7 +15,7 @@ class ICPCompute
   private:
 	struct ssbo_correspondence_data
 	{
-		glm::vec4 o_a1;
+		glm::vec4 o_a1; // PADDING
 		glm::vec3 o_a2;
 		float     o_b;
 	};

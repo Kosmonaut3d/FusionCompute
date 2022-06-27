@@ -93,9 +93,9 @@ void main() {
 	vec3 n_i = normalOldWorld;
 
 	o_struct outputData;
-	outputData.o_a1 = vec3(1,0,0);
-	outputData.o_a2 = vec3(3,3,3);
-	outputData.o_b = 2;
+	outputData.o_a1 = cross(s_i, n_i);
+	outputData.o_a2 = n_i;
+	outputData.o_b = dot(n_i, d_i) - dot(n_i, s_i);
 
 	o_d[currentCount] = outputData;
 
