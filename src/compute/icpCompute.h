@@ -16,5 +16,8 @@ class ICPCompute
 	ofShader     m_computeICPReduction;
 	unsigned int m_texID;
 	unsigned int m_atomicCounterID;
-	unsigned int m_ssboID;
+	unsigned int m_ssboInID;
+	unsigned int m_ssboOutID;
+
+	unsigned int m_outData[300];
 };

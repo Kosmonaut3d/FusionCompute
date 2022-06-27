@@ -7,7 +7,8 @@ ICPCompute::ICPCompute()
     , m_computeICPReduction{}
     , m_texID{}
     , m_atomicCounterID{}
-    , m_ssboID{}
+    , m_ssboInID{}
+    , m_ssboOutID{}
 {
 	m_computeICPShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeICP.comp");
 	m_computeICPShader.linkProgram();
@@ -39,16 +40,14 @@ void ICPCompute::setupTexture()
 	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
 	// Set up ssbo
-	unsigned int data[100];
+	glGenBuffers(1, &m_ssboInID);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboInID);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 640 * 480 * sizeof(unsigned int), nullptr, GL_DYNAMIC_READ);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
-	for (int i = 0; i < 100; i++)
-	{
-		data[i] = 0;
-	}
-
-	glGenBuffers(1, &m_ssboID);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboID);
-	glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(data), &data, GL_DYNAMIC_READ);
+	glGenBuffers(1, &m_ssboOutID);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboOutID);
+	glBufferData(GL_SHADER_STORAGE_BUFFER, 300 * sizeof(unsigned int), nullptr, GL_DYNAMIC_READ);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 }
 
@@ -112,29 +111,40 @@ void ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int oldVertexW
 		glBeginQuery(GL_TIME_ELAPSED, query);
 	}
 
-	int  dataSize   = 100;
-	auto test2      = log2(dataSize);
-	auto ceiling    = ceil(test2);
-	int  iterations = 1 << (static_cast<int>(ceil(test2)) - 1);
+	const int dataSize   = 640 * 480;
+	auto      test2      = log2(dataSize);
+	auto      ceiling    = ceil(test2);
+	int       iterations = 1 << (static_cast<int>(ceil(test2)) - 1);
 
 	m_computeICPReduction.begin();
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboID);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_ssboID);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboInID);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_ssboInID);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboOutID);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_ssboOutID);
 
-	m_computeICPShader.setUniform1i("iterations", iterations);
+	m_computeICPReduction.setUniform1i("iterations", iterations);
+	m_computeICPReduction.setUniform1i("datasize", dataSize);
 
-	m_computeICPReduction.dispatchCompute(100, 1, 1);
+	const int workgroupsize = 1024;
+	const int numworkgroups = dataSize / workgroupsize;
+
+	m_computeICPReduction.dispatchCompute(numworkgroups, 1, 1);
 	m_computeICPReduction.end();
 
-	unsigned int data[100];
-	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(data), &data);
+	glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(m_outData), &m_outData);
+
+	GLuint combined = 0;
+
+	for (int i = 0; i < 300; i++)
+	{
+		combined += m_outData[i];
+	}
 
 	// Timing
 	{
 		glEndQuery(GL_TIME_ELAPSED);
 		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_measureGPUTime);
 	}
-
 
 	int test = 0;
 }
