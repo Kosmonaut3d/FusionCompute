@@ -4,17 +4,31 @@ layout(local_size_x = 1, local_size_y = 1) in;
 
 layout(rgba32f, binding = 0) uniform readonly coherent image2D vertex_old;
 layout(rgba32f, binding = 1) uniform readonly coherent image2D vertex_new;
-layout(rgba32f, binding = 2) uniform writeonly coherent image2D correspondence;
+layout(rgba32f, binding = 2) uniform readonly coherent image2D normals_old;
+layout(rgba32f, binding = 3) uniform readonly coherent image2D normals_new;
+
+layout(rgba32f, binding = 4) uniform writeonly coherent image2D correspondence;
+
+struct o_struct
+{
+	vec3 o_a1;
+	vec3 o_a2;
+	float o_b;
+};
+
+// Output
+layout(std430, binding = 0) buffer odata
+{
+	o_struct o_d[640*480];
+};
 
 layout(binding = 0, offset=0) uniform atomic_uint correspondence_counter;
 
 uniform mat3x3 viewToWorldItRot;
 uniform mat4x4 viewToWorldIt; // View To World
-
 uniform mat4x4 viewToWorldOld; // View To World previous
-
 uniform mat4x4 viewProjectionIt; // Current iteration view projection
-
+uniform float _epsilonDistance = 1;
 const float WIDTH2 = 320; //halfed
 const float HEIGHT2 = 240;
 
@@ -46,9 +60,44 @@ void main() {
 	vec3 vertexOldWorld = (viewToWorldOld * vec4(imageLoad(vertex_old, pixel_coord_projected).xyz, 1)).xyz;
 
 	vec3 diff = vertexOldWorld-vertexNewWorld;
+	
+	if (length(diff) > _epsilonDistance)
+	{
+		return;
+	}
 
 	uint currentCount = atomicCounterIncrement(correspondence_counter);
     //memoryBarrier();
-	
-	imageStore(correspondence, pixel_coords, vec4(diff, 1));
+
+	// Old normals
+	vec3 normalOldWorld = imageLoad(normals_old, pixel_coord_projected).xyz;
+
+	// Code from icp cpu
+	//correspondences.emplace_back(newVertexWorld, referenceVertexWorld, referenceNormalWorld);
+	//Eigen::Vector3d s_i            = GLM2E(std::get<0>(correspondence)).cast<double>();
+	//Eigen::Vector3d d_i            = GLM2E(std::get<1>(correspondence)).cast<double>();
+	//Eigen::Vector3d n_i            = GLM2E(std::get<2>(correspondence)).cast<double>();
+	//
+	//Eigen::Matrix<double, 6, 1> A_i;
+	//A_i << s_i.cross(n_i), n_i;
+	//A_ += A_i * A_i.transpose();
+	//
+	//b_ += A_i * (n_i.dot(d_i) - n_i.dot(s_i));
+	//
+	////
+	//A__ += A_i;
+
+	// output
+	vec3 s_i = vertexNewWorld;
+	vec3 d_i = vertexOldWorld;
+	vec3 n_i = normalOldWorld;
+
+	o_struct outputData;
+	outputData.o_a1 = vec3(1,0,0);
+	outputData.o_a2 = vec3(3,3,3);
+	outputData.o_b = 2;
+
+	o_d[currentCount] = outputData;
+
+	imageStore(correspondence, pixel_coords, vec4(normalOldWorld, 1));
 }

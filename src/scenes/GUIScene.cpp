@@ -17,7 +17,7 @@ int       GUIScene::s_pointCloudDownscaleExp   = 3;
 int       GUIScene::s_pointCloudDownscale      = 8;
 bool      GUIScene::s_computeICPCPU            = false;
 bool      GUIScene::s_computeICPCPU_Summed     = false;
-float     GUIScene::s_ICP_epsilonDist          = .2;
+float     GUIScene::s_ICP_epsilonDist          = .1;
 float     GUIScene::s_ICP_epsilonNor           = .8;
 bool      GUIScene::s_quickDebug               = false;
 bool      GUIScene::s_drawDepthBackground      = false;
@@ -25,6 +25,7 @@ bool      GUIScene::s_bilateralBlurCompute     = true;
 bool      GUIScene::s_bilateralBlurDraw        = true;
 GLuint64  GUIScene::s_measureGPUTime           = 0;
 GLuint64  GUIScene::s_measureGPUTime2          = 0;
+GLuint64  GUIScene::s_measureGPUTime_reduction = 0;
 bool      GUIScene::s_sdfCompute               = false;
 int       GUIScene::s_sdfResolution            = 64;
 bool      GUIScene::s_sdfDrawSlice             = false;
@@ -124,10 +125,15 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::TextColored(gpuCol, "ICP Compute");
 				ImGui::Checkbox("Compute ICP", &s_computeICPGPU);
 
+				ImGui::Text("ICP reduce time %f", s_measureGPUTime_reduction / 1000000.0);
+
 				if (s_computeICPGPU)
 				{
 					ImGui::Text("correspondences %u", s_ICPGPU_correspondences);
 				}
+
+				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);
+				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
 
 				ImGui::Checkbox("Draw ICP", &s_drawICPGPU);
 				ImGui::PopStyleColor(1);
@@ -191,7 +197,7 @@ void GUIScene::draw(ofEasyCam& camera)
 					s_resetView = true;
 				}
 
-				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 4);
+				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);
 				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
 				ImGui::EndTabItem();
 			}

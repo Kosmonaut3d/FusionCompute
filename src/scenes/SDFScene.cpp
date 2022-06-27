@@ -29,7 +29,8 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldTo
 
 	if (GUIScene::s_computeICPGPU)
 	{
-		m_icpCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudWorldTexOld, viewToWorld, viewProjection);
+		m_icpCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew, m_pointsCloudWorldTexOld,
+		                     m_pointsCloudNormalTexOld, viewToWorld, viewProjection);
 	}
 }
 
