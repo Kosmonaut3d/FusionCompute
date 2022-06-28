@@ -18,7 +18,7 @@ void SDFScene::setup(ofxKinect& kinect)
 
 //----------------------------------------------------------------------------------------------------------
 void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldToClip, glm::mat4x4& viewToWorld,
-                      glm::mat4x4& viewProjection, unsigned int m_pointsCloudWorldTexNew,
+                      glm::mat4x4& worldToView, glm::mat4x4& projection, unsigned int m_pointsCloudWorldTexNew,
                       unsigned int m_pointsCloudNormalTexNew, unsigned int m_pointsCloudWorldTexOld,
                       unsigned int m_pointsCloudNormalTexOld)
 {
@@ -29,8 +29,12 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldTo
 
 	if (GUIScene::s_computeICPGPU)
 	{
-		m_icpCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew, m_pointsCloudWorldTexOld,
-		                     m_pointsCloudNormalTexOld, viewToWorld, viewProjection);
+		glm::mat4x4 viewToWorldIt =
+		    m_icpCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew, m_pointsCloudWorldTexOld,
+		                         m_pointsCloudNormalTexOld, viewToWorld, projection);
+
+		worldToView = glm::inverse(viewToWorldIt);
+		viewToWorld = viewToWorldIt;
 	}
 }
 

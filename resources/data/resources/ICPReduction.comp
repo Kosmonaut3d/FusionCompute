@@ -1,18 +1,44 @@
 #version 440
 
-layout(local_size_x = 1024) in;
+layout(local_size_x = 128) in;
 
-layout(std430, binding = 0) buffer data
+struct in_struct
 {
-	uint g_idata[640*480];
+	vec3 in_a0;
+	vec3 in_a1;
+	float in_b;
 };
 
-layout(std430, binding = 1) buffer odata
+struct out_struct
 {
-	uint g_odata[300];
+	vec3 out_a00;
+	vec3 out_a01;
+	vec3 out_a10;
+	vec3 out_a11;
+	vec3 out_a20;
+	vec3 out_a21; //3rd row, 4-6 column
+	vec3 out_a30;
+	vec3 out_a31;
+	vec3 out_a40;
+	vec3 out_a41;
+	vec3 out_a50;
+	vec3 out_a51;
+	
+	vec3 out_b0;
+	vec3 out_b1;
 };
 
-shared uint sdata[gl_WorkGroupSize.x];
+layout(std430, binding = 0) readonly coherent buffer data
+{
+	in_struct g_idata[];
+};
+
+layout(std430, binding = 1) writeonly coherent buffer odata
+{
+	out_struct g_odata[];
+};
+
+shared out_struct sdata[gl_WorkGroupSize.x];
 
 uniform int iterations = 128;
 uniform int datasize = 100;
@@ -20,31 +46,70 @@ uniform int datasize = 100;
 const float WIDTH2 = 320; //halfed
 const float HEIGHT2 = 240;
 
+
 void main() {
 
 	uint tid = gl_LocalInvocationID.x;
 	uint i = gl_WorkGroupID.x*(gl_WorkGroupSize.x*2) + tid;
 
-	sdata[tid] = 2;
+	//sdata[tid] = 2;
 	//sdata[tid] = g_idata[i] + g_idata[i+blockDim.x];
-	
-	memoryBarrier();
-	
-	/*// Initial step, used for trees that are not power of 2
-	if (i < iterations && (i + iterations) < datasize) 
-	{
-		sdata[tid] += sdata[tid + iterations];
-	}
 
-	memoryBarrier();
-	*/
+	vec3 i_a0 = g_idata[i].in_a0;
+	vec3 i_a1 = g_idata[i].in_a1;
+	float i_b = g_idata[i].in_b;
+
+	vec3 j_a0 = g_idata[i + gl_WorkGroupSize.x].in_a0;
+	vec3 j_a1 = g_idata[i + gl_WorkGroupSize.x].in_a1;
+	float j_b = g_idata[i + gl_WorkGroupSize.x].in_b;
+
+	sdata[tid].out_a00 = i_a0* i_a0.x + j_a0* j_a0.x; 
+	sdata[tid].out_a01 = i_a1* i_a0.x + j_a1* j_a0.x;
+	sdata[tid].out_a10 = i_a0* i_a0.y + j_a0* j_a0.y;
+	sdata[tid].out_a11 = i_a1* i_a0.y + j_a1* j_a0.y;
+	sdata[tid].out_a20 = i_a0* i_a0.z + j_a0* j_a0.z;
+	sdata[tid].out_a21 = i_a1* i_a0.z + j_a1* j_a0.z;
+	
+	sdata[tid].out_a30 = i_a0* i_a1.x + j_a0* j_a1.x;
+	sdata[tid].out_a31 = i_a1* i_a1.x + j_a1* j_a1.x;
+	sdata[tid].out_a40 = i_a0* i_a1.y + j_a0* j_a1.y;
+	sdata[tid].out_a41 = i_a1* i_a1.y + j_a1* j_a1.y;
+	sdata[tid].out_a50 = i_a0* i_a1.z + j_a0* j_a1.z;
+	sdata[tid].out_a51 = i_a1* i_a1.z + j_a1* j_a1.z;
+
+	// Repeat for bottom
+	
+	sdata[tid].out_b0 = i_a0* i_b + j_a0* j_b;
+	sdata[tid].out_b1 = i_a1* i_b + j_a1* j_b;
+
+	// TESTING
+	//sdata[tid].out_a00 = vec3(2,2,2);
+
+	barrier();
 
 	for (unsigned int s=gl_WorkGroupSize.x/2; s>0; s>>=1)
 	{
 		if (tid < s) 
 		{
-			sdata[tid] += sdata[tid + s];
-			memoryBarrier();
+			//sdata[tid] += sdata[tid + s];
+			sdata[tid].out_a00 += sdata[tid+s].out_a00;
+			sdata[tid].out_a01 += sdata[tid+s].out_a01;
+			sdata[tid].out_a10 += sdata[tid+s].out_a10;
+			sdata[tid].out_a11 += sdata[tid+s].out_a11;
+			sdata[tid].out_a20 += sdata[tid+s].out_a20;
+			sdata[tid].out_a21 += sdata[tid+s].out_a21;
+
+			sdata[tid].out_a30 += sdata[tid+s].out_a30;
+			sdata[tid].out_a31 += sdata[tid+s].out_a31;
+			sdata[tid].out_a40 += sdata[tid+s].out_a40;
+			sdata[tid].out_a41 += sdata[tid+s].out_a41;
+			sdata[tid].out_a50 += sdata[tid+s].out_a50;
+			sdata[tid].out_a51 += sdata[tid+s].out_a51;
+
+			sdata[tid].out_b0 += sdata[tid+s].out_b0;
+			sdata[tid].out_b1 += sdata[tid+s].out_b1;
+
+			barrier();
 		}
 	}
 

@@ -12,7 +12,7 @@ class SDFCompute
 	unsigned int getTextureID();
 	glm::mat4x4& getWorldInv();
 	void         drawOutline();
-	void drawRaymarch(ofCamera& camera);
+	void         drawRaymarch(ofCamera& camera);
 
   private:
 	ofShader     m_computeSDFShader;

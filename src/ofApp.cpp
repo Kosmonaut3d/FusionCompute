@@ -181,9 +181,8 @@ void ofApp::update()
 			auto PCLNormalNew = m_pointCloudScene.getPCLNormal(m_isFrame0);
 			auto PCLNormalOld = m_pointCloudScene.getPCLNormal(!m_isFrame0);
 
-			m_sdfScene.update(updateKinect, m_kinect, kinectViewProjection, m_kinectViewToWorld,
-			                  m_kinectProjection * m_kinectWorldToView, PCLWorldNew, PCLNormalNew, PCLWorldOld,
-			                  PCLNormalOld);
+			m_sdfScene.update(updateKinect, m_kinect, kinectViewProjection, m_kinectViewToWorld, m_kinectWorldToView,
+			                  m_kinectProjection, PCLWorldNew, PCLNormalNew, PCLWorldOld, PCLNormalOld);
 			break;
 		}
 		default: {

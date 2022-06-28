@@ -17,9 +17,9 @@ struct o_struct
 };
 
 // Output
-layout(std430, binding = 0) buffer odata
+layout(std430, binding = 0) writeonly buffer odata
 {
-	o_struct o_d[640*480];
+	o_struct o_d[];
 };
 
 layout(binding = 0, offset=0) uniform atomic_uint correspondence_counter;
@@ -67,7 +67,6 @@ void main() {
 	}
 
 	uint currentCount = atomicCounterIncrement(correspondence_counter);
-    //memoryBarrier();
 
 	// Old normals
 	vec3 normalOldWorld = imageLoad(normals_old, pixel_coord_projected).xyz;
@@ -93,11 +92,13 @@ void main() {
 	vec3 n_i = normalOldWorld;
 
 	o_struct outputData;
+	// TEST
 	outputData.o_a1 = cross(s_i, n_i);
 	outputData.o_a2 = n_i;
 	outputData.o_b = dot(n_i, d_i) - dot(n_i, s_i);
 
 	o_d[currentCount] = outputData;
+    memoryBarrier();
 
-	imageStore(correspondence, pixel_coords, vec4(normalOldWorld, 1));
+	//imageStore(correspondence, pixel_coords, vec4(normalOldWorld, 1));
 }

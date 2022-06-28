@@ -19,6 +19,7 @@ bool      GUIScene::s_computeICPCPU            = false;
 bool      GUIScene::s_computeICPCPU_Summed     = false;
 float     GUIScene::s_ICP_epsilonDist          = .1;
 float     GUIScene::s_ICP_epsilonNor           = .8;
+int       GUIScene::s_ICPGPU_iterations        = 1;
 bool      GUIScene::s_quickDebug               = false;
 bool      GUIScene::s_drawDepthBackground      = false;
 bool      GUIScene::s_bilateralBlurCompute     = true;
@@ -29,12 +30,12 @@ GLuint64  GUIScene::s_measureGPUTime_reduction = 0;
 bool      GUIScene::s_sdfCompute               = false;
 int       GUIScene::s_sdfResolution            = 64;
 bool      GUIScene::s_sdfDrawSlice             = false;
-bool      GUIScene::s_sdfDrawRaytrace          = true;
+bool      GUIScene::s_sdfDrawRaytrace          = false;
 float     GUIScene::s_sdfSliceX                = 0.f;
 float     GUIScene::s_sdfWeightTruncation      = 20.f;
 float     GUIScene::s_sdfTruncation            = 3.f;
-bool      GUIScene::s_computeICPGPU            = true;
-bool      GUIScene::s_drawICPGPU               = true;
+bool      GUIScene::s_computeICPGPU            = false;
+bool      GUIScene::s_drawICPGPU               = false;
 bool      GUIScene::s_resetView                = false;
 glm::vec3 GUIScene::s_testPointPos             = glm::vec3(-1, 0, -2);
 GLuint    GUIScene::s_ICPGPU_correspondences   = 0;
@@ -72,7 +73,7 @@ void GUIScene::draw(ofEasyCam& camera)
 		static const float maxTimeDelta = 1.0f;
 		static float       msAvg        = 0.0f;
 
-		float ms_current = 1000.0f / ImGui::GetIO().Framerate;
+		float ms_current = 1000.0f / ofGetElapsedTimef();
 
 		accuCnt++;
 		msAccu += ms_current;
@@ -134,6 +135,7 @@ void GUIScene::draw(ofEasyCam& camera)
 
 				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);
 				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
+				ImGui::SliderInt("iterations", &s_ICPGPU_iterations, 1, 20);
 
 				ImGui::Checkbox("Draw ICP", &s_drawICPGPU);
 				ImGui::PopStyleColor(1);
