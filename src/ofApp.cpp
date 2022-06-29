@@ -21,7 +21,7 @@ ofApp::ofApp()
 
 	glm::vec3   kinectOrigin = glm::vec3(0, 0, 0);
 	auto        ori          = ofVec3f(kinectOrigin);
-	auto        tar          = ofVec3f(kinectOrigin + glm::vec3(.1, 0, -1));
+	auto        tar          = ofVec3f(kinectOrigin + glm::vec3(0, 0, -1));
 	auto        upv          = ofVec3f(glm::vec3(0, 1, 0));
 	ofMatrix4x4 view;
 	view.makeLookAtViewMatrix(ori, tar, upv);
@@ -49,7 +49,7 @@ void ofApp::setup()
 	m_camera.setPosition(glm::vec3(0, 0, 0));
 	m_camera.setTarget(glm::vec3(0, 0, -2)); // look forward
 	m_camera.setDistance(2);
-	m_camera.setFov(48.6f);
+	m_camera.setFov(45.25f);
 	m_camera.setNearClip(0.01); // 10 cm
 	m_camera.setFarClip(1000);
 	m_camera.setAspectRatio(4. / 3);

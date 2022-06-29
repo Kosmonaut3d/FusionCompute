@@ -39,6 +39,7 @@ class GUIScene //: public SceneImpl
 	static float          s_ICP_epsilonNor;
 	static GLuint         s_ICPGPU_correspondences;
 	static int            s_ICPGPU_iterations;
+	static bool           s_ICPGPU_SDF;
 	static bool           s_quickDebug;
 	static bool           s_drawDepthBackground;
 	static bool           s_bilateralBlurCompute;

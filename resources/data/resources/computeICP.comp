@@ -100,5 +100,5 @@ void main() {
 	o_d[currentCount] = outputData;
     memoryBarrier();
 
-	//imageStore(correspondence, pixel_coords, vec4(normalOldWorld, 1));
+	imageStore(correspondence, pixel_coords, vec4(normalOldWorld, 1));
 }

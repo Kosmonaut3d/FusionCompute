@@ -20,6 +20,7 @@ bool      GUIScene::s_computeICPCPU_Summed     = false;
 float     GUIScene::s_ICP_epsilonDist          = .1;
 float     GUIScene::s_ICP_epsilonNor           = .8;
 int       GUIScene::s_ICPGPU_iterations        = 1;
+bool      GUIScene::s_ICPGPU_SDF               = true;
 bool      GUIScene::s_quickDebug               = false;
 bool      GUIScene::s_drawDepthBackground      = false;
 bool      GUIScene::s_bilateralBlurCompute     = true;
@@ -136,6 +137,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);
 				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
 				ImGui::SliderInt("iterations", &s_ICPGPU_iterations, 1, 20);
+				ImGui::Checkbox("Point to Mesh", &s_ICPGPU_SDF);
 
 				ImGui::Checkbox("Draw ICP", &s_drawICPGPU);
 				ImGui::PopStyleColor(1);

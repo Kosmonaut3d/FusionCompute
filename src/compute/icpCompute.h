@@ -8,10 +8,14 @@ class ICPCompute
 {
   public:
 	ICPCompute();
-	void         setupTexture();
-	glm::mat4x4  ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int newNormalWorldTex,
-                                    unsigned int oldVertexWorldTex, unsigned int oldNormalWorldTex,
-                                    glm::mat4x4& viewWorldIt, glm::mat4x4& projection);
+	void        setupTexture();
+	glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int newNormalWorldTex,
+	                                unsigned int oldVertexWorldTex, unsigned int oldNormalWorldTex,
+	                                glm::mat4x4& viewWorldIt, glm::mat4x4& projection);
+	void computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::mat4x4& projection, glm::mat4x4& viewToWorldOld,
+	                         glm::mat3x3& viewToWorldRot_prev, unsigned int oldVertexWorldTex,
+	                         unsigned int newVertexWorldTex, unsigned int oldNormalWorldTex,
+	                         unsigned int newNormalWorldTex);
 	unsigned int getTexID();
 	void         calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewWorldIt);
 
@@ -47,6 +51,7 @@ class ICPCompute
 	void feedVec3ToMatrix(Eigen::Matrix<double, 6, 6>& mat, const glm::vec4& v);
 
 	ofShader     m_computeICPShader;
+	ofShader     m_computeICPSDFShader;
 	ofShader     m_computeICPReduction;
 	unsigned int m_texID;
 	unsigned int m_atomicCounterID;

@@ -10,8 +10,6 @@ uniform mat4 sdfBaseTransform;
 uniform float sdfResolution;
 
 uniform mat4 viewprojection;
-uniform float near;
-uniform float far;
 
 uniform float _truncationDistance;
 #define FLT_MAX 10000
@@ -59,11 +57,12 @@ float getDistanceSDFVolume(vec3 p)
 
 float GetDistSDF(vec3 p)
 {
+    /*
     float dist = getDistanceSDFVolume(p);
     if(dist > 0)
     {
         discard;
-    }
+    }*/
 
     // IDEA: Transform the p first to sdfBase and trace from there
     // Transform world position to SDF Base

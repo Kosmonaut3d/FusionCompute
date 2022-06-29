@@ -5,6 +5,7 @@
 //----------------------------------------------------------------------------------------------------------
 ICPCompute::ICPCompute()
     : m_computeICPShader{}
+    , m_computeICPSDFShader{}
     , m_computeICPReduction{}
     , m_texID{}
     , m_atomicCounterID{}
@@ -13,6 +14,9 @@ ICPCompute::ICPCompute()
 {
 	m_computeICPShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeICP.comp");
 	m_computeICPShader.linkProgram();
+
+	m_computeICPSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeICPSDF.comp");
+	m_computeICPSDFShader.linkProgram();
 
 	m_computeICPReduction.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/ICPReduction.comp");
 	m_computeICPReduction.linkProgram();
@@ -69,38 +73,14 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		constexpr glm::vec4 empty{0, 0, 0, 0};
 		glClearTexImage(m_texID, 0, GL_RGBA, GL_FLOAT, &empty);
 
-		// Find correspondences
-		m_computeICPShader.begin();
-
-		m_computeICPShader.setUniformMatrix4f("viewToWorldIt", viewToWorld_iter);
-		glm::mat4x4 viewProjection_iter = (projection * glm::inverse(glm::mat4x4(viewToWorld_iter)));
-		m_computeICPShader.setUniformMatrix4f("viewProjectionIt", viewProjection_iter);
-
-		m_computeICPShader.setUniformMatrix4f("viewToWorldOld", viewToWorldOld); // TODO, in first step this is correct
-		m_computeICPShader.setUniformMatrix3f("viewToWorldItRot", viewToWorldRot_prev); // TODO
-
-		m_computeICPShader.setUniform1f("_epsilonDistance", GUIScene::s_ICP_epsilonDist);
-
-		// glBindImageTexture(0, depthTexID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-		glBindImageTexture(0, oldVertexWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-		glBindImageTexture(1, newVertexWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-		glBindImageTexture(2, oldNormalWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-		glBindImageTexture(3, newNormalWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-
-		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboCorrespondencesID);
-		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_ssboCorrespondencesID);
-
-		// correspondance
-		glBindImageTexture(4, m_texID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-		// Reset counter
-		unsigned int a = 0;
-		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
-		glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &a);
-		glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicCounterID);
-
-		m_computeICPShader.dispatchCompute(640, 480, 1);
-		m_computeICPShader.end();
+		if (GUIScene::s_ICPGPU_SDF)
+		{
+		}
+		else
+		{
+			computePointToPoint(viewToWorld_iter, projection, viewToWorldOld, viewToWorldRot_prev, oldVertexWorldTex,
+			                    newVertexWorldTex, oldNormalWorldTex, newNormalWorldTex);
+		}
 
 		GLuint counter;
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
@@ -174,6 +154,46 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 	}
 
 	return glm::mat4x4(viewToWorld_iter);
+}
+
+void ICPCompute::computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::mat4x4& projection,
+                                     glm::mat4x4& viewToWorldOld, glm::mat3x3& viewToWorldRot_prev,
+                                     unsigned int oldVertexWorldTex, unsigned int newVertexWorldTex,
+                                     unsigned int oldNormalWorldTex, unsigned int newNormalWorldTex)
+{
+
+	// Find correspondences
+	m_computeICPShader.begin();
+
+	m_computeICPShader.setUniformMatrix4f("viewToWorldIt", viewToWorld_iter);
+	glm::mat4x4 viewProjection_iter = (projection * glm::inverse(glm::mat4x4(viewToWorld_iter)));
+	m_computeICPShader.setUniformMatrix4f("viewProjectionIt", viewProjection_iter);
+
+	m_computeICPShader.setUniformMatrix4f("viewToWorldOld", viewToWorldOld); // TODO, in first step this is correct
+	m_computeICPShader.setUniformMatrix3f("viewToWorldItRot", viewToWorldRot_prev); // TODO
+
+	m_computeICPShader.setUniform1f("_epsilonDistance", GUIScene::s_ICP_epsilonDist);
+
+	// glBindImageTexture(0, depthTexID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+	glBindImageTexture(0, oldVertexWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	glBindImageTexture(1, newVertexWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	glBindImageTexture(2, oldNormalWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	glBindImageTexture(3, newNormalWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboCorrespondencesID);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_ssboCorrespondencesID);
+
+	// correspondance
+	glBindImageTexture(4, m_texID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+	// Reset counter
+	unsigned int a = 0;
+	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
+	glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &a);
+	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicCounterID);
+
+	m_computeICPShader.dispatchCompute(640, 480, 1);
+	m_computeICPShader.end();
 }
 
 unsigned int ICPCompute::getTexID()
