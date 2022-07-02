@@ -26,9 +26,11 @@ layout(binding = 0, offset=0) uniform atomic_uint correspondence_counter;
 
 uniform mat3x3 viewToWorldItRot;
 uniform mat4x4 viewToWorldIt; // View To World
+uniform mat3x3 viewToWorldOldRot; // View To World previous
 uniform mat4x4 viewToWorldOld; // View To World previous
 uniform mat4x4 viewProjectionIt; // Current iteration view projection
 uniform float _epsilonDistance = 1;
+uniform float _epsilonNormal = .5;
 const float WIDTH2 = 320; //halfed
 const float HEIGHT2 = 240;
 
@@ -59,6 +61,11 @@ void main() {
 
 	vec3 vertexOldWorld = (viewToWorldOld * vec4(imageLoad(vertex_old, pixel_coord_projected).xyz, 1)).xyz;
 
+	if(vertexOldWorld.z == 0)
+	{
+		return;
+	}
+
 	vec3 diff = vertexOldWorld-vertexNewWorld;
 	
 	if (length(diff) > _epsilonDistance)
@@ -66,11 +73,15 @@ void main() {
 		return;
 	}
 
-	uint currentCount = atomicCounterIncrement(correspondence_counter);
-
 	// Old normals
-	vec3 normalOldWorld = imageLoad(normals_old, pixel_coord_projected).xyz;
+	vec3 normalOldWorld = normalize(viewToWorldOldRot * imageLoad(normals_old, pixel_coord_projected).xyz);
+	vec3 newNormalWorld = normalize(viewToWorldItRot * imageLoad(normals_new, pixel_coords).xyz);
 
+	// TODO CHECK EPSILONS
+	if (dot(normalOldWorld, newNormalWorld) < _epsilonNormal)
+	{
+		return;
+	}
 	// Code from icp cpu
 	//correspondences.emplace_back(newVertexWorld, referenceVertexWorld, referenceNormalWorld);
 	//Eigen::Vector3d s_i            = GLM2E(std::get<0>(correspondence)).cast<double>();
@@ -85,6 +96,8 @@ void main() {
 	//
 	////
 	//A__ += A_i;
+	
+	uint currentCount = atomicCounterIncrement(correspondence_counter);
 
 	// output
 	vec3 s_i = vertexNewWorld;

@@ -114,8 +114,8 @@ void main() {
     vec3 nor = GetNormal(pos);
     
         // beautify normal
-    nor = (nor + vec3(1)) * .5;
-	imageStore(correspondence, pixel_coords, vec4(nor, 1));
+    //nor = (nor + vec3(1)) * .5;
+	//imageStore(correspondence, pixel_coords, vec4(nor, 1));
     
 	// output
 	vec3 s_i = vertexNewWorld;

@@ -141,6 +141,10 @@ void GUIScene::draw(ofEasyCam& camera)
 
 				ImGui::Checkbox("Draw ICP", &s_drawICPGPU);
 				ImGui::PopStyleColor(1);
+				if (ImGui::Button("Reset view"))
+				{
+					s_resetView = true;
+				}
 
 				/* ImGui::SliderFloat("Point X", &s_testPointPos.x, -2.0f, 2.0f);
 				ImGui::SliderFloat("Point y", &s_testPointPos.y, -2.0f, 2.0f);

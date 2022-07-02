@@ -62,12 +62,13 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
                                 unsigned int oldVertexWorldTex, unsigned int oldNormalWorldTex,
                                 glm::mat4x4& viewToWorldIt, glm::mat4x4& projection)
 {
-	glm::mat4x4                                   viewToWorldOld   = viewToWorldIt;
-	glm::mat<4, 4, double, glm::precision::highp> viewToWorld_iter = viewToWorldIt;
+	glm::mat4x4                                   viewToWorldOld    = viewToWorldIt;
+	glm::mat3x3                                   viewToWorldOldRot = glm::mat3x3(viewToWorldOld);
+	glm::mat<4, 4, double, glm::precision::highp> viewToWorld_iter  = viewToWorldIt;
 
 	for (int i = 0; i < GUIScene::s_ICPGPU_iterations; i++)
 	{
-		glm::mat3x3 viewToWorldRot_prev = glm::mat3x3(viewToWorld_iter);
+		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
 
 		// Clear buffer first
 		constexpr glm::vec4 empty{0, 0, 0, 0};
@@ -78,8 +79,8 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		}
 		else
 		{
-			computePointToPoint(viewToWorld_iter, projection, viewToWorldOld, viewToWorldRot_prev, oldVertexWorldTex,
-			                    newVertexWorldTex, oldNormalWorldTex, newNormalWorldTex);
+			computePointToPoint(viewToWorld_iter, projection, viewToWorldOld, viewToWorldRot_iter, viewToWorldOldRot,
+			                    oldVertexWorldTex, newVertexWorldTex, oldNormalWorldTex, newNormalWorldTex);
 		}
 
 		GLuint counter;
@@ -87,9 +88,6 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &counter);
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 		GUIScene::s_ICPGPU_correspondences = counter;
-
-		ssbo_correspondence_data data[20];
-		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(data), &data);
 
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
@@ -157,9 +155,10 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 }
 
 void ICPCompute::computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::mat4x4& projection,
-                                     glm::mat4x4& viewToWorldOld, glm::mat3x3& viewToWorldRot_prev,
-                                     unsigned int oldVertexWorldTex, unsigned int newVertexWorldTex,
-                                     unsigned int oldNormalWorldTex, unsigned int newNormalWorldTex)
+                                     glm::mat4x4& viewToWorld_old, glm::mat3x3& viewToWorldRot_iter,
+                                     glm::mat3x3& viewToWorldRot_old, unsigned int oldVertexWorldTex,
+                                     unsigned int newVertexWorldTex, unsigned int oldNormalWorldTex,
+                                     unsigned int newNormalWorldTex)
 {
 
 	// Find correspondences
@@ -169,10 +168,12 @@ void ICPCompute::computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::ma
 	glm::mat4x4 viewProjection_iter = (projection * glm::inverse(glm::mat4x4(viewToWorld_iter)));
 	m_computeICPShader.setUniformMatrix4f("viewProjectionIt", viewProjection_iter);
 
-	m_computeICPShader.setUniformMatrix4f("viewToWorldOld", viewToWorldOld); // TODO, in first step this is correct
-	m_computeICPShader.setUniformMatrix3f("viewToWorldItRot", viewToWorldRot_prev); // TODO
+	m_computeICPShader.setUniformMatrix4f("viewToWorldOld", viewToWorld_old); // TODO, in first step this is correct
+	m_computeICPShader.setUniformMatrix3f("viewToWorldItRot", viewToWorldRot_iter);
+	m_computeICPShader.setUniformMatrix3f("viewToWorldOldRot", viewToWorldRot_old);
 
 	m_computeICPShader.setUniform1f("_epsilonDistance", GUIScene::s_ICP_epsilonDist);
+	m_computeICPShader.setUniform1f("_epsilonNormal", GUIScene::s_ICP_epsilonNor);
 
 	// glBindImageTexture(0, depthTexID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 	glBindImageTexture(0, oldVertexWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
