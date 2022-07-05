@@ -12,6 +12,13 @@ Project{
         name: { return FileInfo.baseName(sourceDirectory) }
 
         files: [
+            "resources/data/resources/ICPReduction.comp",
+            "resources/data/resources/computeICP.comp",
+            "resources/data/resources/computeICPSDF.comp",
+            "resources/data/resources/computeSDF.comp",
+            "resources/data/resources/raymarchSDF.frag",
+            "src/compute/icpCompute.cpp",
+            "src/compute/icpCompute.h",
             'resources/data/resources/computeBilateralBlur.comp',
             'resources/data/resources/computeModelPCL.comp',
             'resources/data/resources/computeNormalPCL.comp',
