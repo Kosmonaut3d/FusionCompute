@@ -33,13 +33,14 @@ class GUIScene //: public SceneImpl
 	static bool           s_pointCloudCPUForceUpdate;
 	static int            s_pointCloudDownscaleExp;
 	static int            s_pointCloudDownscale;
-	static bool           s_computeICPCPU;
-	static bool           s_computeICPCPU_Summed;
+	static bool           s_ICP_CPU_compute;
+	static bool           s_ICP_CPU_sum;
 	static float          s_ICP_epsilonDist;
 	static float          s_ICP_epsilonNor;
-	static GLuint         s_ICPGPU_correspondences;
-	static int            s_ICPGPU_iterations;
-	static bool           s_ICPGPU_SDF;
+	static GLuint         s_ICP_GPU_correspondenceCount;
+	static int            s_ICP_GPU_iterations;
+	static bool           s_ICP_GPU_SDF;
+	static bool           s_ICP_applyTransformation;
 	static bool           s_quickDebug;
 	static bool           s_drawDepthBackground;
 	static bool           s_bilateralBlurCompute;
@@ -54,7 +55,7 @@ class GUIScene //: public SceneImpl
 	static bool           s_sdfDrawRaytrace;
 	static float          s_sdfWeightTruncation;
 	static float          s_sdfTruncation;
-	static bool           s_computeICPGPU;
+	static bool           s_ICP_GPU_compute;
 	static bool           s_drawICPGPU;
 	static bool           s_resetView;
 	static glm::vec3      s_testPointPos;

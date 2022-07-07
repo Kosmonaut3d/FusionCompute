@@ -108,7 +108,7 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 		// Solve
 		Eigen::Matrix<double, 6, 1> result;
 
-		if (GUIScene::s_computeICPCPU_Summed)
+		if (GUIScene::s_ICP_CPU_sum)
 		{
 			Eigen::Matrix<double, 6, 1> b_ = Eigen::Matrix<double, 6, 1>::Zero();
 			Eigen::Matrix<double, 6, 6> A_ = Eigen::Matrix<double, 6, 6>::Zero();

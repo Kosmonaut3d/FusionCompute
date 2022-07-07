@@ -16,6 +16,12 @@ void main() {
 	vec3 model_x = imageLoad(model_output, pixel_coords + ivec2(1, 0)).xyz;
 	vec3 model_y = imageLoad(model_output, pixel_coords + ivec2(0, 1)).xyz;
 	
+	if(model.z == 0 || model_x.z == 0 || model_y.z == 0)
+	{
+		imageStore(normal_output, pixel_coords, vec4(0,0,0,0));
+		return;
+	}
+
 	vec3 v1 = (model_x - model);
 	vec3 v2 = (model_y - model);
 

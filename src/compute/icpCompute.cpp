@@ -7,7 +7,7 @@ ICPCompute::ICPCompute()
     : m_computeICPShader{}
     , m_computeICPSDFShader{}
     , m_computeICPReduction{}
-    , m_texID{}
+    , m_correspondenceVisualizationTexID{}
     , m_atomicCounterID{}
     , m_ssboOutID{}
     , m_ssboCorrespondencesID{}
@@ -31,13 +31,13 @@ void ICPCompute::setupTexture()
 	const int size = tex_w * tex_h;
 
 	// Model
-	glGenTextures(1, &m_texID);
+	glGenTextures(1, &m_correspondenceVisualizationTexID);
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, m_texID);
+	glBindTexture(GL_TEXTURE_2D, m_correspondenceVisualizationTexID);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
-	glBindImageTexture(1, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
+	glBindImageTexture(1, m_correspondenceVisualizationTexID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
 	// atomic counter
 	glGenBuffers(1, &m_atomicCounterID);
@@ -60,22 +60,53 @@ void ICPCompute::setupTexture()
 //----------------------------------------------------------------------------------------------------------
 glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int newNormalWorldTex,
                                 unsigned int oldVertexWorldTex, unsigned int oldNormalWorldTex,
-                                glm::mat4x4& viewToWorldIt, glm::mat4x4& projection)
+                                glm::mat4x4& viewToWorldIt, glm::mat4x4& projection, SDFCompute& sdfCompute)
 {
 	glm::mat4x4                                   viewToWorldOld    = viewToWorldIt;
 	glm::mat3x3                                   viewToWorldOldRot = glm::mat3x3(viewToWorldOld);
 	glm::mat<4, 4, double, glm::precision::highp> viewToWorld_iter  = viewToWorldIt;
 
-	for (int i = 0; i < GUIScene::s_ICPGPU_iterations; i++)
+	for (int i = 0; i < GUIScene::s_ICP_GPU_iterations; i++)
 	{
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
 
 		// Clear buffer first
 		constexpr glm::vec4 empty{0, 0, 0, 0};
-		glClearTexImage(m_texID, 0, GL_RGBA, GL_FLOAT, &empty);
+		glClearTexImage(m_correspondenceVisualizationTexID, 0, GL_RGBA, GL_FLOAT, &empty);
 
-		if (GUIScene::s_ICPGPU_SDF)
+		if (GUIScene::s_ICP_GPU_SDF)
 		{
+			// Camera
+			glm::vec3 _cameraOrigin = viewToWorldIt * glm::vec4(0, 0, 0, 1);
+
+			m_computeICPSDFShader.begin();
+
+			m_computeICPSDFShader.setUniform3f("_cameraOrigin", _cameraOrigin);
+			m_computeICPSDFShader.setUniformMatrix4f("_viewToWorldIt", viewToWorld_iter);
+			m_computeICPSDFShader.setUniformMatrix3f("_viewToWorldItRot", viewToWorldRot_iter);
+			m_computeICPSDFShader.setUniformMatrix4f("_sdfBaseTransform", sdfCompute.getSDFBaseTransformation());
+			m_computeICPSDFShader.setUniform1f("_truncationDistance", sdfCompute.getScaledTruncation());
+			m_computeICPSDFShader.setUniform1f("_epsilonDistance", GUIScene::s_ICP_epsilonDist);
+			m_computeICPSDFShader.setUniform1f("_epsilonNormal", GUIScene::s_ICP_epsilonNor);
+
+			glBindImageTexture(0, newVertexWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+			glBindImageTexture(1, newNormalWorldTex, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+			glBindImageTexture(2, m_correspondenceVisualizationTexID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_3D, sdfCompute.getTextureID());
+
+			glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboCorrespondencesID);
+			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_ssboCorrespondencesID);
+
+			// Reset counter
+			unsigned int a = 0;
+			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
+			glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &a);
+			glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicCounterID);
+
+			m_computeICPSDFShader.dispatchCompute(640, 480, 1);
+			m_computeICPSDFShader.end();
 		}
 		else
 		{
@@ -83,28 +114,18 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 			                    oldVertexWorldTex, newVertexWorldTex, oldNormalWorldTex, newNormalWorldTex);
 		}
 
-		GLuint counter;
+		GLuint correspondencesFound;
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
-		glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &counter);
+		glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &correspondencesFound);
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
-		GUIScene::s_ICPGPU_correspondences = counter;
+		GUIScene::s_ICP_GPU_correspondenceCount = correspondencesFound;
 
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
-		if (counter <= 0)
+		if (correspondencesFound <= 0)
 		{
 			break;
 		}
-
-		/*
-		std::vector<glm::vec4> framedata(640 * 480);
-		glBindTexture(GL_TEXTURE_2D, m_texID);
-		glGetTextureImage(m_texID, 0, GL_RGBA, GL_FLOAT, framedata.size() * sizeof(glm::vec4), &framedata[0]);
-		*/
-
-		// READ ATOMIC
-		/*
-		 */
 
 		//////////////////////////////////////////
 		// REDUCTION
@@ -117,19 +138,11 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 			glBeginQuery(GL_TIME_ELAPSED, query);
 		}
 
-		const int dataSize   = 640 * 480;
-		auto      test2      = log2(dataSize);
-		auto      ceiling    = ceil(test2);
-		int       iterations = 1 << (static_cast<int>(ceil(test2)) - 1);
-
 		m_computeICPReduction.begin();
-		// glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboCorrespondencesID);
-		// glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_ssboCorrespondencesID);
 		glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboOutID);
 		glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 1, m_ssboOutID);
 
-		m_computeICPReduction.setUniform1i("iterations", iterations);
-		m_computeICPReduction.setUniform1i("datasize", dataSize);
+		const int dataSize = correspondencesFound;
 
 		const int workgroupsize = 128;
 		const int numworkgroups = dataSize / workgroupsize / 2;
@@ -137,7 +150,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		m_computeICPReduction.dispatchCompute(numworkgroups, 1, 1);
 		m_computeICPReduction.end();
 
-		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(m_outData), &m_outData);
+		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(ssbo_out_data) * numworkgroups, &m_outData);
 
 		// Timing
 		{
@@ -146,7 +159,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		}
 
 		// Feed the matrix
-		calculateICP(viewToWorld_iter);
+		calculateICP(viewToWorld_iter, numworkgroups);
 
 		int test = 0;
 	}
@@ -185,7 +198,7 @@ void ICPCompute::computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::ma
 	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, m_ssboCorrespondencesID);
 
 	// correspondance
-	glBindImageTexture(4, m_texID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+	glBindImageTexture(4, m_correspondenceVisualizationTexID, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
 	// Reset counter
 	unsigned int a = 0;
@@ -193,13 +206,14 @@ void ICPCompute::computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::ma
 	glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &a);
 	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicCounterID);
 
-	m_computeICPShader.dispatchCompute(640, 480, 1);
+	// 640*480 = 10*640 * 30 * 16
+	m_computeICPShader.dispatchCompute(10, 30, 1);
 	m_computeICPShader.end();
 }
 
 unsigned int ICPCompute::getTexID()
 {
-	return m_texID;
+	return m_correspondenceVisualizationTexID;
 }
 
 void ICPCompute::feedVec3ToMatrix(Eigen::Matrix<double, 6, 6>& mat, const glm::vec4& v)
@@ -207,14 +221,14 @@ void ICPCompute::feedVec3ToMatrix(Eigen::Matrix<double, 6, 6>& mat, const glm::v
 	mat << v.x, v.y, v.z;
 }
 
-void ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewToWorld_iter)
+void ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewToWorld_iter, int numworkgroups)
 {
 	Eigen::Matrix<double, 6, 1> b_ = Eigen::Matrix<double, 6, 1>::Zero();
 	Eigen::Matrix<double, 6, 6> A_ = Eigen::Matrix<double, 6, 6>::Zero();
 
-	int corres = GUIScene::s_ICPGPU_correspondences / 128 / 2;
+	int corres = GUIScene::s_ICP_GPU_correspondenceCount / 128 / 2;
 
-	for (size_t i = 0; i < 600; ++i)
+	for (size_t i = 0; i < numworkgroups; ++i)
 	{
 		auto                        obj = m_outData[i];
 		Eigen::Matrix<double, 6, 6> A_i;
@@ -247,6 +261,7 @@ void ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 		float ty = result[4];
 		float tz = result[5];
 
+		/*
 		Eigen::Matrix<double, 4, 4> T_inc{{1, a, -g, tx}, {-a, 1, b, ty}, {g, -b, 1, tz}, {0, 0, 0, 1}};
 
 		double alpha = result[0];
@@ -254,13 +269,22 @@ void ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 		double gamma = result[2];
 
 		Eigen::Matrix4d transformation{
-		    {1, -gamma, beta, result[3]}, {gamma, 1, -alpha, result[4]}, {-beta, alpha, 1, result[5]}, {0, 0, 0, 1}};
+		    {1, -gamma, beta, tx}, {gamma, 1, -alpha, ty}, {-beta, alpha, 1, tz}, {0, 0, 0, 1}};
 
 		std::cout << transformation;
 
-		Eigen::Matrix<double, 4, 4> T_z = GLM2E(viewToWorld_iter);
+		*/
+		// YET ANOTHER
+		Eigen::Matrix4d transformation;
+		double          alpha = result[0];
+		double          beta  = result[1];
+		double          gamma = result[2];
 
-		T_z = transformation * T_z;
+		transformation << 1, alpha * beta - gamma, alpha * gamma + beta, tx, gamma, alpha * beta * gamma + 1,
+		    beta * gamma - alpha, ty, -beta, alpha, 1, tz, 0, 0, 0, 1;
+
+		Eigen::Matrix<double, 4, 4> T_z = GLM2E(viewToWorld_iter);
+		T_z                             = transformation * T_z;
 
 		// Increment
 		viewToWorld_iter = E2GLM(T_z);

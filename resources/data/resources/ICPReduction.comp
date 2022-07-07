@@ -40,13 +40,6 @@ layout(std430, binding = 1) writeonly coherent buffer odata
 
 shared out_struct sdata[gl_WorkGroupSize.x];
 
-uniform int iterations = 128;
-uniform int datasize = 100;
-
-const float WIDTH2 = 320; //halfed
-const float HEIGHT2 = 240;
-
-
 void main() {
 
 	uint tid = gl_LocalInvocationID.x;

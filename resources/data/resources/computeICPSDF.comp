@@ -3,7 +3,8 @@
 layout(local_size_x = 1, local_size_y = 1) in;
 
 layout(rgba32f, binding = 0) uniform readonly coherent image2D vertex_new;
-layout(rgba32f, binding = 4) uniform writeonly coherent image2D correspondence;
+layout(rgba32f, binding = 1) uniform readonly coherent image2D normals_new;
+layout(rgba32f, binding = 2) uniform writeonly coherent image2D correspondence;
 uniform sampler3D volume_tex;
 
 struct o_struct
@@ -21,12 +22,13 @@ layout(std430, binding = 0) writeonly buffer odata
 
 layout(binding = 0, offset=0) uniform atomic_uint correspondence_counter;
 
-uniform mat4x4 _viewToWorldIt; // View To World
 uniform vec3 _cameraOrigin; // origin of the camera
-uniform float _epsilonDistance = 1;
+uniform mat4x4 _viewToWorldIt; // View To World
+uniform mat3x3 _viewToWorldItRot; // View To World
 uniform mat4 _sdfBaseTransform;
-uniform float _sdfResolution;
 uniform float _truncationDistance;
+uniform float _epsilonDistance = 1;
+uniform float _epsilonNormal = .5;
 
 #define MAX_STEPS 100
 #define MAX_DIST 8
@@ -99,6 +101,7 @@ void main() {
 
     // SDF part
 	vec3 ro = vertexNewWorld; // let's start at the vertex position
+    ro = (vertexNewWorld + _cameraOrigin)*.5; // let's start half way between point and camera
     vec3 rd = normalize(vertexNewWorld - _cameraOrigin);
     vec2 d = RayMarchSDF(ro, rd);
     
@@ -106,17 +109,41 @@ void main() {
     {
         return;
     }
-    
-	uint currentCount = atomicCounterIncrement(correspondence_counter);
-    
     // Hit point
     vec3 pos = ro + rd * d.x;
     vec3 nor = GetNormal(pos);
     
+	vec3 diff = pos-vertexNewWorld;
+	
+	if (length(diff) > _epsilonDistance)
+	{
+		return;
+	}
+
+    // Get old normal
+	vec3 newNormalWorld = normalize(_viewToWorldItRot * imageLoad(normals_new, pixel_coords).xyz);
+
+    /*
+    CHECKERBOARD COMPARISON
+    float checkSize = .01;
+    float fmodResult = mod(floor(checkSize * pixel_coords.x) + floor(checkSize * pixel_coords.y), 2.0);
+    float fin = max(sign(fmodResult), 0.0);
+
         // beautify normal
     //nor = (nor + vec3(1)) * .5;
-	//imageStore(correspondence, pixel_coords, vec4(nor, 1));
+	imageStore(correspondence, pixel_coords, vec4(fin * newNormalWorld + (1-fin)*nor, 1));
+    */
     
+	// TODO CHECK EPSILONS
+	if (dot(nor, newNormalWorld) < _epsilonNormal)
+	{
+		return;
+	}
+    
+	uint currentCount = atomicCounterIncrement(correspondence_counter);
+    
+	imageStore(correspondence, pixel_coords, vec4(dot(nor,newNormalWorld).xxx, 1));
+
 	// output
 	vec3 s_i = vertexNewWorld;
 	vec3 d_i = pos;

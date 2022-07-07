@@ -1,6 +1,7 @@
 #pragma once
 
 //#include "helper/eigen2glm.h"
+#include "sdfCompute.h"
 #include <../deps/Eigen/Dense>
 #include <ofMain.h>
 
@@ -11,13 +12,13 @@ class ICPCompute
 	void        setupTexture();
 	glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int newNormalWorldTex,
 	                                unsigned int oldVertexWorldTex, unsigned int oldNormalWorldTex,
-	                                glm::mat4x4& viewWorldIt, glm::mat4x4& projection);
+	                                glm::mat4x4& viewWorldIt, glm::mat4x4& projection, SDFCompute& sdfCompute);
 	void computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::mat4x4& projection, glm::mat4x4& viewToWorld_old,
 	                         glm::mat3x3& viewToWorldRot_iter, glm::mat3x3& viewToWorldRot_old,
 	                         unsigned int oldVertexWorldTex, unsigned int newVertexWorldTex,
 	                         unsigned int oldNormalWorldTex, unsigned int newNormalWorldTex);
 	unsigned int getTexID();
-	void         calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewWorldIt);
+	void         calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewWorldIt, int numworkgroups);
 
   private:
 	struct ssbo_correspondence_data
@@ -53,7 +54,7 @@ class ICPCompute
 	ofShader     m_computeICPShader;
 	ofShader     m_computeICPSDFShader;
 	ofShader     m_computeICPReduction;
-	unsigned int m_texID;
+	unsigned int m_correspondenceVisualizationTexID;
 	unsigned int m_atomicCounterID;
 	unsigned int m_ssboOutID;
 	unsigned int m_ssboCorrespondencesID;

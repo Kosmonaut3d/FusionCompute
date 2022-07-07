@@ -22,7 +22,7 @@ void main()
 	}
 	else
 	{
-		outputColor =  vec4(0, valSDF.x, 0 ,1.);
+		outputColor =  vec4(0, valSDF.x * .001, 0 ,1.);
 	}
 
 	//vec3 valCompute =  texture(tex2D, relPos.zy).rbg;

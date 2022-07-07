@@ -27,14 +27,17 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldTo
 		m_sdfCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew, viewToWorld, worldToClip);
 	}
 
-	if (GUIScene::s_computeICPGPU)
+	if (GUIScene::s_ICP_GPU_compute)
 	{
 		glm::mat4x4 viewToWorldIt =
 		    m_icpCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew, m_pointsCloudWorldTexOld,
-		                         m_pointsCloudNormalTexOld, viewToWorld, projection);
+		                         m_pointsCloudNormalTexOld, viewToWorld, projection, m_sdfCompute);
 
-		worldToView = glm::inverse(viewToWorldIt);
-		viewToWorld = viewToWorldIt;
+		if (GUIScene::s_ICP_applyTransformation)
+		{
+			worldToView = glm::inverse(viewToWorldIt);
+			viewToWorld = viewToWorldIt;
+		}
 	}
 }
 
@@ -49,7 +52,7 @@ void SDFScene::draw(ofCamera& camera)
 	}
 	if (GUIScene::s_sdfDrawSlice)
 	{
-		m_slice.draw(m_sdfCompute.getWorldInv(), m_sdfCompute.getTextureID(), 0);
+		m_slice.draw(m_sdfCompute.getSDFBaseTransformation(), m_sdfCompute.getTextureID(), 0);
 	}
 
 	camera.end();

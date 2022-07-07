@@ -259,9 +259,9 @@ void ofApp::draw()
 			break;
 		}
 		case GUIScene::SceneSelection::SDF: {
-			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
-
 			m_sdfScene.draw(m_camera);
+
+			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
 
 			m_camera.begin();
 			drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);

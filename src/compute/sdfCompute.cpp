@@ -39,11 +39,9 @@ void SDFCompute::setupTexture()
 
 	std::vector<glm::vec2> framedata(m_resolution * m_resolution * m_resolution);
 
-	const float truncationScaled = m_scale / m_resolution * GUIScene::s_sdfTruncation;
+	const float truncationScaled = getScaledTruncation();
 	std::fill(framedata.begin(), framedata.end(), glm::vec2(truncationScaled, 0));
 
-	// glTexImage3D(GL_TEXTURE_3D, 0, GL_R32F, m_resolution, m_resolution, m_resolution, 0, GL_RED, GL_FLOAT,
-	// framedata.data());
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RG32F, m_resolution, m_resolution, m_resolution, 0, GL_RG, GL_FLOAT,
 	             framedata.data());
 }
@@ -73,7 +71,7 @@ void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNorma
 	glm::vec3 pointLocal = m_modelMatInv * glm::vec4(point, 1);
 
 	// Make the truncation distance dependent on the minimum distance between 2 tiles
-	const float truncationScaled = m_scale / m_resolution * GUIScene::s_sdfTruncation;
+	const float truncationScaled = getScaledTruncation();
 
 	m_computeSDFShader.begin();
 
@@ -114,9 +112,14 @@ unsigned int SDFCompute::getTextureID()
 }
 
 //----------------------------------------------------------------------------------------------------------
-glm::mat4x4& SDFCompute::getWorldInv()
+glm::mat4x4& SDFCompute::getSDFBaseTransformation()
 {
 	return m_modelMatInv;
+}
+
+float SDFCompute::getScaledTruncation()
+{
+	return m_scale * GUIScene::s_sdfTruncation;
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -161,7 +164,7 @@ void SDFCompute::drawRaymarch(ofCamera& camera)
 	glBindTexture(GL_TEXTURE_3D, m_texID);
 
 	// Make the truncation distance dependent on the minimum distance between 2 tiles
-	const float truncationScaled = m_scale / m_resolution * GUIScene::s_sdfTruncation;
+	const float truncationScaled = getScaledTruncation();
 
 	m_raymarchSDFShader.setUniform3f("cameraWorld", camera.getPosition());
 	m_raymarchSDFShader.setUniformMatrix4f("sdfBaseTransform", m_modelMatInv);

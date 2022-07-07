@@ -57,7 +57,7 @@ vec2 worldToDistance(vec3 worldPos)
 	if(abs(len) < _truncationDistance)
 	{
 		vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
-		float dotProduct = dot(normalize(dist), normalize(pclNor));
+		float dotProduct = dot(dist, pclNor); // dot(normalize(dist), normalize(pclNor));
 		float scaledLen = len * FLT_MAX /_truncationDistance;
 		return vec2(sign(dotProduct)*scaledLen, 1);
 	}
@@ -83,7 +83,4 @@ void main() {
 
 		imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
 	}
-  // NOTE: Nvidia could use derivatives for normal maps;
-
-  // Problem: openGL reads textures from bottom
 }

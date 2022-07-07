@@ -10,7 +10,8 @@ class SDFCompute
 	void         compute(unsigned int pointCloudId, unsigned int pointCloudNormalId, glm::mat4x4& viewToWorld,
 	                     glm::mat4x4 worldToClipKinect);
 	unsigned int getTextureID();
-	glm::mat4x4& getWorldInv();
+	glm::mat4x4& getSDFBaseTransformation();
+	float        getScaledTruncation();
 	void         drawOutline();
 	void         drawRaymarch(ofCamera& camera);
 
@@ -20,6 +21,7 @@ class SDFCompute
 	glm::mat4x4  m_modelMat;
 	glm::mat4x4  m_modelMatInv;
 	unsigned int m_texID;
+	unsigned int m_colorTexID;
 	int          m_resolution;
 	glm::vec3    m_origin;
 	float        m_scale;

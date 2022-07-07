@@ -85,8 +85,9 @@ vec2 RayMarchSDF(vec3 ro, vec3 rd)
     {
         vec3 p = ro + rd * dO;
         float ds = GetDistSDF(p); // ds is Distance Scene
+
         dO += ds;
-        if(dO > (MAX_DIST) || ds < SURFACE_DIST) break;
+        if(dO > (MAX_DIST) || abs(ds) < SURFACE_DIST) break;
     }
 
     return vec2(dO, i * 1.0 / MAX_STEPS );

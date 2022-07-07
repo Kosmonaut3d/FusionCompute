@@ -64,7 +64,7 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 			}
 		}
 
-		if (GUIScene::s_computeICPCPU)
+		if (GUIScene::s_ICP_CPU_compute)
 		{
 			// GUIScene::s_computeICPCPU = false;
 

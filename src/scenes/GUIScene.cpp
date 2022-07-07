@@ -15,12 +15,6 @@ bool      GUIScene::s_drawPointCloudCPU        = false;
 bool      GUIScene::s_drawPointCloudNormCPU    = false;
 int       GUIScene::s_pointCloudDownscaleExp   = 3;
 int       GUIScene::s_pointCloudDownscale      = 8;
-bool      GUIScene::s_computeICPCPU            = false;
-bool      GUIScene::s_computeICPCPU_Summed     = false;
-float     GUIScene::s_ICP_epsilonDist          = .1;
-float     GUIScene::s_ICP_epsilonNor           = .8;
-int       GUIScene::s_ICPGPU_iterations        = 1;
-bool      GUIScene::s_ICPGPU_SDF               = true;
 bool      GUIScene::s_quickDebug               = false;
 bool      GUIScene::s_drawDepthBackground      = false;
 bool      GUIScene::s_bilateralBlurCompute     = true;
@@ -28,18 +22,27 @@ bool      GUIScene::s_bilateralBlurDraw        = true;
 GLuint64  GUIScene::s_measureGPUTime           = 0;
 GLuint64  GUIScene::s_measureGPUTime2          = 0;
 GLuint64  GUIScene::s_measureGPUTime_reduction = 0;
-bool      GUIScene::s_sdfCompute               = false;
-int       GUIScene::s_sdfResolution            = 64;
+bool      GUIScene::s_sdfCompute               = true;
+int       GUIScene::s_sdfResolution            = 512;
 bool      GUIScene::s_sdfDrawSlice             = false;
 bool      GUIScene::s_sdfDrawRaytrace          = false;
 float     GUIScene::s_sdfSliceX                = 0.f;
-float     GUIScene::s_sdfWeightTruncation      = 20.f;
-float     GUIScene::s_sdfTruncation            = 3.f;
-bool      GUIScene::s_computeICPGPU            = false;
+float     GUIScene::s_sdfWeightTruncation      = 200.f;
+float     GUIScene::s_sdfTruncation            = .1f;
 bool      GUIScene::s_drawICPGPU               = false;
 bool      GUIScene::s_resetView                = false;
 glm::vec3 GUIScene::s_testPointPos             = glm::vec3(-1, 0, -2);
-GLuint    GUIScene::s_ICPGPU_correspondences   = 0;
+
+// ICP
+bool   GUIScene::s_ICP_applyTransformation     = false;
+bool   GUIScene::s_ICP_CPU_compute             = false;
+bool   GUIScene::s_ICP_CPU_sum                 = false;
+bool   GUIScene::s_ICP_GPU_compute             = true;
+float  GUIScene::s_ICP_epsilonDist             = .05;
+float  GUIScene::s_ICP_epsilonNor              = .98;
+int    GUIScene::s_ICP_GPU_iterations          = 5;
+bool   GUIScene::s_ICP_GPU_SDF                 = true;
+GLuint GUIScene::s_ICP_GPU_correspondenceCount = 0;
 
 //---------------------------------------------------
 GUIScene::GUIScene()
@@ -116,7 +119,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Text("Draw time %f", s_measureGPUTime2 / 1000000.0);
 				ImGui::Checkbox("Draw Slice", &s_sdfDrawSlice);
 				ImGui::SliderFloat("SDF Slice X", &s_sdfSliceX, -2.0f, 2.0f);
-				ImGui::SliderFloat("SDF Truncation", &s_sdfTruncation, 0, 10);
+				ImGui::SliderFloat("SDF Truncation", &s_sdfTruncation, 0, 1);
 				ImGui::SliderFloat("SDF Weight Truncation", &s_sdfWeightTruncation, 0, 1000);
 				ImGui::Checkbox("Compute Bilateral Blur", &s_bilateralBlurCompute);
 
@@ -125,21 +128,22 @@ void GUIScene::draw(ofEasyCam& camera)
 				const ImVec4 gpuCol = (ImVec4)ImColor(0.5, 170.5f, 0.5f);
 				ImGui::PushStyleColor(ImGuiCol_CheckMark, gpuCol);
 				ImGui::TextColored(gpuCol, "ICP Compute");
-				ImGui::Checkbox("Compute ICP", &s_computeICPGPU);
+				ImGui::Checkbox("Compute ICP", &s_ICP_GPU_compute);
 
 				ImGui::Text("ICP reduce time %f", s_measureGPUTime_reduction / 1000000.0);
 
-				if (s_computeICPGPU)
+				if (s_ICP_GPU_compute)
 				{
-					ImGui::Text("correspondences %u", s_ICPGPU_correspondences);
+					ImGui::Text("correspondences %u", s_ICP_GPU_correspondenceCount);
 				}
 
 				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);
 				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
-				ImGui::SliderInt("iterations", &s_ICPGPU_iterations, 1, 20);
-				ImGui::Checkbox("Point to Mesh", &s_ICPGPU_SDF);
+				ImGui::SliderInt("iterations", &s_ICP_GPU_iterations, 1, 20);
+				ImGui::Checkbox("Point to Mesh", &s_ICP_GPU_SDF);
 
 				ImGui::Checkbox("Draw ICP", &s_drawICPGPU);
+				ImGui::Checkbox("Apply ICP transformation", &s_ICP_applyTransformation);
 				ImGui::PopStyleColor(1);
 				if (ImGui::Button("Reset view"))
 				{
@@ -198,8 +202,8 @@ void GUIScene::draw(ofEasyCam& camera)
 			if (ImGui::BeginTabItem("ICP"))
 			{
 				s_sceneSelection = SceneSelection::PointCloud;
-				ImGui::Checkbox("Compute ICP CPU", &s_computeICPCPU);
-				ImGui::Checkbox("Sum ICP CPU", &s_computeICPCPU_Summed);
+				ImGui::Checkbox("Compute ICP CPU", &s_ICP_CPU_compute);
+				ImGui::Checkbox("Sum ICP CPU", &s_ICP_CPU_sum);
 				if (ImGui::Button("Reset view"))
 				{
 					s_resetView = true;
@@ -207,6 +211,8 @@ void GUIScene::draw(ofEasyCam& camera)
 
 				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);
 				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
+
+				ImGui::Checkbox("Apply ICP transformation", &s_ICP_applyTransformation);
 				ImGui::EndTabItem();
 			}
 			if (ImGui::BeginTabItem("Blur"))
