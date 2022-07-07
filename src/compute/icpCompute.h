@@ -10,7 +10,7 @@ class ICPCompute
   public:
 	ICPCompute();
 	void        setupTexture();
-	glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int newNormalWorldTex,
+    glm::mat4x4 compute(unsigned int newVertexWorldTex, unsigned int newNormalWorldTex,
 	                                unsigned int oldVertexWorldTex, unsigned int oldNormalWorldTex,
 	                                glm::mat4x4& viewWorldIt, glm::mat4x4& projection, SDFCompute& sdfCompute);
 	void computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::mat4x4& projection, glm::mat4x4& viewToWorld_old,
