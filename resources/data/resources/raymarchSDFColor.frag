@@ -1,7 +1,7 @@
 
 // fragment shader
 
-#version 430
+#version 440
 
 out vec4 outputColor;
 in vec3 world;
@@ -13,17 +13,17 @@ uniform mat4 viewprojection;
 
 uniform float _truncationDistance;
 
-#define MAX_STEPS 10
-#define MAX_DIST 8
+#define MAX_STEPS 20
+#define MAX_DIST 4
 #define SURFACE_DIST .01
 
-uniform sampler3D volume_tex;
+layout(binding=0) uniform sampler3D volume_tex;
+layout(binding=1) uniform sampler3D color_tex;
 
 // Header
 float GetDistSDF(vec3 p);
 vec2 RayMarchSDF(vec3 ro, vec3 rd);
 
- 
 vec3 GetNormal(vec3 p)
 { 
     float d = GetDistSDF(p); // Distance
@@ -34,15 +34,6 @@ vec3 GetNormal(vec3 p)
     GetDistSDF(p-e.yyx));
    
     return normalize(n);
-}
-
-//Random number [0:1] without sine
-#define HASHSCALE1 .1031
-float hash(float p)
-{
-	vec3 p3  = fract(vec3(p) * HASHSCALE1);
-    p3 += dot(p3, p3.yzx + 19.19);
-    return fract((p3.x + p3.y) * p3.z);
 }
 
 float getDistanceSDFVolume(vec3 p)
@@ -67,7 +58,7 @@ float GetDistSDF(vec3 p)
 
     if(relPos.x < 0 || relPos.y < 0 || relPos.z < 0 || relPos.x > 1 || relPos.y > 1|| relPos.z > 1)
     {
-        return .1;
+        return 10;
     }
     
     // Replace by uniform
@@ -108,11 +99,10 @@ void main()
     {
         // Hit point
         vec3 pos = ro + rd * d.x;
-        vec3 nor = GetNormal(pos);
     
-        // beautify normal
-        nor = (nor + vec3(1)) * .5;
-        outputColor = vec4( nor, 1.0);
+        vec3 relPos = (sdfBaseTransform * vec4(pos, 1)).xyz; 
+
+        outputColor = texture(color_tex, relPos);
     }
     else
     { 

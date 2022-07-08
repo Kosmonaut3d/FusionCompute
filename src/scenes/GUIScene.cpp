@@ -6,7 +6,7 @@ bool      GUIScene::s_isKinectDeliveringData   = false;
 bool      GUIScene::s_updateKinectData         = true;
 ImVec4    GUIScene::s_backgroundColor          = ImVec4(0.2, 0.2, 0.2, 1);
 bool      GUIScene::s_computePointCloud        = true;
-bool      GUIScene::s_drawPointCloud           = true;
+bool      GUIScene::s_drawPointCloud           = false;
 bool      GUIScene::s_drawPointCloudTex        = false;
 bool      GUIScene::s_drawPointCloudNorm       = false;
 bool      GUIScene::s_computePointCloudCPU     = false;
@@ -22,16 +22,18 @@ bool      GUIScene::s_bilateralBlurDraw        = true;
 GLuint64  GUIScene::s_measureGPUTime           = 0;
 GLuint64  GUIScene::s_measureGPUTime2          = 0;
 GLuint64  GUIScene::s_measureGPUTime_reduction = 0;
-bool      GUIScene::s_sdfCompute               = true;
-int       GUIScene::s_sdfResolution            = 512;
-bool      GUIScene::s_sdfDrawSlice             = false;
-bool      GUIScene::s_sdfDrawRaytrace          = false;
-float     GUIScene::s_sdfSliceX                = 0.f;
-float     GUIScene::s_sdfWeightTruncation      = 200.f;
-float     GUIScene::s_sdfTruncation            = .1f;
 bool      GUIScene::s_drawICPGPU               = false;
 bool      GUIScene::s_resetView                = false;
 glm::vec3 GUIScene::s_testPointPos             = glm::vec3(-1, 0, -2);
+
+bool  GUIScene::s_sdfCompute          = true;
+bool  GUIScene::s_sdfComputeColor     = true;
+int   GUIScene::s_sdfResolution       = 512;
+bool  GUIScene::s_sdfDrawSlice        = false;
+bool  GUIScene::s_sdfDrawRaytrace     = true;
+float GUIScene::s_sdfSliceX           = 0.f;
+float GUIScene::s_sdfWeightTruncation = 200.f;
+float GUIScene::s_sdfTruncation       = .1f;
 
 // ICP
 bool   GUIScene::s_ICP_applyTransformation     = false;
@@ -91,7 +93,8 @@ void GUIScene::draw(ofEasyCam& camera)
 			timeDelta = 0.0f;
 		}
 
-		ImGui::Text("Application average %.3f (%.1f FPS), %d vertices", msAvg, ImGui::GetIO().Framerate,
+		ImGui::Text("Application average %.3f (%.1f FPS), %d vertices", msAvg,
+		            ofGetFrameRate(), // ImGui::GetIO().Framerate,
 		            ImGui::GetIO().MetricsRenderVertices);
 
 		ImGui::TextColored(s_isKinectDeliveringData ? ImColor(50, 200, 50) : ImColor(200, 50, 50),
@@ -114,6 +117,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Text("eff. %d", s_sdfResolution);
 
 				ImGui::Checkbox("Compute SDF", &s_sdfCompute);
+				ImGui::Checkbox("Compute SDF Color", &s_sdfComputeColor);
 				ImGui::Text("Compute time %f", s_measureGPUTime / 1000000.0);
 				ImGui::Checkbox("Draw Raytrace", &s_sdfDrawRaytrace);
 				ImGui::Text("Draw time %f", s_measureGPUTime2 / 1000000.0);

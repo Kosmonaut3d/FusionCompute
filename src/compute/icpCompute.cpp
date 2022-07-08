@@ -66,6 +66,8 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 	glm::mat3x3                                   viewToWorldOldRot = glm::mat3x3(viewToWorldOld);
 	glm::mat<4, 4, double, glm::precision::highp> viewToWorld_iter  = viewToWorldIt;
 
+	GUIScene::s_ICP_GPU_correspondenceCount = 0;
+
 	for (int i = 0; i < GUIScene::s_ICP_GPU_iterations; i++)
 	{
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
@@ -118,6 +120,12 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
 		glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &correspondencesFound);
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+
+		if (correspondencesFound < GUIScene::s_ICP_GPU_correspondenceCount)
+		{
+			break;
+		}
+
 		GUIScene::s_ICP_GPU_correspondenceCount = correspondencesFound;
 
 		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

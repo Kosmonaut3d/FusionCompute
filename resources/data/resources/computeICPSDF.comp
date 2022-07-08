@@ -30,10 +30,9 @@ uniform float _truncationDistance;
 uniform float _epsilonDistance = 1;
 uniform float _epsilonNormal = .5;
 
-#define MAX_STEPS 100
+#define MAX_STEPS 50
 #define MAX_DIST 8
 #define SURFACE_DIST .01
-#define FLT_MAX 10000
 
 float getDistanceSDFVolume(vec3 p)
 {
@@ -56,11 +55,11 @@ float GetDistSDF(vec3 p)
 
     if(relPos.x < 0 || relPos.y < 0 || relPos.z < 0 || relPos.x > 1 || relPos.y > 1|| relPos.z > 1)
     {
-        return .1;
+        return 10;
     }
     
     // Replace by uniform
-    return texture(volume_tex, relPos).r / FLT_MAX * _truncationDistance;
+    return texture(volume_tex, relPos).r;
 }
 
 vec2 RayMarchSDF(vec3 ro, vec3 rd) 

@@ -26,4 +26,5 @@ class SDFScene //: public SceneImpl
 	SignedDistanceField m_sdfCPU;
 	Slice               m_slice;
 	ICPCompute          m_icpCompute;
+	ofTexture*          m_kinectColorTexPtr;
 };

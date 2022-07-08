@@ -285,12 +285,15 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="resources\data\resources\common_icp.comp" />
+    <None Include="resources\data\resources\common_raymarch.comp" />
     <None Include="resources\data\resources\computeBilateralBlur.comp" />
     <None Include="resources\data\resources\computeICP.comp" />
     <None Include="resources\data\resources\computeICPSDF.comp" />
     <None Include="resources\data\resources\computeModelPCL.comp" />
     <None Include="resources\data\resources\computeNormalPCL.comp" />
     <None Include="resources\data\resources\computeSDF.comp" />
+    <None Include="resources\data\resources\computeSDFColor.comp" />
     <None Include="resources\data\resources\expandSDF.comp" />
     <None Include="resources\data\resources\ICPReduction.comp" />
     <None Include="resources\data\resources\raymarchSDF.frag" />
@@ -298,6 +301,7 @@
     <None Include="resources\data\resources\fullScreenQuad.vert" />
     <None Include="resources\data\resources\pointCloud.frag" />
     <None Include="resources\data\resources\pointCloud.vert" />
+    <None Include="resources\data\resources\raymarchSDFColor.frag" />
     <None Include="resources\data\resources\sliceFragShader.frag" />
     <None Include="resources\data\resources\vertShader.vert" />
   </ItemGroup>

@@ -8,6 +8,8 @@ uniform float _distance_x;
 uniform float _distance_xy;
 uniform float _distance_xyz;
 
+uniform float _resolution;
+
 #define FLT_MAX 10000
 
 void main() {

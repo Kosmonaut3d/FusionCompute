@@ -8,12 +8,14 @@ SDFScene::SDFScene()
     , m_sdfCPU{GUIScene::s_sdfResolution, glm::vec3(-2, -2, -4), 4, 2}
     , m_slice(glm::vec3(0, 0, -1), 2)
     , m_icpCompute{}
+    , m_kinectColorTexPtr{}
 {
 }
 
 //----------------------------------------------------------------------------------------------------------
 void SDFScene::setup(ofxKinect& kinect)
 {
+	m_kinectColorTexPtr = &kinect.getTexture();
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -24,7 +26,8 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldTo
 {
 	if (GUIScene::s_sdfCompute)
 	{
-		m_sdfCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew, viewToWorld, worldToClip);
+		m_sdfCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew,
+		                     m_kinectColorTexPtr->getTextureData().textureID, viewToWorld, worldToClip);
 	}
 
 	if (GUIScene::s_ICP_GPU_compute)

@@ -4,10 +4,13 @@
 //----------------------------------------------------------------------------------------------------------
 SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
     : m_computeSDFShader{}
+    , m_computeSDFColorShader{}
     , m_raymarchSDFShader{}
+    , m_raymarchSDFColorShader{}
     , m_modelMat{}
     , m_modelMatInv{}
     , m_texID{}
+    , m_colorTexID{}
     , m_resolution{resolution}
     , m_origin{origin}
     , m_scale{scale}
@@ -17,13 +20,23 @@ SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
 		throw std::exception(); //"could not load shaders");
 	}
 
+	if (!m_raymarchSDFColorShader.load("resources/vertShader.vert", "resources/raymarchSDFColor.frag"))
+	{
+		throw std::exception(); //"could not load shaders");
+	}
+
 	m_computeSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeSDF.comp");
 	m_computeSDFShader.linkProgram();
+
+	m_computeSDFColorShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeSDFColor.comp");
+	m_computeSDFColorShader.linkProgram();
 
 	m_modelMat    = glm::mat4x4();
 	m_modelMat    = glm::scale(glm::translate(m_modelMat, origin), glm::vec3(scale));
 	m_modelMatInv = glm::inverse(m_modelMat);
+	m_resolution  = GUIScene::s_sdfResolution;
 	setupTexture();
+	setupColorTexture();
 }
 
 void SDFCompute::setupTexture()
@@ -44,11 +57,28 @@ void SDFCompute::setupTexture()
 
 	glTexImage3D(GL_TEXTURE_3D, 0, GL_RG32F, m_resolution, m_resolution, m_resolution, 0, GL_RG, GL_FLOAT,
 	             framedata.data());
+
+	glBindTexture(GL_TEXTURE_3D, 0);
+}
+
+void SDFCompute::setupColorTexture()
+{
+	glGenTextures(1, &m_colorTexID);
+	glBindTexture(GL_TEXTURE_3D, m_colorTexID);
+	// glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, m_resolution, m_resolution, m_resolution, 0, GL_RGBA, GL_FLOAT, nullptr);
+	glBindTexture(GL_TEXTURE_3D, 0);
 }
 
 //----------------------------------------------------------------------------------------------------------
-void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNormalId, glm::mat4x4& viewToWorld,
-                         glm::mat4x4 worldToClipKinect)
+void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNormalId, unsigned int kinectColorTexId,
+                         glm::mat4x4& viewToWorld, glm::mat4x4 worldToClipKinect)
 {
 	GLuint   query;
 	GLuint64 elapsed_time;
@@ -64,39 +94,55 @@ void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNorma
 		m_resolution = GUIScene::s_sdfResolution;
 		glDeleteTextures(1, &m_texID);
 		setupTexture();
+
+		// TODO Add a check, since this takes ages
+		glDeleteTextures(1, &m_colorTexID);
+		setupColorTexture();
 	}
 
-	glm::vec3 point = GUIScene::s_testPointPos;
+	const ofShader* currentShader = GUIScene::s_sdfComputeColor ? &m_computeSDFColorShader : &m_computeSDFShader;
 
-	glm::vec3 pointLocal = m_modelMatInv * glm::vec4(point, 1);
+	currentShader->begin();
 
 	// Make the truncation distance dependent on the minimum distance between 2 tiles
 	const float truncationScaled = getScaledTruncation();
 
-	m_computeSDFShader.begin();
+	currentShader->setUniform1f("_stepSize", 1. / m_resolution);
+	currentShader->setUniformMatrix4f("_pclWorldToClip", worldToClipKinect);
+	currentShader->setUniformMatrix4f("_viewToWorld", viewToWorld);
+	currentShader->setUniformMatrix3f("_viewToWorldRot", glm::mat3(viewToWorld));
+	currentShader->setUniformMatrix4f("_modelMatrix", m_modelMat);
+	currentShader->setUniform1f("_truncationDistance", truncationScaled);
+	currentShader->setUniform1f("_maxWeight", GUIScene::s_sdfWeightTruncation);
 
-	m_computeSDFShader.setUniform1f("_stepSize", 1. / m_resolution);
-	m_computeSDFShader.setUniformMatrix4f("_pclWorldToClip", worldToClipKinect);
-	m_computeSDFShader.setUniformMatrix4f("_viewToWorld", viewToWorld);
-	m_computeSDFShader.setUniformMatrix3f("_viewToWorldRot", glm::mat3(viewToWorld));
-	m_computeSDFShader.setUniformMatrix4f("_modelMatrix", m_modelMat);
-	m_computeSDFShader.setUniform1f("_truncationDistance", truncationScaled);
-	m_computeSDFShader.setUniform1f("_maxWeight", GUIScene::s_sdfWeightTruncation);
+	if (GUIScene::s_sdfComputeColor)
+	{
+		glm::vec3 _cameraOrigin = viewToWorld * glm::vec4(0, 0, 0, 1);
 
-	glBindImageTexture(0, pointCloudId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-	glBindImageTexture(1, pointCloudNormalId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-	glBindImageTexture(2, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+		currentShader->setUniform3f("_cameraOrigin", _cameraOrigin);
+
+		int test = currentShader->getUniformLocation("color_input");
+		glBindImageTexture(0, pointCloudId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		glBindImageTexture(1, pointCloudNormalId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		glBindImageTexture(2, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+		glBindImageTexture(3, m_colorTexID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA8);
+		// glBindImageTexture(2, kinectColorTexId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RG8UI);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, kinectColorTexId);
+	}
+	else
+	{
+		glBindImageTexture(0, pointCloudId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		glBindImageTexture(1, pointCloudNormalId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+		glBindImageTexture(2, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+	}
 
 	const int threads    = 8;
 	const int resolution = max(m_resolution / threads, 1);
 
-	m_computeSDFShader.dispatchCompute(resolution, resolution, resolution);
-	m_computeSDFShader.end();
-	/*
-	std::vector<glm::vec2> framedata(m_resolution * m_resolution * m_resolution);
-	glBindTexture(GL_TEXTURE_3D, m_texID);
-	glGetTextureImage(m_texID, 0, GL_RED, GL_FLOAT, framedata.size() * sizeof(glm::vec2), &framedata[0]);
-	*/
+	currentShader->dispatchCompute(resolution, resolution, resolution);
+	currentShader->end();
 
 	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
 	{
@@ -156,24 +202,33 @@ void SDFCompute::drawRaymarch(ofCamera& camera)
 	// glCullFace(GL_BACK);
 
 	ofPushStyle();
-	m_raymarchSDFShader.begin();
+
+	const ofShader* currentShader = GUIScene::s_sdfComputeColor ? &m_raymarchSDFColorShader : &m_raymarchSDFShader;
+
+	currentShader->begin();
 	// glPolygonMode(GL_BACK, GL_LINE);
 	float scalehalf = m_scale / 2;
 
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, m_texID);
 
+	if (GUIScene::s_sdfComputeColor)
+	{
+		glActiveTexture(GL_TEXTURE0 + 1);
+		glBindTexture(GL_TEXTURE_3D, m_colorTexID);
+	}
+
 	// Make the truncation distance dependent on the minimum distance between 2 tiles
 	const float truncationScaled = getScaledTruncation();
 
-	m_raymarchSDFShader.setUniform3f("cameraWorld", camera.getPosition());
-	m_raymarchSDFShader.setUniformMatrix4f("sdfBaseTransform", m_modelMatInv);
-	m_raymarchSDFShader.setUniform1f("sdfResolution", m_resolution);
-	m_raymarchSDFShader.setUniform1f("_truncationDistance", truncationScaled);
-	m_raymarchSDFShader.setUniformMatrix4f("viewprojection", camera.getModelViewProjectionMatrix());
+	currentShader->setUniform3f("cameraWorld", camera.getPosition());
+	currentShader->setUniformMatrix4f("sdfBaseTransform", m_modelMatInv);
+	currentShader->setUniform1f("sdfResolution", m_resolution);
+	currentShader->setUniform1f("_truncationDistance", truncationScaled);
+	currentShader->setUniformMatrix4f("viewprojection", camera.getModelViewProjectionMatrix());
 
 	ofDrawBox(m_origin + glm::vec3(scalehalf, scalehalf, scalehalf), m_scale, m_scale, m_scale);
-	m_raymarchSDFShader.end();
+	currentShader->end();
 	ofPopStyle();
 
 	// glDisable(GL_CULL_FACE);
