@@ -391,5 +391,8 @@
     <None Include="resources\data\resources\computeICPSDF.comp">
       <Filter>shaders</Filter>
     </None>
+    <None Include="resources\data\resources\expandSDF.comp">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

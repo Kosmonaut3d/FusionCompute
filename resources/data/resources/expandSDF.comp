@@ -1,0 +1,26 @@
+#version 440 core
+
+layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
+
+layout(rg32f, binding = 2) uniform image3D model_output;
+
+uniform float _distance_x;
+uniform float _distance_xy;
+uniform float _distance_xyz;
+
+#define FLT_MAX 10000
+
+void main() {
+	// base pixel colour for image
+	ivec3 pixel_coords = ivec3(gl_GlobalInvocationID.xyz);
+	
+	// cop out
+	//if(pixel_coords.x == 0 || pixel_coords.y == 0 pixel_coords.z == 0 || 
+
+	//vec2 previousData = imageLoad(model_output, pixel_coords).rg;
+
+	//float minDist = previousData.x;
+	
+
+
+}

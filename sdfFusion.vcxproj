@@ -291,6 +291,7 @@
     <None Include="resources\data\resources\computeModelPCL.comp" />
     <None Include="resources\data\resources\computeNormalPCL.comp" />
     <None Include="resources\data\resources\computeSDF.comp" />
+    <None Include="resources\data\resources\expandSDF.comp" />
     <None Include="resources\data\resources\ICPReduction.comp" />
     <None Include="resources\data\resources\raymarchSDF.frag" />
     <None Include="resources\data\resources\fullScreenQuad.frag" />
