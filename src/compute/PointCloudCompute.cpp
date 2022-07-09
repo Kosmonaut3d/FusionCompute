@@ -75,6 +75,13 @@ void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)
 	unsigned int texModelId  = isFrame0 ? m_texModelID_0 : m_texModelID_1;
 	unsigned int texNormalId = isFrame0 ? m_texNormalID_0 : m_texNormalID_1;
 
+	GLuint query;
+	if (GUIScene::s_measureTime)
+	{
+		glGenQueries(1, &query);
+		glBeginQuery(GL_TIME_ELAPSED, query);
+	}
+
 	// Worlds
 	m_computeModelShader.begin();
 
@@ -96,6 +103,12 @@ void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)
 	m_computeNormalShader.dispatchCompute(639, 479, 1);
 	m_computeNormalShader.end();
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+	if (GUIScene::s_measureTime)
+	{
+		glEndQuery(GL_TIME_ELAPSED);
+		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_PCL_GPU_measuredComputeTime);
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------

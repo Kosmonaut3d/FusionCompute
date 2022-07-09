@@ -7,10 +7,12 @@ SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
     , m_computeSDFColorShader{}
     , m_raymarchSDFShader{}
     , m_raymarchSDFColorShader{}
+    , m_expandSDFShader{}
     , m_modelMat{}
     , m_modelMatInv{}
     , m_texID{}
     , m_colorTexID{}
+    , m_atomicCounterID{}
     , m_resolution{resolution}
     , m_origin{origin}
     , m_scale{scale}
@@ -31,12 +33,25 @@ SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
 	m_computeSDFColorShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeSDFColor.comp");
 	m_computeSDFColorShader.linkProgram();
 
+	m_expandSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/expandSDF.comp");
+	m_expandSDFShader.linkProgram();
+
 	m_modelMat    = glm::mat4x4();
 	m_modelMat    = glm::scale(glm::translate(m_modelMat, origin), glm::vec3(scale));
 	m_modelMatInv = glm::inverse(m_modelMat);
 	m_resolution  = GUIScene::s_sdfResolution;
 	setupTexture();
 	setupColorTexture();
+	setupAtomicCounter();
+}
+
+void SDFCompute::setupAtomicCounter()
+{
+	// atomic counter
+	glGenBuffers(1, &m_atomicCounterID);
+	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
+	glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_STATIC_COPY);
+	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 }
 
 void SDFCompute::setupTexture()
@@ -80,10 +95,8 @@ void SDFCompute::setupColorTexture()
 void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNormalId, unsigned int kinectColorTexId,
                          glm::mat4x4& viewToWorld, glm::mat4x4 worldToClipKinect)
 {
-	GLuint   query;
-	GLuint64 elapsed_time;
-
-	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
+	GLuint query;
+	if (GUIScene::s_measureTime)
 	{
 		glGenQueries(1, &query);
 		glBeginQuery(GL_TIME_ELAPSED, query);
@@ -138,16 +151,70 @@ void SDFCompute::compute(unsigned int pointCloudId, unsigned int pointCloudNorma
 		glBindImageTexture(2, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
 	}
 
-	const int threads    = 8;
-	const int resolution = max(m_resolution / threads, 1);
+	const int threadsX     = 4;
+	const int threadsYZ    = 8;
+	const int resolutionX  = max(m_resolution / threadsX, 1);
+	const int resolutionYZ = max(m_resolution / threadsYZ, 1);
 
-	currentShader->dispatchCompute(resolution, resolution, resolution);
+	currentShader->dispatchCompute(resolutionX, resolutionYZ, resolutionYZ);
 	currentShader->end();
 
-	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
+	if (GUIScene::s_measureTime)
 	{
 		glEndQuery(GL_TIME_ELAPSED);
-		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_measureGPUTime);
+		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_sdfMeasuredComputeTime);
+	}
+}
+
+// Experimental
+void SDFCompute::computeExpandSDF()
+{
+	GLuint query;
+	if (GUIScene::s_measureTime)
+	{
+		glGenQueries(1, &query);
+		glBeginQuery(GL_TIME_ELAPSED, query);
+	}
+
+	m_expandSDFShader.begin();
+
+	// bind counter
+	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
+	glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicCounterID);
+	unsigned int a = 0;
+	glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &a);
+
+	float distanceBetweenFields = 1. / m_resolution * m_scale;
+	m_expandSDFShader.setUniform1f("_distance_x", distanceBetweenFields);
+	m_expandSDFShader.setUniform1f("_truncationDistance", getScaledTruncation());
+	m_expandSDFShader.setUniform1i("_resolution", m_resolution);
+
+	glm::ivec3 testDir[4] = {glm::ivec3(0, 0, 1), glm::ivec3(-1, 0, 0), glm::ivec3(0, 0, 1), glm::ivec3(0, 0, -1)};
+	static int i          = 0;
+	i++;
+	if (i >= 4)
+	{
+		i = 0;
+	}
+
+	m_expandSDFShader.setUniform3i("_testDirection", testDir[i].x, testDir[i].y, testDir[i].z);
+
+	glBindImageTexture(0, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RG32F);
+
+	const int threadsize         = 8;
+	const int resolutionDispatch = max(m_resolution / threadsize, 1);
+	m_expandSDFShader.dispatchCompute(resolutionDispatch, resolutionDispatch, resolutionDispatch);
+	m_expandSDFShader.end();
+
+	GLuint numOperations;
+	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
+	glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &numOperations);
+	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
+
+	if (GUIScene::s_measureTime)
+	{
+		glEndQuery(GL_TIME_ELAPSED);
+		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_sdfExpandMeasuredComputeTime);
 	}
 }
 
@@ -189,8 +256,7 @@ void SDFCompute::drawOutline()
 //----------------------------------------------------------------------------------------------------------
 void SDFCompute::drawRaymarch(ofCamera& camera)
 {
-	GLuint   query;
-	GLuint64 elapsed_time;
+	GLuint query;
 
 	if (GUIScene::SceneSelection::SDF == GUIScene::s_sceneSelection)
 	{

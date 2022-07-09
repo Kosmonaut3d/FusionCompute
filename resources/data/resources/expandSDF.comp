@@ -2,27 +2,45 @@
 
 layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
-layout(rg32f, binding = 2) uniform image3D model_output;
+layout(rg32f, binding = 0) uniform image3D model_output;
 
 uniform float _distance_x;
-uniform float _distance_xy;
-uniform float _distance_xyz;
+uniform ivec3 _testDirection;
+uniform float _truncationDistance;
 
-uniform float _resolution;
+uniform int _resolution;
 
-#define FLT_MAX 10000
+layout(binding = 0, offset=0) uniform atomic_uint operation_counter;
 
 void main() {
 	// base pixel colour for image
 	ivec3 pixel_coords = ivec3(gl_GlobalInvocationID.xyz);
 	
 	// cop out
-	//if(pixel_coords.x == 0 || pixel_coords.y == 0 pixel_coords.z == 0 || 
+	if(pixel_coords.x == 0 || pixel_coords.y == 0 || pixel_coords.z == 0 || pixel_coords.x == _resolution || pixel_coords.y == _resolution || pixel_coords.z == _resolution)
+	{
+		return;
+	}
 
-	//vec2 previousData = imageLoad(model_output, pixel_coords).rg;
+	vec2 currentSDFWeight = imageLoad(model_output, pixel_coords).xy;
+	float signedDistance = currentSDFWeight.x;
 
-	//float minDist = previousData.x;
-	
+	if(signedDistance < 0)
+	{
+		return;
+	}
 
-
+	float x = imageLoad(model_output, pixel_coords + _testDirection).x;
+	if(x > 0)
+	{
+		signedDistance = min(signedDistance, _distance_x + x);
+		memoryBarrier();
+		imageStore(model_output, pixel_coords, vec4(signedDistance, currentSDFWeight.y, 0,0));
+		uint currentCount = atomicCounterIncrement(operation_counter);
+	}
+	//signedDistance = min(signedDistance, _distance_x + imageLoad(model_output, pixel_coords + ivec3(0,1,0)).x);
+	//signedDistance = min(signedDistance, _distance_x + imageLoad(model_output, pixel_coords + ivec3(0,0,1)).x);
+	//signedDistance = min(signedDistance, _distance_x + imageLoad(model_output, pixel_coords + ivec3(-1,0,0)).x);
+	//signedDistance = min(signedDistance, _distance_x + imageLoad(model_output, pixel_coords + ivec3(0,-1,0)).x);
+	//signedDistance = min(signedDistance, _distance_x + imageLoad(model_output, pixel_coords + ivec3(0,0,-1)).x);
 }

@@ -1,6 +1,6 @@
 #version 440 core
 
-layout(local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
+layout(local_size_x =4, local_size_y = 8, local_size_z = 8) in;
 
 layout(rgba32f, binding = 0) uniform readonly image2D pcl_input;
 layout(rgba32f, binding = 1) uniform readonly image2D pcl_normal_input;
@@ -89,10 +89,9 @@ void main() {
 
 	sdfOutput newData = worldToDistance(worldVoxelPosition);
 	
-	vec2 previousData = imageLoad(model_output, pixel_coords).rg;
-
 	if(newData.weight > 0)
 	{
+		vec2 previousData = imageLoad(model_output, pixel_coords).rg;
 		vec3 previousColor = imageLoad(color_output, pixel_coords).rgb;
 		float updatedWeight = newData.weight + previousData.y;
 		float accValue = (previousData.x * previousData.y + newData.sdfValue * newData.weight) / updatedWeight;

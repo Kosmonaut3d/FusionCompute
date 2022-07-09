@@ -118,7 +118,7 @@ void PointCloudCPU::draw(bool drawNormals, glm::mat4x4 viewToWorld)
 	{
 		return;
 	}
-	glPointSize(GUIScene::s_pointCloudDownscale);
+	glPointSize(GUIScene::s_PCL_CPU_downscale);
 
 	if (drawNormals)
 	{

@@ -24,10 +24,19 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldTo
                       unsigned int m_pointsCloudNormalTexNew, unsigned int m_pointsCloudWorldTexOld,
                       unsigned int m_pointsCloudNormalTexOld)
 {
+	if (!kinectUpdate)
+	{
+		return;
+	}
 	if (GUIScene::s_sdfCompute)
 	{
 		m_sdfCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew,
 		                     m_kinectColorTexPtr->getTextureData().textureID, viewToWorld, worldToClip);
+	}
+
+	if (GUIScene::s_sdfExpand)
+	{
+		m_sdfCompute.computeExpandSDF();
 	}
 
 	if (GUIScene::s_ICP_GPU_compute)
@@ -60,7 +69,7 @@ void SDFScene::draw(ofCamera& camera)
 
 	camera.end();
 
-	if (GUIScene::s_drawICPGPU)
+	if (GUIScene::s_ICP_GPU_drawDebug)
 	{
 		FullScreenQuadRender::get().draw(m_icpCompute.getTexID(), GL_TEXTURE_2D);
 	}

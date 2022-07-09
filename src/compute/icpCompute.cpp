@@ -68,13 +68,21 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 
 	GUIScene::s_ICP_GPU_correspondenceCount = 0;
 
+	// Clear buffer first
+	constexpr glm::vec4 empty{0, 0, 0, 0};
+	glClearTexImage(m_correspondenceVisualizationTexID, 0, GL_RGBA, GL_FLOAT, &empty);
+
 	for (int i = 0; i < GUIScene::s_ICP_GPU_iterations; i++)
 	{
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
 
-		// Clear buffer first
-		constexpr glm::vec4 empty{0, 0, 0, 0};
-		glClearTexImage(m_correspondenceVisualizationTexID, 0, GL_RGBA, GL_FLOAT, &empty);
+		GLuint   query;
+		GLuint64 elapsedCorrespondenceTime = 0;
+		if (GUIScene::s_measureTime)
+		{
+			glGenQueries(1, &query);
+			glBeginQuery(GL_TIME_ELAPSED, query);
+		}
 
 		if (GUIScene::s_ICP_GPU_SDF)
 		{
@@ -121,6 +129,14 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		glGetBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &correspondencesFound);
 		glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
+		if (GUIScene::s_measureTime)
+		{
+			glEndQuery(GL_TIME_ELAPSED);
+			glGetQueryObjectui64v(query, GL_QUERY_RESULT, &elapsedCorrespondenceTime);
+
+			GUIScene::s_ICP_GPU_correspondenceMeasureTime += elapsedCorrespondenceTime;
+		}
+
 		if (correspondencesFound < GUIScene::s_ICP_GPU_correspondenceCount)
 		{
 			break;
@@ -128,7 +144,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 
 		GUIScene::s_ICP_GPU_correspondenceCount = correspondencesFound;
 
-		glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+		// glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 
 		if (correspondencesFound <= 0)
 		{
@@ -137,13 +153,14 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 
 		//////////////////////////////////////////
 		// REDUCTION
-		GLuint   query;
-		GLuint64 elapsed_time;
+		GLuint   query2;
+		GLuint64 elapsedReductionTime = 0;
 
 		// Timing
+		if (GUIScene::s_measureTime)
 		{
-			glGenQueries(1, &query);
-			glBeginQuery(GL_TIME_ELAPSED, query);
+			glGenQueries(1, &query2);
+			glBeginQuery(GL_TIME_ELAPSED, query2);
 		}
 
 		m_computeICPReduction.begin();
@@ -161,13 +178,20 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		glGetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(ssbo_out_data) * numworkgroups, &m_outData);
 
 		// Timing
+		if (GUIScene::s_measureTime)
 		{
 			glEndQuery(GL_TIME_ELAPSED);
-			glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_measureGPUTime_reduction);
+			glGetQueryObjectui64v(query2, GL_QUERY_RESULT, &elapsedReductionTime);
+			GUIScene::s_ICP_GPU_reductionMeasureTime += elapsedReductionTime;
 		}
+
+		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
 		// Feed the matrix
 		calculateICP(viewToWorld_iter, numworkgroups);
+
+		GUIScene::s_ICP_CPU_solveSystemMeasureTime +=
+		    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count();
 
 		int test = 0;
 	}

@@ -25,10 +25,9 @@ BilateralBlurCompute::BilateralBlurCompute()
 //----------------------------------------------------------------------------------------------------------
 void BilateralBlurCompute::compute(ofTexture& depthImage, bool blur)
 {
-	GLuint   query;
-	GLuint64 elapsed_time;
+	GLuint query;
 
-	if (GUIScene::SceneSelection::Blur == GUIScene::s_sceneSelection)
+	if (GUIScene::s_measureTime)
 	{
 		glGenQueries(1, &query);
 		glBeginQuery(GL_TIME_ELAPSED, query);
@@ -44,10 +43,10 @@ void BilateralBlurCompute::compute(ofTexture& depthImage, bool blur)
 	m_computeBlurShader.dispatchCompute(640, 480, 1);
 	m_computeBlurShader.end();
 
-	if (GUIScene::SceneSelection::Blur == GUIScene::s_sceneSelection)
+	if (GUIScene::s_measureTime)
 	{
 		glEndQuery(GL_TIME_ELAPSED);
-		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_measureGPUTime);
+		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_bilateralBlur_measureComputeTime);
 	}
 }
 

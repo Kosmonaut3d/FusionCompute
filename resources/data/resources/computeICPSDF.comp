@@ -99,9 +99,19 @@ void main() {
 	}
 
     // SDF part
-	vec3 ro = vertexNewWorld; // let's start at the vertex position
-    ro = (vertexNewWorld + _cameraOrigin)*.5; // let's start half way between point and camera
+
+    // Direction of Ray
     vec3 rd = normalize(vertexNewWorld - _cameraOrigin);
+
+    // Origin of ray. Note: Let us start closely to the point in order to save ray marching steps
+    // In theory we should start from the camera origin, however, there may be obstacles in the way,
+    // so it is not necessarily better
+	vec3 ro = vertexNewWorld - rd * _epsilonDistance * 2;
+
+    // Note 
+    //ro = vertexNewWorld - rd * _truncationDistance; 
+
+
     vec2 d = RayMarchSDF(ro, rd);
     
     if(d.x > MAX_DIST)
@@ -110,7 +120,6 @@ void main() {
     }
     // Hit point
     vec3 pos = ro + rd * d.x;
-    vec3 nor = GetNormal(pos);
     
 	vec3 diff = pos-vertexNewWorld;
 	
@@ -118,7 +127,8 @@ void main() {
 	{
 		return;
 	}
-
+    
+    vec3 nor = GetNormal(pos);
     // Get old normal
 	vec3 newNormalWorld = normalize(_viewToWorldItRot * imageLoad(normals_new, pixel_coords).xyz);
 

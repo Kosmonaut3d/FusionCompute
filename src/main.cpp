@@ -1,6 +1,8 @@
 #include "ofApp.h"
 #include "ofMain.h"
 
+#define BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE
+
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
                                 const GLchar* message, const void* userParam)
 {

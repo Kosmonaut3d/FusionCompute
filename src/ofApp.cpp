@@ -138,6 +138,7 @@ void ofApp::drawFullScreenImage(ofImage& image)
 //--------------------------------------------------------------
 void ofApp::update()
 {
+	// Reset timers
 	if (GUIScene::s_resetView)
 	{
 		m_kinectViewToWorld   = m_kinectViewToWorld_Init;
@@ -158,6 +159,13 @@ void ofApp::update()
 		// TODO maybe use the kinect internal one instead, or make this a reference
 		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
 		m_depthImage.update();
+
+		GUIScene::s_bilateralBlur_measureComputeTime  = 0;
+		GUIScene::s_PCL_GPU_measuredComputeTime       = 0;
+		GUIScene::s_sdfMeasuredComputeTime            = 0;
+		GUIScene::s_ICP_GPU_correspondenceMeasureTime = 0;
+		GUIScene::s_ICP_GPU_reductionMeasureTime      = 0;
+		GUIScene::s_ICP_CPU_solveSystemMeasureTime    = 0;
 	}
 
 	switch (GUIScene::s_sceneSelection)
