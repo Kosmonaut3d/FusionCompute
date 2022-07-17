@@ -23,7 +23,7 @@ void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum se
 int main()
 {
 	ofGLFWWindowSettings settings;
-	settings.setGLVersion(4, 4); // we define the OpenGL version we want to use
+	settings.setGLVersion(4, 6); // we define the OpenGL version we want to use
 	// ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 
 	settings.setSize(1280, 960);
@@ -35,7 +35,7 @@ int main()
 
 	ofSetDataPathRoot("../resources/data/");
 
-    std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
+	std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
 
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN

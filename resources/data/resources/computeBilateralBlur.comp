@@ -1,4 +1,4 @@
-#version 440 core
+#version 460 core
 
 layout(local_size_x = 8, local_size_y = 5) in;
 
@@ -33,7 +33,7 @@ uniform bool blur = true;
 float diffFunc(float x)
 {
     // Total range => 4m -> clip range = 4 / 10 = 40cm;
-    float z = x*10;
+    float z = x*30;
     float y = 1.f - (3.f*z*z*z*z);
     return max(y, 0);
     //float y = 1.f - (3.f*x*x - 2.f*x*x*x);

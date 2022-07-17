@@ -1,7 +1,7 @@
 
 // fragment shader
 
-#version 420
+#version 460 core
 
 out vec4 outputColor;
 in vec3 world;

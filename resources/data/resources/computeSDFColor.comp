@@ -1,4 +1,4 @@
-#version 440 core
+#version 460 core
 
 layout(local_size_x =4, local_size_y = 8, local_size_z = 8) in;
 
@@ -92,16 +92,22 @@ void main() {
 	if(newData.weight > 0)
 	{
 		vec2 previousData = imageLoad(model_output, pixel_coords).rg;
-		vec3 previousColor = imageLoad(color_output, pixel_coords).rgb;
 		float updatedWeight = newData.weight + previousData.y;
 		float accValue = (previousData.x * previousData.y + newData.sdfValue * newData.weight) / updatedWeight;
 		float accWeight = min(updatedWeight, _maxWeight);
 
 		imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
-
+		
+		// LERP COLOR
+		/*
+		vec3 previousColor = imageLoad(color_output, pixel_coords).rgb;
 		vec3 colorValue = (previousColor * previousData.y + newData.color * newData.weight) / updatedWeight;
+		*/
 
-		imageStore(color_output, pixel_coords, vec4(colorValue , 1));
+		if(newData.sdfValue * newData.weight < previousData.x * previousData.y)
+		{
+			imageStore(color_output, pixel_coords, vec4(newData.color , 1));
+		}
 	}
 	/*else
 	{

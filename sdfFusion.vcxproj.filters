@@ -400,11 +400,5 @@
     <None Include="resources\data\resources\raymarchSDFColor.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\common_raymarch.comp">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="resources\data\resources\common_icp.comp">
-      <Filter>shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

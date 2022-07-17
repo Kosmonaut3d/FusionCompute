@@ -1,4 +1,4 @@
-#version 440
+#version 460 core
 
 layout(rgba32f, binding = 0) uniform readonly image2D worldTex;
 uniform sampler2D colorTex;

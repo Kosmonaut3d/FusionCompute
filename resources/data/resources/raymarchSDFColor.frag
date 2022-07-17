@@ -1,7 +1,7 @@
 
 // fragment shader
 
-#version 440
+#version 460 core
 
 out vec4 outputColor;
 in vec3 world;
@@ -73,6 +73,15 @@ vec2 RayMarchSDF(vec3 ro, vec3 rd)
     {
         vec3 p = ro + rd * dO;
         float ds = GetDistSDF(p); // ds is Distance Scene
+
+        /*
+        if(ds < -SURFACE_DIST)
+        {
+            dO = dO - ds_old * ds_old / (ds - ds_old);
+            return vec2(dO, i * 1.0 / MAX_STEPS );
+        }
+        ds_old = ds;
+        */
 
         dO += ds;
         if(dO > (MAX_DIST) || (ds) < SURFACE_DIST) break;

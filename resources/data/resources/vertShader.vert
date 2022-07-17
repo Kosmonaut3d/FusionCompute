@@ -1,6 +1,6 @@
 // vertex shader
 
-#version 420
+#version 460 core
 
 uniform mat4 modelMatrix;
 uniform mat4 modelViewProjectionMatrix;

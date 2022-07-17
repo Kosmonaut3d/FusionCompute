@@ -285,8 +285,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\data\resources\common_icp.comp" />
-    <None Include="resources\data\resources\common_raymarch.comp" />
     <None Include="resources\data\resources\computeBilateralBlur.comp" />
     <None Include="resources\data\resources\computeICP.comp" />
     <None Include="resources\data\resources\computeICPSDF.comp" />

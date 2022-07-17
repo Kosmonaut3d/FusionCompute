@@ -1,4 +1,4 @@
-#version 420 core
+#version 460 core
 
 out vec2 texcoords; // texcoords are in the normalized [0,1] range for the viewport-filling quad part of the triangle
 

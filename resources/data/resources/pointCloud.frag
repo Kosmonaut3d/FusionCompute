@@ -1,4 +1,4 @@
-#version 440
+#version 460 core
 
 out vec4 outputColor;
 uniform sampler2D colorTex;
