@@ -80,7 +80,7 @@ void main() {
 
 	barrier();
 
-    for (unsigned int s=gl_WorkGroupSize.x/2; s>0; s>>=1)
+    for (uint s=gl_WorkGroupSize.x/2; s>0; s>>=1)
 	{
 		if (tid < s) 
 		{
