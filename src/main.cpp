@@ -33,6 +33,8 @@ int main()
 
 	ofSetDataPathRoot("../resources/data/");
 
+    std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
+
 	// this kicks off the running of my app
 	// can be OF_WINDOW or OF_FULLSCREEN
 	// pass in width and height too:

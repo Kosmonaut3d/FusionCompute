@@ -42,7 +42,7 @@ void ICPCompute::setupTexture()
 	// atomic counter
 	glGenBuffers(1, &m_atomicCounterID);
 	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
-	glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_STATIC_COPY);
+    glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_READ);
 	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
 	// Set up ssbo
@@ -104,7 +104,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 			// Reset counter
 			unsigned int a = 0;
 			glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, m_atomicCounterID);
-			glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &a);
+            glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &a);
 			glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicCounterID);
 
 			m_computeICPSDFShader.dispatchCompute(640, 480, 1);
