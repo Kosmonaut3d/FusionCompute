@@ -104,7 +104,8 @@ void main() {
 		vec3 colorValue = (previousColor * previousData.y + newData.color * newData.weight) / updatedWeight;
 		*/
 
-		if(newData.sdfValue * newData.weight < previousData.x * previousData.y)
+		// Are we closer than before?
+		if(newData.sdfValue < previousData.x && newData.weight > 0.1)
 		{
 			imageStore(color_output, pixel_coords, vec4(newData.color , 1));
 		}

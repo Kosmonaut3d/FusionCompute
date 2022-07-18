@@ -13,7 +13,9 @@ uniform mat4 viewprojection;
 
 uniform float _truncationDistance;
 
-#define MAX_STEPS 10
+uniform bool _drawNormals;
+
+#define MAX_STEPS 20
 #define MAX_DIST 8
 #define SURFACE_DIST .01
 
@@ -67,7 +69,7 @@ float GetDistSDF(vec3 p)
 
     if(relPos.x < 0 || relPos.y < 0 || relPos.z < 0 || relPos.x > 1 || relPos.y > 1|| relPos.z > 1)
     {
-        return .1;
+        return 10;
     }
     
     // Replace by uniform
@@ -109,10 +111,18 @@ void main()
         // Hit point
         vec3 pos = ro + rd * d.x;
         vec3 nor = GetNormal(pos);
-    
+        
+        if(_drawNormals)
+        {
         // beautify normal
-        nor = (nor + vec3(1)) * .5;
-        outputColor = vec4( nor, 1.0);
+            nor = (nor + vec3(1)) * .5;
+            outputColor = vec4( nor, 1.0);
+        }
+        else
+        {
+            float ndl = dot(nor, -rd);
+            outputColor = vec4(ndl.xxx, 1.0);
+        }
     }
     else
     { 

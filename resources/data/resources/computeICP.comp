@@ -28,7 +28,7 @@ uniform mat3x3 viewToWorldItRot;
 uniform mat4x4 viewToWorldIt; // View To World
 uniform mat3x3 viewToWorldOldRot; // View To World previous
 uniform mat4x4 viewToWorldOld; // View To World previous
-uniform mat4x4 viewProjectionIt; // Current iteration view projection
+uniform mat4x4 viewProjectionIt; // old iteration view projection
 uniform float _epsilonDistance = 1;
 uniform float _epsilonNormal = .5;
 const float WIDTH2 = 320; //halfed

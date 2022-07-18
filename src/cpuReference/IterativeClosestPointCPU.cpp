@@ -3,7 +3,7 @@
 
 //----------------------------------------------------------------------------------------------------------
 IterativeClostestPointCPU::IterativeClostestPointCPU()
-    : m_epsilonDistance(0.1f) // TJODDDDDDDDDDDDDDDDD
+    : m_epsilonDistance(0.1f)
     , m_epsilonNormal(0.8f)
     , m_failPixel(0)
     , m_failDistance(0)
@@ -228,7 +228,7 @@ void IterativeClostestPointCPU::getCorrespondences(
     const int& SIZE, int& fail_z, double& E_sum, int& found,
     std::vector<std::tuple<glm::vec3, glm::vec3, glm::vec3>>& correspondences)
 {
-	glm::mat4x4 viewProjection_iter = (projection * glm::mat4x4(worldToView_iter));
+	glm::mat4x4 viewProjection_original = (projection * glm::inverse(viewToWorld_prev));
 
 	/// ..........................
 	for (int i = 0; i < SIZE; i++)
@@ -246,7 +246,7 @@ void IterativeClostestPointCPU::getCorrespondences(
 		}
 
 		// NOTE: transform from world to camera -> project
-		glm::vec4 clipSpacePos = viewProjection_iter * glm::vec4(newVertexWorld, 1);
+		glm::vec4 clipSpacePos = viewProjection_original * glm::vec4(newVertexWorld, 1);
 
 		if (clipSpacePos.w == 0)
 		{
