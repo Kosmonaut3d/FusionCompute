@@ -19,24 +19,14 @@ void SDFScene::setup(ofxKinect& kinect)
 }
 
 //----------------------------------------------------------------------------------------------------------
-void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldToClip, glm::mat4x4& viewToWorld,
-                      glm::mat4x4& worldToView, glm::mat4x4& projection, unsigned int m_pointsCloudWorldTexNew,
+void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& viewToWorld, glm::mat4x4& worldToView,
+                      glm::mat4x4& projection, unsigned int m_pointsCloudWorldTexNew,
                       unsigned int m_pointsCloudNormalTexNew, unsigned int m_pointsCloudWorldTexOld,
                       unsigned int m_pointsCloudNormalTexOld)
 {
 	if (!kinectUpdate)
 	{
 		return;
-	}
-	if (GUIScene::s_sdfCompute)
-	{
-		m_sdfCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew,
-		                     m_kinectColorTexPtr->getTextureData().textureID, viewToWorld, worldToClip);
-	}
-
-	if (GUIScene::s_sdfExpand)
-	{
-		m_sdfCompute.computeExpandSDF();
 	}
 
 	if (GUIScene::s_ICP_GPU_compute)
@@ -50,6 +40,15 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& worldTo
 			worldToView = glm::inverse(viewToWorldIt);
 			viewToWorld = viewToWorldIt;
 		}
+	}
+	if (GUIScene::s_sdfCompute)
+	{
+		m_sdfCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew,
+		                     m_kinectColorTexPtr->getTextureData().textureID, viewToWorld, projection * worldToView);
+	}
+	if (GUIScene::s_sdfExpand)
+	{
+		m_sdfCompute.computeExpandSDF();
 	}
 }
 

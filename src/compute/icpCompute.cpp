@@ -72,6 +72,8 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 	constexpr glm::vec4 empty{0, 0, 0, 0};
 	glClearTexImage(m_correspondenceVisualizationTexID, 0, GL_RGBA, GL_FLOAT, &empty);
 
+	double previousError = 100000000000000;
+
 	for (int i = 0; i < GUIScene::s_ICP_GPU_iterations; i++)
 	{
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
@@ -137,10 +139,12 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 			GUIScene::s_ICP_GPU_correspondenceMeasureTime += elapsedCorrespondenceTime;
 		}
 
+		// Early break off
+		/*
 		if (correspondencesFound < GUIScene::s_ICP_GPU_correspondenceCount)
 		{
-			break;
-		}
+		    break;
+		}*/
 
 		GUIScene::s_ICP_GPU_correspondenceCount = correspondencesFound;
 
@@ -187,14 +191,17 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 
 		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
+		if (!calculateICP(viewToWorld_iter, &previousError, numworkgroups))
+		{
+			// Stop this for loop
+			i = GUIScene::s_ICP_GPU_iterations;
+		}
 		// Feed the matrix
-		calculateICP(viewToWorld_iter, numworkgroups);
 
 		GUIScene::s_ICP_CPU_solveSystemMeasureTime +=
 		    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count();
-
-		int test = 0;
 	}
+	GUIScene::s_ICP_GPU_error = previousError;
 
 	return glm::mat4x4(viewToWorld_iter);
 }
@@ -253,12 +260,15 @@ void ICPCompute::feedVec3ToMatrix(Eigen::Matrix<double, 6, 6>& mat, const glm::v
 	mat << v.x, v.y, v.z;
 }
 
-void ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewToWorld_iter, int numworkgroups)
+bool ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewToWorld_iter, double* previousError,
+                              int numworkgroups)
 {
 	Eigen::Matrix<double, 6, 1> b_ = Eigen::Matrix<double, 6, 1>::Zero();
 	Eigen::Matrix<double, 6, 6> A_ = Eigen::Matrix<double, 6, 6>::Zero();
 
 	int corres = GUIScene::s_ICP_GPU_correspondenceCount / 128 / 2;
+
+	double error = 0;
 
 	for (size_t i = 0; i < numworkgroups; ++i)
 	{
@@ -276,7 +286,17 @@ void ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 		b_i << obj.out_b0.x, obj.out_b0.y, obj.out_b0.z, obj.out_b1.x, obj.out_b1.y, obj.out_b1.z;
 
 		b_ += b_i;
+
+		// Error
+		error += obj.out_a00.y;
 	}
+
+	if (error > *previousError)
+	{
+		return false;
+	}
+
+	*previousError = error;
 
 	Eigen::Matrix<double, 6, 1> result = A_.bdcSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(b_);
 	// Eigen::Matrix<double, 6, 1> result2 = A_.llt().solve(b_);
@@ -293,19 +313,6 @@ void ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 		float ty = result[4];
 		float tz = result[5];
 
-		/*
-		Eigen::Matrix<double, 4, 4> T_inc{{1, a, -g, tx}, {-a, 1, b, ty}, {g, -b, 1, tz}, {0, 0, 0, 1}};
-
-		double alpha = result[0];
-		double beta  = result[1];
-		double gamma = result[2];
-
-		Eigen::Matrix4d transformation{
-		    {1, -gamma, beta, tx}, {gamma, 1, -alpha, ty}, {-beta, alpha, 1, tz}, {0, 0, 0, 1}};
-
-		std::cout << transformation;
-
-		*/
 		// YET ANOTHER
 		Eigen::Matrix4d transformation;
 		double          alpha = result[0];
@@ -321,14 +328,17 @@ void ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 		// Increment
 		viewToWorld_iter = E2GLM(T_z);
 	}
+	return true;
 }
 
 void ICPCompute::feedOutputToMatrix(Eigen::Matrix<double, 6, 6>& A_i, ICPCompute::ssbo_out_data& obj)
 {
-	A_i << obj.out_a00.x, obj.out_a00.y, obj.out_a00.z, obj.out_a01.x, obj.out_a01.y, obj.out_a01.z, obj.out_a10.x,
-	    obj.out_a10.y, obj.out_a10.z, obj.out_a11.x, obj.out_a11.y, obj.out_a11.z, obj.out_a20.x, obj.out_a20.y,
-	    obj.out_a20.z, obj.out_a21.x, obj.out_a21.y, obj.out_a21.z, obj.out_a30.x, obj.out_a30.y, obj.out_a30.z,
-	    obj.out_a31.x, obj.out_a31.y, obj.out_a31.z, obj.out_a40.x, obj.out_a40.y, obj.out_a40.z, obj.out_a41.x,
-	    obj.out_a41.y, obj.out_a41.z, obj.out_a50.x, obj.out_a50.y, obj.out_a50.z, obj.out_a51.x, obj.out_a51.y,
-	    obj.out_a51.z;
+	// Note obj.out_a00.y, = obj.out_a10.x, since the matrix is symmetric
+
+	A_i << obj.out_a00.x, /* obj.out_a00.y*/ obj.out_a10.x, obj.out_a00.z, obj.out_a01.x, obj.out_a01.y, obj.out_a01.z,
+	    obj.out_a10.x, obj.out_a10.y, obj.out_a10.z, obj.out_a11.x, obj.out_a11.y, obj.out_a11.z, obj.out_a20.x,
+	    obj.out_a20.y, obj.out_a20.z, obj.out_a21.x, obj.out_a21.y, obj.out_a21.z, obj.out_a30.x, obj.out_a30.y,
+	    obj.out_a30.z, obj.out_a31.x, obj.out_a31.y, obj.out_a31.z, obj.out_a40.x, obj.out_a40.y, obj.out_a40.z,
+	    obj.out_a41.x, obj.out_a41.y, obj.out_a41.z, obj.out_a50.x, obj.out_a50.y, obj.out_a50.z, obj.out_a51.x,
+	    obj.out_a51.y, obj.out_a51.z;
 }

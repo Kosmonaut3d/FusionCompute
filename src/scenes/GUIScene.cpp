@@ -56,6 +56,7 @@ float    GUIScene::s_ICP_epsilonNor                    = .98;
 int      GUIScene::s_ICP_GPU_iterations                = 5;
 bool     GUIScene::s_ICP_GPU_SDF                       = true;
 GLuint   GUIScene::s_ICP_GPU_correspondenceCount       = 0;
+double   GUIScene::s_ICP_GPU_error                     = 0;
 //---------------------------------------------------
 GUIScene::GUIScene()
     : m_gui()
@@ -200,6 +201,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				if (s_ICP_GPU_compute)
 				{
 					ImGui::Text("correspondences %u", s_ICP_GPU_correspondenceCount);
+					ImGui::Text("error %f", s_ICP_GPU_error);
 				}
 
 				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);

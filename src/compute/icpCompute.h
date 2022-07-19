@@ -10,15 +10,16 @@ class ICPCompute
   public:
 	ICPCompute();
 	void        setupTexture();
-    glm::mat4x4 compute(unsigned int newVertexWorldTex, unsigned int newNormalWorldTex,
-	                                unsigned int oldVertexWorldTex, unsigned int oldNormalWorldTex,
-	                                glm::mat4x4& viewWorldIt, glm::mat4x4& projection, SDFCompute& sdfCompute);
+	glm::mat4x4 compute(unsigned int newVertexWorldTex, unsigned int newNormalWorldTex, unsigned int oldVertexWorldTex,
+	                    unsigned int oldNormalWorldTex, glm::mat4x4& viewWorldIt, glm::mat4x4& projection,
+	                    SDFCompute& sdfCompute);
 	void computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::mat4x4& projection, glm::mat4x4& viewToWorld_old,
 	                         glm::mat3x3& viewToWorldRot_iter, glm::mat3x3& viewToWorldRot_old,
 	                         unsigned int oldVertexWorldTex, unsigned int newVertexWorldTex,
 	                         unsigned int oldNormalWorldTex, unsigned int newNormalWorldTex);
 	unsigned int getTexID();
-	void         calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewWorldIt, int numworkgroups);
+	bool         calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewWorldIt, double* previousError,
+	                          int numworkgroups);
 
   private:
 	struct ssbo_correspondence_data

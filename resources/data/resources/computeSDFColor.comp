@@ -99,16 +99,16 @@ void main() {
 		imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
 		
 		// LERP COLOR
-		/*
+		
 		vec3 previousColor = imageLoad(color_output, pixel_coords).rgb;
 		vec3 colorValue = (previousColor * previousData.y + newData.color * newData.weight) / updatedWeight;
-		*/
+		imageStore(color_output, pixel_coords, vec4(colorValue , 1));
 
 		// Are we closer than before?
-		if(newData.sdfValue < previousData.x && newData.weight > 0.1)
+		/*if(newData.sdfValue < previousData.x && newData.weight > 0.1)
 		{
 			imageStore(color_output, pixel_coords, vec4(newData.color , 1));
-		}
+		}*/
 	}
 	/*else
 	{

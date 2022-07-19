@@ -69,6 +69,7 @@ class GUIScene //: public SceneImpl
 	static GLuint64 s_ICP_GPU_reductionMeasureTime;
 	static GLuint64 s_ICP_CPU_solveSystemMeasureTime;
 	static GLuint   s_ICP_GPU_correspondenceCount;
+	static double   s_ICP_GPU_error;
 	static int      s_ICP_GPU_iterations;
 	static bool     s_ICP_GPU_SDF;
 	static bool     s_ICP_GPU_drawDebug;

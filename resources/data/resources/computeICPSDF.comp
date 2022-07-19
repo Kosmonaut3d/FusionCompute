@@ -66,12 +66,13 @@ vec2 RayMarchSDF(vec3 ro, vec3 rd)
 {
     float dO = 0;
     int i = 0;
+    float maxDist = _epsilonDistance * 2;
     for(i = 0; i<MAX_STEPS;i++)
     {
         vec3 p = ro + rd * dO;
         float ds = GetDistSDF(p); // ds is Distance Scene
         dO += ds;
-        if(dO > (MAX_DIST) || ds < SURFACE_DIST) break;
+        if(dO > (maxDist ) || ds < SURFACE_DIST) break;
     }
 
     return vec2(dO, i * 1.0 / MAX_STEPS );
@@ -106,7 +107,7 @@ void main() {
     // Origin of ray. Note: Let us start closely to the point in order to save ray marching steps
     // In theory we should start from the camera origin, however, there may be obstacles in the way,
     // so it is not necessarily better
-	vec3 ro = vertexNewWorld - rd * _epsilonDistance * 2;
+	vec3 ro = vertexNewWorld - rd * _epsilonDistance;
 
     // Note 
     //ro = vertexNewWorld - rd * _truncationDistance; 
@@ -114,7 +115,7 @@ void main() {
 
     vec2 d = RayMarchSDF(ro, rd);
     
-    if(d.x > MAX_DIST)
+    if(d.x > _epsilonDistance* 2)
     {
         return;
     }
