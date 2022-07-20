@@ -90,7 +90,8 @@ void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)
 	glBindImageTexture(0, depthTexID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
 	glBindImageTexture(1, texModelId, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 
-	m_computeModelShader.dispatchCompute(640, 480, 1);
+	// Resolution 640*480 / Threadsize 32, 16 =
+	m_computeModelShader.dispatchCompute(20, 30, 1);
 	m_computeModelShader.end();
 
 	// glMemoryBarrier(GL_ALL_BARRIER_BITS);
@@ -99,8 +100,8 @@ void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)
 	m_computeNormalShader.begin();
 	glBindImageTexture(1, texModelId, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	glBindImageTexture(2, texNormalId, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
-	// Do not compute the last row, since a fetch outside is super expensive
-	m_computeNormalShader.dispatchCompute(639, 479, 1);
+
+	m_computeModelShader.dispatchCompute(20, 30, 1);
 	m_computeNormalShader.end();
 	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 

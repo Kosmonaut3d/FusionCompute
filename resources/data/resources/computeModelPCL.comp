@@ -1,6 +1,6 @@
 #version 460 core
 
-layout(local_size_x = 1, local_size_y = 1) in;
+layout(local_size_x = 32, local_size_y = 16) in;
 
 layout(r32f, binding = 0) uniform readonly image2D rawDepthImage;
 layout(rgba32f, binding = 1) uniform writeonly image2D model_output;

@@ -143,9 +143,9 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 				ImGui::Text("SDF Generation %f", avg_sdfMeasuredComputeTime / 1000000.0);
 
-				ImGui::ProgressBar(s_sdfExpandMeasuredComputeTime / totalTime, barSize);
-				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-				ImGui::Text("SDF Expansion %f", s_sdfExpandMeasuredComputeTime / 1000000.0);
+				// ImGui::ProgressBar(s_sdfExpandMeasuredComputeTime / totalTime, barSize);
+				// ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+				// ImGui::Text("SDF Expansion %f", s_sdfExpandMeasuredComputeTime / 1000000.0);
 
 				ImGui::ProgressBar(avg_ICP_GPU_correspondenceMeasureTime / totalTime, barSize);
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -166,7 +166,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				s_sceneSelection = SceneSelection::SDF;
 
 				static int sdfResExp = static_cast<int>(log2(s_sdfResolution));
-				if (ImGui::SliderInt("SDF Resolution", &sdfResExp, 4, 9))
+				if (ImGui::SliderInt("SDF Resolution", &sdfResExp, 4, 10))
 				{
 					s_sdfResolution = pow(2, sdfResExp);
 				}
@@ -177,8 +177,8 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Compute SDF Color", &s_sdfComputeColor);
 				ImGui::Text("Compute time %f", s_sdfMeasuredComputeTime / 1000000.0);
 
-				ImGui::Checkbox("Expand SDF", &s_sdfExpand);
-				ImGui::Text("Expansion time %f", s_sdfExpandMeasuredComputeTime / 1000000.0);
+				// ImGui::Checkbox("Expand SDF", &s_sdfExpand);
+				// ImGui::Text("Expansion time %f", s_sdfExpandMeasuredComputeTime / 1000000.0);
 
 				ImGui::Checkbox("Draw Raytrace", &s_sdfDrawRaytrace);
 				ImGui::Text("Draw time %f", s_measureGPUTime2 / 1000000.0);

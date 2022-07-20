@@ -90,7 +90,6 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		{
 			// Camera
 			glm::vec3 _cameraOrigin = viewToWorldIt * glm::vec4(0, 0, 0, 1);
-
 			m_computeICPSDFShader.begin();
 
 			m_computeICPSDFShader.setUniform3f("_cameraOrigin", _cameraOrigin);
@@ -293,7 +292,7 @@ bool ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 
 	if (error > *previousError)
 	{
-		return false;
+		// return false;
 	}
 
 	*previousError = error;
@@ -304,20 +303,15 @@ bool ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 
 	if (!isnan(result[0]))
 	{
-		int test = 1;
-
-		float b  = result[0];
-		float g  = result[1];
-		float a  = result[2];
-		float tx = result[3];
-		float ty = result[4];
-		float tz = result[5];
 
 		// YET ANOTHER
 		Eigen::Matrix4d transformation;
 		double          alpha = result[0];
 		double          beta  = result[1];
 		double          gamma = result[2];
+		float           tx    = result[3];
+		float           ty    = result[4];
+		float           tz    = result[5];
 
 		transformation << 1, alpha * beta - gamma, alpha * gamma + beta, tx, gamma, alpha * beta * gamma + 1,
 		    beta * gamma - alpha, ty, -beta, alpha, 1, tz, 0, 0, 0, 1;
@@ -335,10 +329,10 @@ void ICPCompute::feedOutputToMatrix(Eigen::Matrix<double, 6, 6>& A_i, ICPCompute
 {
 	// Note obj.out_a00.y, = obj.out_a10.x, since the matrix is symmetric
 
-	A_i << obj.out_a00.x, /* obj.out_a00.y*/ obj.out_a10.x, obj.out_a00.z, obj.out_a01.x, obj.out_a01.y, obj.out_a01.z,
-	    obj.out_a10.x, obj.out_a10.y, obj.out_a10.z, obj.out_a11.x, obj.out_a11.y, obj.out_a11.z, obj.out_a20.x,
-	    obj.out_a20.y, obj.out_a20.z, obj.out_a21.x, obj.out_a21.y, obj.out_a21.z, obj.out_a30.x, obj.out_a30.y,
-	    obj.out_a30.z, obj.out_a31.x, obj.out_a31.y, obj.out_a31.z, obj.out_a40.x, obj.out_a40.y, obj.out_a40.z,
-	    obj.out_a41.x, obj.out_a41.y, obj.out_a41.z, obj.out_a50.x, obj.out_a50.y, obj.out_a50.z, obj.out_a51.x,
-	    obj.out_a51.y, obj.out_a51.z;
+	A_i << obj.out_a00.x, /* obj.out_a00.y*/ /**/ obj.out_a10.x, obj.out_a00.z, obj.out_a01.x, obj.out_a01.y,
+	    obj.out_a01.z, obj.out_a10.x, obj.out_a10.y, obj.out_a10.z, obj.out_a11.x, obj.out_a11.y, obj.out_a11.z,
+	    obj.out_a20.x, obj.out_a20.y, obj.out_a20.z, obj.out_a21.x, obj.out_a21.y, obj.out_a21.z, obj.out_a30.x,
+	    obj.out_a30.y, obj.out_a30.z, obj.out_a31.x, obj.out_a31.y, obj.out_a31.z, obj.out_a40.x, obj.out_a40.y,
+	    obj.out_a40.z, obj.out_a41.x, obj.out_a41.y, obj.out_a41.z, obj.out_a50.x, obj.out_a50.y, obj.out_a50.z,
+	    obj.out_a51.x, obj.out_a51.y, obj.out_a51.z;
 }

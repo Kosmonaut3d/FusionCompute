@@ -40,7 +40,8 @@ void BilateralBlurCompute::compute(ofTexture& depthImage, bool blur)
 	glBindImageTexture(0, depthImage.getTextureData().textureID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16UI);
 	glBindImageTexture(1, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);
 
-	m_computeBlurShader.dispatchCompute(640, 480, 1);
+	// Thread size = 32, 16 -> 20*32 = 640, 30*16 = 480
+	m_computeBlurShader.dispatchCompute(20, 30, 1);
 	m_computeBlurShader.end();
 
 	if (GUIScene::s_measureTime)
