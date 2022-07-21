@@ -33,9 +33,7 @@ void BilateralBlurCompute::compute(ofTexture& depthImage, bool blur)
 		glBeginQuery(GL_TIME_ELAPSED, query);
 	}
 
-	// Worlds
 	m_computeBlurShader.begin();
-
 	m_computeBlurShader.setUniform1i("blur", blur);
 	glBindImageTexture(0, depthImage.getTextureData().textureID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R16UI);
 	glBindImageTexture(1, m_texID, 0, GL_FALSE, 0, GL_READ_WRITE, GL_R32F);

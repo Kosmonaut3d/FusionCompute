@@ -1,0 +1,122 @@
+#version 460 core
+
+layout(local_size_x =4, local_size_y = 8, local_size_z = 8) in;
+
+layout(rgba32f, binding = 0) uniform readonly image2D pcl_input;
+layout(rgba32f, binding = 1) uniform readonly image2D pcl_normal_input;
+layout(rg32f, binding = 2) uniform image3D model_output;
+layout(rgba8, binding = 3) uniform image3D color_output;
+
+layout(binding = 0) uniform sampler2D color_input;
+
+uniform float _stepSize;
+uniform mat4x4 _modelMatrix;
+uniform mat4x4 _pclWorldToClip;
+uniform mat4x4 _viewToWorld;
+uniform mat3x3 _viewToWorldRot;
+uniform float _truncationDistance;
+uniform float _maxWeight = 20;
+uniform vec3 _cameraOrigin;
+
+const float W2 = 640;
+const float H2 = 480;
+
+struct sdfOutput
+{
+    vec3 color;
+	float sdfValue;
+	float weight;
+};
+
+sdfOutput worldToDistance(vec3 worldPos)
+{  
+	sdfOutput outputData = {vec3(0,0,0), _truncationDistance, 0};
+	// NOTE: transform from world to camera -> project
+	vec4 clipSpacePos = _pclWorldToClip * vec4(worldPos, 1);
+
+	if (clipSpacePos.w == 0 || clipSpacePos.z == 0)
+	{
+		return outputData;
+	}
+
+	vec3 ndc = vec3(clipSpacePos) / clipSpacePos.w;
+	if (abs(ndc.x) >= 1 || abs(ndc.y) >= 1)
+	{
+		return outputData;
+	}
+
+	// OPENGL
+	ndc.y      = -ndc.y;
+	
+	ndc.x = (ndc.x+1)*.5f;
+	ndc.y = (ndc.y+1)*.5f;
+
+	int x_proj = int(round(ndc.x * W2));
+	int y_proj = int(round(ndc.y * H2));
+		
+	// STILL VIEWSPACE
+	vec3 pclPos = imageLoad(pcl_input, ivec2(x_proj, y_proj)).xyz;
+
+	if(pclPos.z >= 0)
+	{
+		return outputData;
+	}
+
+	vec3 pclWorldPos = vec4(_viewToWorld * vec4(pclPos, 1)).xyz;
+	vec3 dist = worldPos - pclWorldPos;
+	float len = length(dist);
+
+	vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
+	float dotProduct =dot(normalize(_cameraOrigin - pclPos), normalize(pclNor));// (dot(normalize(_cameraOrigin - pclPos), normalize(pclNor))+1)*.5; //dot(dist, pclNor); 
+
+	if(len < _truncationDistance)
+	{
+		outputData.sdfValue = sign(dot(dist, pclNor))*len;
+		outputData.color = texture(color_input, vec2(ndc.x, ndc.y)).rgb; //imageLoad(color_input, ivec2(x_proj, y_proj)).rgb;
+		// step(0.05,dotProduct); //clamp( dotProduct * 10, 0, 1);
+	}
+
+	outputData.weight = clamp(dotProduct, 0, 1);
+	// We are not close enough, but our pixel is legit - weight = 1
+	return outputData;
+}
+
+void main() {
+	// base pixel colour for image
+	ivec3 pixel_coords = ivec3(gl_GlobalInvocationID.xyz);
+
+	vec3 worldVoxelPosition = (_modelMatrix * vec4((pixel_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
+
+	sdfOutput newData = worldToDistance(worldVoxelPosition);
+	
+	if(newData.weight > 0)
+	{
+		vec2 previousData = imageLoad(model_output, pixel_coords).rg;
+		float updatedWeight = newData.weight + previousData.y;
+		float accValue = (previousData.x * previousData.y + newData.sdfValue * newData.weight) / updatedWeight;
+		float accWeight = min(updatedWeight, _maxWeight);
+
+		imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
+		
+		// LERP COLOR
+		
+		/*
+		vec3 previousColor = imageLoad(color_output, pixel_coords).rgb;
+		vec3 colorValue = (previousColor * previousData.y + newData.color * newData.weight) / updatedWeight;
+		imageStore(color_output, pixel_coords, vec4(colorValue , 1));
+		*/
+
+		// Are we closer than before?
+		if(newData.sdfValue < previousData.x && newData.weight > 0.1)
+		{
+			imageStore(color_output, pixel_coords, vec4(newData.color , 1));
+		}
+	}
+	/*else
+	{
+		imageStore(model_output, pixel_coords, vec4(previousData, 0,0));
+
+		vec2 previousData = imageLoad(model_output, pixel_coords).rg;
+		imageStore(color_output, pixel_coords, vec4(previousData.y / _maxWeight, 0, 0 , 1));
+	}*/
+}

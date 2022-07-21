@@ -1,0 +1,165 @@
+#version 460 core
+
+layout(local_size_x = 64, local_size_y = 16) in;
+
+layout(rgba32f, binding = 0) uniform readonly coherent image2D vertex_new;
+layout(rgba32f, binding = 1) uniform readonly coherent image2D normals_new;
+layout(rgba32f, binding = 2) uniform writeonly coherent image2D correspondence;
+uniform sampler3D volume_tex;
+
+struct o_struct
+{
+	vec3 o_a1;
+	vec3 o_a2;
+	float o_b;
+};
+
+// Output
+layout(std430, binding = 0) writeonly buffer odata
+{
+	o_struct o_d[];
+};
+
+layout(binding = 0, offset=0) uniform atomic_uint correspondence_counter;
+
+uniform vec3 _cameraOrigin; // origin of the camera
+uniform mat4x4 _viewToWorldIt; // View To World
+uniform mat3x3 _viewToWorldItRot; // View To World
+uniform mat4 _sdfBaseTransform;
+uniform float _truncationDistance;
+uniform float _epsilonDistance = 1;
+uniform float _epsilonNormal = .5;
+
+#define MAX_STEPS 50
+#define MAX_DIST 8
+#define SURFACE_DIST .01
+
+float getDistanceSDFVolume(vec3 p)
+{
+    const vec3 b = vec3(2, 2, 2);
+    vec3 q = abs(p-vec3(0, 0, -2)) - b;
+    return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
+
+float GetDistSDF(vec3 p)
+{
+    /*float dist = getDistanceSDFVolume(p);
+    if(dist > 0)
+    {
+        discard;
+    }*/
+
+    // IDEA: Transform the p first to sdfBase and trace from there
+    // Transform world position to SDF Base
+    vec3 relPos = (_sdfBaseTransform * vec4(p, 1)).xyz; 
+
+    if(relPos.x < 0 || relPos.y < 0 || relPos.z < 0 || relPos.x > 1 || relPos.y > 1|| relPos.z > 1)
+    {
+        return 10;
+    }
+    
+    // Replace by uniform
+    return texture(volume_tex, relPos).r;
+}
+
+vec2 RayMarchSDF(vec3 ro, vec3 rd) 
+{
+    float dO = 0;
+    int i = 0;
+    float maxDist =  _epsilonDistance * 2; //MAX_DIST;
+    for(i = 0; i<MAX_STEPS;i++)
+    {
+        vec3 p = ro + rd * dO;
+        float ds = GetDistSDF(p); // ds is Distance Scene
+        dO += ds;
+        if(dO > (maxDist ) || ds < SURFACE_DIST) break;
+    }
+
+    return vec2(dO, i * 1.0 / MAX_STEPS );
+}
+
+vec3 GetNormal(vec3 p)
+{ 
+    float d = GetDistSDF(p); // Distance
+    vec2 e = vec2(.01,0); // Epsilon
+    vec3 n = d - vec3(
+    GetDistSDF(p-e.xyy),  
+    GetDistSDF(p-e.yxy),
+    GetDistSDF(p-e.yyx));
+    return normalize(n);
+}
+
+void main() {
+	// base pixel colour for image
+	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+	vec3 vertexWorldSource = (_viewToWorldIt * vec4(imageLoad(vertex_new, pixel_coords).xyz, 1)).xyz;
+	if(vertexWorldSource.z == 0)
+	{
+		return;
+	}
+
+    // SDF part
+
+    // Direction of Ray
+    vec3 rd = normalize(vertexWorldSource - _cameraOrigin);
+
+    // Origin of ray
+	vec3 ro =  vertexWorldSource - rd * _epsilonDistance; //
+
+    // distance to hit
+    vec2 d = RayMarchSDF(ro, rd);
+    
+    // OPTIMIZATION
+    /*if(d.x > _epsilonDistance* 2)
+    {
+        return;
+    }*/
+
+    // correspondence point
+    vec3 pos = ro + rd * d.x;
+    
+	if (distance(pos, vertexWorldSource) > _epsilonDistance)
+	{
+		return;
+	}
+    
+    vec3 nor = GetNormal(pos);
+    // Get old normal
+	vec3 newNormalWorld = normalize(_viewToWorldItRot * imageLoad(normals_new, pixel_coords).xyz);
+
+    /*
+    CHECKERBOARD COMPARISON
+    float checkSize = .01;
+    float fmodResult = mod(floor(checkSize * pixel_coords.x) + floor(checkSize * pixel_coords.y), 2.0);
+    float fin = max(sign(fmodResult), 0.0);
+
+        // beautify normal
+    //nor = (nor + vec3(1)) * .5;
+	imageStore(correspondence, pixel_coords, vec4(fin * newNormalWorld + (1-fin)*nor, 1));
+    */
+    
+	// TODO CHECK EPSILONS
+	if (dot(nor, newNormalWorld) < _epsilonNormal)
+	{
+		return;
+	}
+    
+	uint currentCount = atomicCounterIncrement(correspondence_counter);
+    
+	imageStore(correspondence, pixel_coords, vec4(dot(nor,newNormalWorld).xxx, 1));
+
+	// output
+	vec3 s_i = vertexWorldSource;
+	vec3 d_i = pos;
+	vec3 n_i = nor;
+
+	o_struct outputData;
+	// TEST
+	outputData.o_a1 = cross(s_i, n_i);
+	outputData.o_a2 = n_i;
+	outputData.o_b = dot(n_i, d_i) - dot(n_i, s_i);
+
+	o_d[currentCount] = outputData;
+    memoryBarrier();
+}

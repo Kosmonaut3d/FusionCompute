@@ -299,13 +299,14 @@ bool ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 	*previousError = error;
 
 	Eigen::Matrix<double, 6, 1> result = A_.bdcSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(b_);
+
+	// Alternatives: -> Work the same, no perceivable difference in performance
+
 	// Eigen::Matrix<double, 6, 1> result2 = A_.llt().solve(b_);
 	// Eigen::Matrix<double, 6, 1> result3 = A_.jacobiSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(b_);
 
 	if (!isnan(result[0]))
 	{
-
-		// YET ANOTHER
 		Eigen::Matrix4d transformation;
 		double          alpha = result[0];
 		double          beta  = result[1];
@@ -328,6 +329,7 @@ bool ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 
 void ICPCompute::feedOutputToMatrix(Eigen::Matrix<double, 6, 6>& A_i, ICPCompute::ssbo_out_data& obj)
 {
+	// obj.out_a00.y has the energy sum hidden inside!
 	// Note obj.out_a00.y, = obj.out_a10.x, since the matrix is symmetric
 
 	A_i << obj.out_a00.x, /* obj.out_a00.y*/ /**/ obj.out_a10.x, obj.out_a00.z, obj.out_a01.x, obj.out_a01.y,

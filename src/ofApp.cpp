@@ -36,13 +36,14 @@ ofApp::ofApp()
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-
+	// Unlimited framerate
 	ofSetVerticalSync(false);
 	ofSetFrameRate(0);
 
 	// IMPORTANT - read rect textures as normalized GL_TEXTURE_2D instead!
 	ofDisableArbTex();
 
+	// No antialising
 	ofDisableSmoothing();
 	ofSetLineWidth(2);
 
@@ -150,8 +151,8 @@ void ofApp::update()
 
 	const bool updateKinect = m_kinect.isFrameNew() && GUIScene::s_updateKinectData;
 
-	// Update
-	if (updateKinect) //&& !m_computeSDF && m_updateKinect)
+	// Update new data
+	if (updateKinect)
 	{
 		GUIScene::s_isKinectDeliveringData = true;
 		m_isFrame0                         = !m_isFrame0;
@@ -168,6 +169,7 @@ void ofApp::update()
 		GUIScene::s_ICP_CPU_solveSystemMeasureTime   = 0;
 	}
 
+	// scene selection based on GUI
 	switch (GUIScene::s_sceneSelection)
 	{
 		case GUIScene::SceneSelection::Blur: {
@@ -198,44 +200,6 @@ void ofApp::update()
 		}
 	}
 	m_guiScene.update();
-
-	/*if (m_drawSDFAlgorithm)
-	{
-	    m_computeSDFAlgorithm.compute(m_depthRawTexture);
-	}*/
-
-	/*
-	static int i = 0;
-	if (m_computeSDF)
-	{
-	    const int batchsize = 2000;
-	    //auto& mesh = m_pointCloud.getMesh();
-	    const ofColor finishColor = ofColor::red;
-
-	    if (m_pointCloud.getSize() > 0)
-	    {
-	        for (int j = 0; j < batchsize; j++)
-	        {
-	            int k = j + i;
-
-	            if (k >= m_pointCloud.getSize())
-	            {
-	                i = 0;
-	                m_computeSDF = false;
-
-	                //m_sdf.storeData();
-
-	                break;
-	            }
-
-	            //m_sdf.insertPoint(glm::vec3(m_pointCloud.getPoints()[k]), glm::vec3(0, 0, 0), 0.75f, 0.1f);
-	            //auto color = mesh.getColor(k);
-	            //mesh.setColor(k, color * ofColor::red);
-	        }
-	        i += batchsize;
-	        m_buildProgress = 1.f * i / m_pointCloud.getSize();
-	    }
-	}*/
 }
 
 //--------------------------------------------------------------
@@ -244,11 +208,11 @@ void ofApp::draw()
 	ofDisableDepthTest();
 	ofBackground(GUIScene::s_backgroundColor);
 
+	// Draw Kinect Depth as background
 	if (GUIScene::s_drawDepthBackground)
 	{
 		ofSetColor(ofColor::white * 0.2);
 		FullScreenQuadRender::get().draw(m_depthImage.getTexture());
-		// drawFullScreenImage(m_depthImage);
 	}
 
 	switch (GUIScene::s_sceneSelection)
@@ -273,7 +237,7 @@ void ofApp::draw()
 
 			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
 
-			if (GUIScene::s_drawHelpers)
+			// if (GUIScene::s_drawHelpers)
 			{
 				m_camera.begin();
 				drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
@@ -286,35 +250,6 @@ void ofApp::draw()
 			break;
 		}
 	}
-
-	/*
-	ofDisableDepthTest();
-
-	if (m_drawSDFAlgorithm)
-	{
-	    //ofSetColor(ofColor::white);
-	    //m_computeSDFAlgorithm.draw(m_depthRawTexture);
-
-	    m_pointCloudComp.draw(m_computeSDFAlgorithm.getTextureID(), m_kinect.getTexture().getTextureData().textureID,
-	false, m_camera.getModelViewProjectionMatrix(), m_pclSizeValue);
-
-	}
-
-	m_camera.begin();
-	ofEnableDepthTest();
-
-	//m_sdf.drawOutline();
-	if (m_drawSDF)
-	{
-	    //m_sdf.drawRaymarch(m_camera);
-	}
-	if (m_drawSlice)
-	{
-	    //ofSetColor(ofColor::red);
-	    //m_slice.draw(m_sdf.getInvWorld(), m_sdf.getTextureID(), m_computeSDFAlgorithm.getTextureID());
-	}
-
-	m_camera.end(); */
 
 	// Draw GUI
 	m_guiScene.draw(m_camera);

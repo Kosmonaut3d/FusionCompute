@@ -212,18 +212,6 @@ void SignedDistanceField::insertPoint(glm::vec3 point, glm::vec3 cameraOrigin, f
 void SignedDistanceField::create3dTexture(int dimension, float maxDist)
 {
 	int size = dimension * dimension * dimension;
-	/*
-	std::vector<UINT8> rgbaBuffer(size * 4);
-	std::fill(rgbaBuffer.begin(), rgbaBuffer.end(), 0U);
-
-	// only r
-	/*int i = 0;
-	rgbaBuffer[i*4] = 255U;
-	rgbaBuffer[i*4+1] = 0;
-	rgbaBuffer[i*4+2] = 0;
-	rgbaBuffer[i*4+3] = 255U;
-
-	*/
 
 	glGenTextures(1, &m_textureID);
 	glBindTexture(GL_TEXTURE_3D, m_textureID);

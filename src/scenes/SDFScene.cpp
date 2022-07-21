@@ -4,7 +4,7 @@
 
 //---------------------------------------------------
 SDFScene::SDFScene()
-    : m_sdfCompute{glm::vec3(-1.5, -1.5, -2.5), GUIScene::s_sdfResolution, 3}
+    : m_sdfCompute{glm::vec3(-2, -2, -3), GUIScene::s_sdfResolution, 4}
     , m_sdfCPU{GUIScene::s_sdfResolution, glm::vec3(-2, -2, -4), 4, 2}
     , m_slice(glm::vec3(0, 0, -1), 2)
     , m_icpCompute{}

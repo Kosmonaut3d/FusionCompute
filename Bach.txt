@@ -1,6 +1,0 @@
-TruncationDistance for faster insertion -> calculate distance between points etc.
-
-TODO Bilateral Blur apply
-
-
-- Implementation of SDF generation moved to OpenGL compute -> should be GPU vendor agnostic

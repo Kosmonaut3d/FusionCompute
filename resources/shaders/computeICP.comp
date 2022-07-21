@@ -1,0 +1,118 @@
+#version 460 core
+
+layout(local_size_x = 64, local_size_y = 16) in;
+
+layout(rgba32f, binding = 0) uniform readonly coherent image2D vertex_old;
+layout(rgba32f, binding = 1) uniform readonly coherent image2D vertex_new;
+layout(rgba32f, binding = 2) uniform readonly coherent image2D normals_old;
+layout(rgba32f, binding = 3) uniform readonly coherent image2D normals_new;
+
+layout(rgba32f, binding = 4) uniform writeonly coherent image2D correspondence;
+
+struct o_struct
+{
+	vec3 o_a1;
+	vec3 o_a2;
+	float o_b;
+};
+
+// Output
+layout(std430, binding = 0) writeonly buffer odata
+{
+	o_struct o_d[];
+};
+
+layout(binding = 0, offset=0) uniform atomic_uint correspondence_counter;
+
+uniform mat3x3 viewToWorldItRot;
+uniform mat4x4 viewToWorldIt; // View To World
+uniform mat3x3 viewToWorldOldRot; // View To World previous
+uniform mat4x4 viewToWorldOld; // View To World previous
+uniform mat4x4 viewProjectionOld; // view projection previous!!
+uniform float _epsilonDistance = 1;
+uniform float _epsilonNormal = .5;
+const float WIDTH2 = 320; //halfed
+const float HEIGHT2 = 240;
+
+void main() {
+	// current pixel
+	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+	// Transform the view-space vertices to world space
+	vec3 vertexWorldSource = (viewToWorldIt * vec4(imageLoad(vertex_new, pixel_coords).xyz, 1)).xyz;
+	if(vertexWorldSource.z == 0)
+	{
+		return;
+	}
+
+	vec4 vertexClipSource = viewProjectionOld * vec4(vertexWorldSource, 1);
+	if(vertexClipSource.w == 0)
+	{
+		return;
+	}
+
+	vec3 vertexNdc = vertexClipSource.xyz / vertexClipSource.w;
+	if(clamp(vertexNdc, -1.f, 1.f) != vertexNdc)
+	{
+		return;
+	}
+
+	// Note: Flip y (OPENGL)
+	ivec2 pixel_coord_projected = ivec2(round((vertexNdc.x + 1.0f) * WIDTH2), round((-vertexNdc.y+1.0f) * HEIGHT2));
+
+	vec3 vertexWorldReference = (viewToWorldOld * vec4(imageLoad(vertex_old, pixel_coord_projected).xyz, 1)).xyz;
+
+	if(vertexWorldReference.z == 0)
+	{
+		return;
+	}
+
+	vec3 diff = vertexWorldReference-vertexWorldSource;
+	
+	if (length(diff) > _epsilonDistance)
+	{
+		return;
+	}
+
+	// Old normals
+	vec3 normalWorldReference = normalize(viewToWorldOldRot * imageLoad(normals_old, pixel_coord_projected).xyz);
+	vec3 normalWorldSource = normalize(viewToWorldItRot * imageLoad(normals_new, pixel_coords).xyz);
+
+	// TODO CHECK EPSILONS
+	if (dot(normalWorldReference, normalWorldSource) < _epsilonNormal)
+	{
+		return;
+	}
+	// Code from icp cpu
+	//correspondences.emplace_back(newVertexWorld, referenceVertexWorld, referenceNormalWorld);
+	//Eigen::Vector3d s_i            = GLM2E(std::get<0>(correspondence)).cast<double>();
+	//Eigen::Vector3d d_i            = GLM2E(std::get<1>(correspondence)).cast<double>();
+	//Eigen::Vector3d n_i            = GLM2E(std::get<2>(correspondence)).cast<double>();
+	//
+	//Eigen::Matrix<double, 6, 1> A_i;
+	//A_i << s_i.cross(n_i), n_i;
+	//A_ += A_i * A_i.transpose();
+	//
+	//b_ += A_i * (n_i.dot(d_i) - n_i.dot(s_i));
+	//
+	////
+	//A__ += A_i;
+	
+	uint currentCount = atomicCounterIncrement(correspondence_counter);
+
+	// output
+	vec3 s_i = vertexWorldSource;
+	vec3 d_i = vertexWorldReference;
+	vec3 n_i = normalWorldReference;
+
+	o_struct outputData;
+	// TEST
+	outputData.o_a1 = cross(s_i, n_i);
+	outputData.o_a2 = n_i;
+	outputData.o_b = dot(n_i, d_i) - dot(n_i, s_i);
+
+	o_d[currentCount] = outputData;
+    memoryBarrier();
+
+	imageStore(correspondence, pixel_coords, vec4(normalWorldReference, 1));
+}

@@ -3,6 +3,7 @@
 
 #define BOOST_CONFIG_SUPPRESS_OUTDATED_MESSAGE
 
+// Will be called when errors on the GPU occur
 void GLAPIENTRY MessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
                                 const GLchar* message, const void* userParam)
 {
@@ -24,7 +25,6 @@ int main()
 {
 	ofGLFWWindowSettings settings;
 	settings.setGLVersion(4, 6); // we define the OpenGL version we want to use
-	// ofSetupOpenGL(1024,768, OF_WINDOW);			// <-------- setup the GL context
 
 	settings.setSize(1280, 960);
 	ofCreateWindow(settings);
@@ -33,8 +33,9 @@ int main()
 	glEnable(GL_DEBUG_OUTPUT);
 	glDebugMessageCallback(MessageCallback, 0);
 
-	ofSetDataPathRoot("../resources/data/");
+	ofSetDataPathRoot("../resources/");
 
+	// Log the OpenGL version
 	std::cout << "GL_VERSION: " << glGetString(GL_VERSION) << std::endl;
 
 	// this kicks off the running of my app

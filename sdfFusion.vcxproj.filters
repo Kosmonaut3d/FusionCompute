@@ -349,55 +349,52 @@
     <ResourceCompile Include="icon.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\data\resources\computeModelPCL.comp">
+    <None Include="resources\shaders\computeBilateralBlur.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\computeNormalPCL.comp">
+    <None Include="resources\shaders\computeICP.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\raymarchSDF.frag">
+    <None Include="resources\shaders\computeICPSDF.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\fullScreenQuad.frag">
+    <None Include="resources\shaders\computeModelPCL.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\fullScreenQuad.vert">
+    <None Include="resources\shaders\computeNormalPCL.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\pointCloud.frag">
+    <None Include="resources\shaders\computeSDF.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\pointCloud.vert">
+    <None Include="resources\shaders\computeSDFColor.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\sliceFragShader.frag">
+    <None Include="resources\shaders\fullScreenQuad.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\vertShader.vert">
+    <None Include="resources\shaders\fullScreenQuad.vert">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\computeBilateralBlur.comp">
+    <None Include="resources\shaders\ICPReduction.comp">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\computeSDF.comp">
+    <None Include="resources\shaders\pointCloud.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\computeICP.comp">
+    <None Include="resources\shaders\pointCloud.vert">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\ICPReduction.comp">
+    <None Include="resources\shaders\raymarchSDF.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\computeICPSDF.comp">
+    <None Include="resources\shaders\raymarchSDFColor.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\expandSDF.comp">
+    <None Include="resources\shaders\sliceFragShader.frag">
       <Filter>shaders</Filter>
     </None>
-    <None Include="resources\data\resources\computeSDFColor.comp">
-      <Filter>shaders</Filter>
-    </None>
-    <None Include="resources\data\resources\raymarchSDFColor.frag">
+    <None Include="resources\shaders\vertShader.vert">
       <Filter>shaders</Filter>
     </None>
   </ItemGroup>

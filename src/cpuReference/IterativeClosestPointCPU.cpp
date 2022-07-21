@@ -1,4 +1,5 @@
 #include "IterativeClosestPointCPU.h"
+#include "../helper/eigen2glm.h"
 #include "scenes/GUIScene.h"
 
 //----------------------------------------------------------------------------------------------------------
@@ -64,12 +65,6 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 		int fail_z     = 0;
 
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
-
-		/* Eigen::Matrix4Xf eiProjection   = GLM2E<float, 4, 4>(projection);
-		glm::mat4x4      glmProjections       = E2GLM<float, 4, 4>(eiProjection);
-
-		glm::mat4x4 test = glm::inverse(glmProjections)  * projection;
-		*/
 
 		Eigen::Matrix<double, 6, 1> A_T_sum;
 		A_T_sum.setZero();
@@ -196,43 +191,17 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 			float ty = result[4];
 			float tz = result[5];
 
-			// std::cout << result << std::endl;
-
-			// Update the transformation matrix
-			// Eigen::Matrix4f T_inc{{1, a, -g, tx}, {-a, 1, b, ty}, {g, -b, 1, tz}, {0, 0, 0, 1}};
-			// viewToWorld_iter = E2GLM(T_inc) * viewToWorld_iter;
-
 			Eigen::Matrix<double, 4, 4> T_inc{{1, a, -g, tx}, {-a, 1, b, ty}, {g, -b, 1, tz}, {0, 0, 0, 1}};
 
 			double alpha = result[0];
 			double beta  = result[1];
 			double gamma = result[2];
 
-			/* Eigen::Matrix4d transformation{{1, alpha * beta - gamma, alpha * gamma + beta, result[3]},
-			                               {gamma, alpha * beta * gamma + 1, beta * gamma - alpha, result[4]},
-			                               {-beta, alpha, 1, result[5]},
-			                               {0, 0, 0, 1}};*/
-
 			Eigen::Matrix4d transformation{{1, -gamma, beta, result[3]},
 			                               {gamma, 1, -alpha, result[4]},
 			                               {-beta, alpha, 1, result[5]},
 			                               {0, 0, 0, 1}};
 
-			/*
-			Eigen::Vector3d   translation = result.tail(3);
-			Eigen::Matrix3d rotation = Eigen::AngleAxisd(alpha, Eigen::Vector3d::UnitX()).toRotationMatrix() *
-			                           Eigen::AngleAxisd(beta, Eigen::Vector3d::UnitY()).toRotationMatrix() *
-			                           Eigen::AngleAxisd(gamma, Eigen::Vector3d::UnitZ()).toRotationMatrix();
-
-			Eigen::Matrix4d pose = Eigen::Matrix4d::Identity();
-
-			pose.block(0, 0, 3, 3) = rotation;
-			pose.block(0, 3, 3, 1) = translation;
-			*/
-			/*
-			transformation << 1, alpha * beta - gamma, alpha * gamma + beta, result[3], gamma, alpha * beta * gamma + 1,
-			    beta * gamma - alpha, result[4], -beta, alpha, 1, result[5], 0, 0, 0, 1;
-			    */
 			Eigen::Matrix<double, 4, 4> T_z = GLM2E(viewToWorld_iter);
 
 			T_z = transformation * T_z;
@@ -259,11 +228,8 @@ void IterativeClostestPointCPU::getCorrespondences(
 	/// ..........................
 	for (int i = 0; i < SIZE; i++)
 	{
-		// TEST MANIPULATION
-		// TODO Need to work with camera space coordinates
 		glm::vec3 newVertexWorld = viewToWorld_iter * glm::vec4(newVertices[i], 1);
 
-		// TODO FIX
 		// Check if there was a valid depth at that vertex
 		if (newVertexWorld.z == 0)
 		{
@@ -346,103 +312,6 @@ void IterativeClostestPointCPU::getCorrespondences(
 }
 
 //----------------------------------------------------------------------------------------------------------
-bool IterativeClostestPointCPU::solveLinearEquation(const glm::vec3 newVertex,
-
-                                                    const glm::vec3 newNormal,
-
-                                                    const glm::vec3* oldVertices,
-
-                                                    const glm::vec3* oldNormals, const glm::mat4x4& oldTransform,
-                                                    const glm::mat4x4& oldTransformProjection,
-                                                    glm::mat4x4& newTransform, int w, int h, int size)
-{
-
-	// Check if the vertex, projected onto our screen by our old MVP is visible on screen even
-	/*
-
-	const glm::vec4 referenceVertex = glm::vec4(oldVertices[index], 1);
-	const glm::vec3 referenceNormal = oldNormals[index];
-
-	// Move up
-	glm::mat3x3 oldRot =
-	    glm::mat3x3(oldTransform[0][0], oldTransform[0][1], oldTransform[0][2], oldTransform[1][0], oldTransform[1][1],
-	                oldTransform[1][2], oldTransform[2][0], oldTransform[2][1], oldTransform[2][2]);
-
-	glm::mat3x3 newRot =
-	    glm::mat3x3(newTransform[0][0], newTransform[0][1], newTransform[0][2], newTransform[1][0], newTransform[1][1],
-	                newTransform[1][2], newTransform[2][0], newTransform[2][1], newTransform[2][2]);
-
-	// World transformation
-	glm::vec3 referenceVertexWorld = referenceVertex * oldTransform;
-	glm::vec3 referenceNormalWorld = referenceVertex * oldRot;
-
-	glm::vec3 newVertexWorld = glm::vec4(newVertex, 1) * newTransform;
-	glm::vec3 newNormalWorld = newNormal * newRot;
-
-	glm::vec3 distance = newVertexWorld - referenceVertexWorld;
-	if (glm::length(distance) > m_epsilonDistance)
-	{
-	    m_failDistance++;
-	    return false;
-	}
-
-	if (glm::abs(glm::dot(referenceNormalWorld, newNormalWorld)) > m_epsilonNormal)
-	{
-	    m_failNormal++;
-	    return false;
-	}
-	// Point correspondence found! Yay
-
-	// AT _ vec6 transposed
-	glm::vec3 at_0 = build_AT(newVertexWorld, referenceNormalWorld);
-	glm::vec3 at_1 = referenceNormalWorld;
-
-	float     b      = glm::dot(referenceNormalWorld, (referenceVertexWorld - newVertexWorld));
-	glm::vec3 at_b_0 = at_0 * b;
-	glm::vec3 at_b_1 = at_1 * b;
-
-	// Matrix ATxA =>
-	double row[6] = {at_b_0.x, at_b_0.y, at_b_0.z, at_b_1.x, at_b_1.y, at_b_1.z};
-	double A[6][6];
-	double L[6][6];
-
-	for (x = 0; x < 6; x++)
-	{
-	    for (y = 0; y < 6; y++)
-	    {
-	        A[x][y] = row[x] * row[y];
-	        L[x][y] = 0;
-	    }
-	}
-
-	// Cholesky Banachiewicz
-	for (int i = 0; i < 6; i++)
-	{
-	    for (int j = 0; j <= i; j++)
-	    {
-	        double sum = 0.0;
-	        for (int k = 0; k < j; k++)
-	            sum += L[i][k] * L[j][k];
-
-	        if (i == j)
-	            L[i][j] = sqrt(A[i][i] - sum);
-	        else
-	            L[i][j] = (1.0 / L[j][j] * (A[i][j] - sum));
-	    }
-	}
-
-	// A = L * LT
-	// Ax = b
-	// L*y = b
-	// LT*x = y
-
-	// Cholesky is symmetric!
-
-	*/
-	return true;
-}
-
-//----------------------------------------------------------------------------------------------------------
 float IterativeClostestPointCPU::pointPlaneEnergyFunction(glm::vec3 distance, glm::vec3 normal)
 {
 	// Vector dot (plane) normal = point to plane distance
@@ -460,9 +329,6 @@ glm::vec3 IterativeClostestPointCPU::build_AT(glm::vec3 V, glm::vec3 N)
 	// v3  0  -v1 0 1 0
 	// -v2 v1   0 0 0 1
 
-	// G_T
-	// 0 v3 -v2
-	// -v3 0 v1 etc...
 	glm::mat3x3 G_T1 = glm::mat3x3(0, -V.z, V.y, V.z, 0, -V.x, -V.y, V.x, 0);
 
 	glm::vec3 out_0 = G_T1 * N;

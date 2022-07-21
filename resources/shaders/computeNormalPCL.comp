@@ -1,0 +1,29 @@
+#version 460 core
+
+layout(local_size_x = 32, local_size_y = 16) in;
+
+layout(rgba32f, binding = 1) uniform readonly coherent image2D model_output;
+layout(rgba32f, binding = 2) uniform writeonly image2D normal_output;
+
+void main() {
+	// base pixel colour for image
+	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+	vec3 model = imageLoad(model_output, pixel_coords).xyz;
+	vec3 model_x = imageLoad(model_output, pixel_coords + ivec2(1, 0)).xyz;
+	vec3 model_y = imageLoad(model_output, pixel_coords + ivec2(0, 1)).xyz;
+	
+	// Check if any of the samples are invalid
+	if(model.z == 0 || model_x.z == 0 || model_y.z == 0)
+	{
+		// Invalid normal map
+		imageStore(normal_output, pixel_coords, vec4(0,0,0,0));
+		return;
+	}
+
+	vec3 v1 = (model_x - model);
+	vec3 v2 = (model_y - model);
+	vec3 normal = normalize(cross(v2, v1));
+
+	imageStore(normal_output, pixel_coords, vec4(normal, 1));
+}

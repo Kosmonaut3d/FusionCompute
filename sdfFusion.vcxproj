@@ -286,23 +286,22 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="resources\data\resources\computeBilateralBlur.comp" />
-    <None Include="resources\data\resources\computeICP.comp" />
-    <None Include="resources\data\resources\computeICPSDF.comp" />
-    <None Include="resources\data\resources\computeModelPCL.comp" />
-    <None Include="resources\data\resources\computeNormalPCL.comp" />
-    <None Include="resources\data\resources\computeSDF.comp" />
-    <None Include="resources\data\resources\computeSDFColor.comp" />
-    <None Include="resources\data\resources\expandSDF.comp" />
-    <None Include="resources\data\resources\ICPReduction.comp" />
-    <None Include="resources\data\resources\raymarchSDF.frag" />
-    <None Include="resources\data\resources\fullScreenQuad.frag" />
-    <None Include="resources\data\resources\fullScreenQuad.vert" />
-    <None Include="resources\data\resources\pointCloud.frag" />
-    <None Include="resources\data\resources\pointCloud.vert" />
-    <None Include="resources\data\resources\raymarchSDFColor.frag" />
-    <None Include="resources\data\resources\sliceFragShader.frag" />
-    <None Include="resources\data\resources\vertShader.vert" />
+    <None Include="resources\shaders\computeBilateralBlur.comp" />
+    <None Include="resources\shaders\computeICP.comp" />
+    <None Include="resources\shaders\computeICPSDF.comp" />
+    <None Include="resources\shaders\computeModelPCL.comp" />
+    <None Include="resources\shaders\computeNormalPCL.comp" />
+    <None Include="resources\shaders\computeSDF.comp" />
+    <None Include="resources\shaders\computeSDFColor.comp" />
+    <None Include="resources\shaders\ICPReduction.comp" />
+    <None Include="resources\shaders\raymarchSDF.frag" />
+    <None Include="resources\shaders\fullScreenQuad.frag" />
+    <None Include="resources\shaders\fullScreenQuad.vert" />
+    <None Include="resources\shaders\pointCloud.frag" />
+    <None Include="resources\shaders\pointCloud.vert" />
+    <None Include="resources\shaders\raymarchSDFColor.frag" />
+    <None Include="resources\shaders\sliceFragShader.frag" />
+    <None Include="resources\shaders\vertShader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ProjectExtensions>

@@ -94,8 +94,6 @@ void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)
 	m_computeModelShader.dispatchCompute(20, 30, 1);
 	m_computeModelShader.end();
 
-	// glMemoryBarrier(GL_ALL_BARRIER_BITS);
-
 	// Normals
 	m_computeNormalShader.begin();
 	glBindImageTexture(1, texModelId, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
