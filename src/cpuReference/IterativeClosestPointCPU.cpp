@@ -49,9 +49,15 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 
 	double E_sum_first = 0.0;
 
-	int MAX_IT = 10;
+	GUIScene::s_ICP_correspondenceMeasureTime  = 0;
+	GUIScene::s_ICP_GPU_reductionMeasureTime   = 0;
+	GUIScene::s_ICP_CPU_solveSystemMeasureTime = 0;
+
+	int MAX_IT = GUIScene::s_ICP_iterations;
 	for (int it = 0; it < MAX_IT; it++)
 	{
+		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
 		m_failPixel    = 0;
 		m_failDistance = 0;
 		m_failNormal   = 0;
@@ -95,21 +101,29 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 				// m_failNormal);
 
 				worldToView_out = worldToView_iter;
-				return;
+				// return;
 			}
 			E_sum_first = E_sum;
 		}
+
+		GUIScene::s_ICP_correspondenceMeasureTime +=
+		    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count() *
+		    1000.0;
 
 		if (correspondences.empty())
 		{
 			return;
 		}
 
+		GUIScene::s_ICP_GPU_correspondenceCount = correspondences.size();
+
 		// Solve
 		Eigen::Matrix<double, 6, 1> result;
 
 		if (GUIScene::s_ICP_CPU_sum)
 		{
+			begin = std::chrono::steady_clock::now();
+
 			Eigen::Matrix<double, 6, 1> b_ = Eigen::Matrix<double, 6, 1>::Zero();
 			Eigen::Matrix<double, 6, 6> A_ = Eigen::Matrix<double, 6, 6>::Zero();
 
@@ -134,7 +148,19 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 
 			Eigen::Matrix<double, 6, 6> A___ = A__ * A__.transpose();
 
+			GUIScene::s_ICP_GPU_reductionMeasureTime +=
+			    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin)
+			        .count() *
+			    1000.0;
+
+			begin = std::chrono::steady_clock::now();
+
 			result = A_.bdcSvd(Eigen::ComputeFullU | Eigen::ComputeFullV).solve(b_);
+
+			GUIScene::s_ICP_CPU_solveSystemMeasureTime +=
+			    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin)
+			        .count() *
+			    1000.0;
 		}
 		else
 		{

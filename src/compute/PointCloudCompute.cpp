@@ -103,7 +103,6 @@ void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)
 
 	m_computeModelShader.dispatchCompute(20, 30, 1);
 	m_computeNormalShader.end();
-	glMemoryBarrier(GL_ALL_BARRIER_BITS);
 
 	if (GUIScene::s_measureTime)
 	{

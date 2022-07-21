@@ -168,6 +168,7 @@
       <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;src\datastructures;..\..\..\addons\ofxImGui\libs;..\..\..\addons\ofxImGui\libs\imgui;..\..\..\addons\ofxImGui\libs\imgui\src;..\..\..\addons\ofxImGui\src;..\..\..\addons\ofxKinect\libs;..\..\..\addons\ofxKinect\libs\libfreenect;..\..\..\addons\ofxKinect\libs\libfreenect\include;..\..\..\addons\ofxKinect\libs\libfreenect\platform;..\..\..\addons\ofxKinect\libs\libfreenect\platform\windows;..\..\..\addons\ofxKinect\libs\libfreenect\src;..\..\..\addons\ofxKinect\libs\libusb;..\..\..\addons\ofxKinect\libs\libusb\include;..\..\..\addons\ofxKinect\libs\libusb\lib;..\..\..\addons\ofxKinect\libs\libusb\lib\vs;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\Win32;..\..\..\addons\ofxKinect\libs\libusb\lib\vs\x64;..\..\..\addons\ofxKinect\src;..\..\..\addons\ofxKinect\src\extra</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <ObjectFileName>$(IntDir)%(RelativeDir)</ObjectFileName>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
     </ClCompile>
     <Link>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>

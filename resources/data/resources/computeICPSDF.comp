@@ -1,6 +1,6 @@
 #version 460 core
 
-layout(local_size_x = 1, local_size_y = 1) in;
+layout(local_size_x = 64, local_size_y = 16) in;
 
 layout(rgba32f, binding = 0) uniform readonly coherent image2D vertex_new;
 layout(rgba32f, binding = 1) uniform readonly coherent image2D normals_new;
@@ -66,7 +66,7 @@ vec2 RayMarchSDF(vec3 ro, vec3 rd)
 {
     float dO = 0;
     int i = 0;
-    float maxDist = _epsilonDistance * 2;
+    float maxDist =  _epsilonDistance * 2; //MAX_DIST;
     for(i = 0; i<MAX_STEPS;i++)
     {
         vec3 p = ro + rd * dO;
@@ -93,8 +93,8 @@ void main() {
 	// base pixel colour for image
 	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
 
-	vec3 vertexNewWorld = (_viewToWorldIt * vec4(imageLoad(vertex_new, pixel_coords).xyz, 1)).xyz;
-	if(vertexNewWorld.z == 0)
+	vec3 vertexWorldSource = (_viewToWorldIt * vec4(imageLoad(vertex_new, pixel_coords).xyz, 1)).xyz;
+	if(vertexWorldSource.z == 0)
 	{
 		return;
 	}
@@ -102,29 +102,24 @@ void main() {
     // SDF part
 
     // Direction of Ray
-    vec3 rd = normalize(vertexNewWorld - _cameraOrigin);
+    vec3 rd = normalize(vertexWorldSource - _cameraOrigin);
 
-    // Origin of ray. Note: Let us start closely to the point in order to save ray marching steps
-    // In theory we should start from the camera origin, however, there may be obstacles in the way,
-    // so it is not necessarily better
-	vec3 ro = vertexNewWorld - rd * _epsilonDistance;
+    // Origin of ray
+	vec3 ro =  vertexWorldSource - rd * _epsilonDistance; //
 
-    // Note 
-    //ro = vertexNewWorld - rd * _truncationDistance; 
-
-
+    // distance to hit
     vec2 d = RayMarchSDF(ro, rd);
     
-    if(d.x > _epsilonDistance* 2)
+    // OPTIMIZATION
+    /*if(d.x > _epsilonDistance* 2)
     {
         return;
-    }
-    // Hit point
+    }*/
+
+    // correspondence point
     vec3 pos = ro + rd * d.x;
     
-	vec3 diff = pos-vertexNewWorld;
-	
-	if (length(diff) > _epsilonDistance)
+	if (distance(pos, vertexWorldSource) > _epsilonDistance)
 	{
 		return;
 	}
@@ -155,7 +150,7 @@ void main() {
 	imageStore(correspondence, pixel_coords, vec4(dot(nor,newNormalWorld).xxx, 1));
 
 	// output
-	vec3 s_i = vertexNewWorld;
+	vec3 s_i = vertexWorldSource;
 	vec3 d_i = pos;
 	vec3 n_i = nor;
 

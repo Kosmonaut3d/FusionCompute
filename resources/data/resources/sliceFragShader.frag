@@ -18,11 +18,11 @@ void main()
 
 	if(valSDF.x < .0)
 	{
-		outputColor =  vec4(-valSDF.x, valSDF.xx ,1.);
+		outputColor =  vec4(-valSDF.x,0, 0 ,1.);
 	}
 	else
 	{
-		outputColor =  vec4(0, valSDF.x * .001, 0 ,1.);
+		outputColor =  vec4(0, valSDF.x, 0 ,1.);
 	}
 
 	//vec3 valCompute =  texture(tex2D, relPos.zy).rbg;

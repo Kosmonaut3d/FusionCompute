@@ -52,15 +52,21 @@ vec2 worldToDistance(vec3 worldPos)
 	vec3 dist = worldPos - pclWorldPos;
 	float len = length(dist);
 
-	if(abs(len) < _truncationDistance)
+	vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
+	float dotProduct = dot(dist, pclNor); // dot(normalize(dist), normalize(pclNor));
+
+	if(len < _truncationDistance)
 	{
-		vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
-		float dotProduct = dot(dist, pclNor); // dot(normalize(dist), normalize(pclNor));
 		return vec2(sign(dotProduct)*len, 1);
 	}
 
+	if(sign(dotProduct)>0)
+	{
+		return vec2(_truncationDistance, 1);
+	}
+
 	// We are not close enough, but our pixel is legit - weight = 1
-	return vec2(_truncationDistance, 0);
+	return vec2(-_truncationDistance, 0);
 }
 
 void main() {

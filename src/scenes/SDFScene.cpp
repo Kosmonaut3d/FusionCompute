@@ -4,7 +4,7 @@
 
 //---------------------------------------------------
 SDFScene::SDFScene()
-    : m_sdfCompute{glm::vec3(-1, -1, -2), GUIScene::s_sdfResolution, 2}
+    : m_sdfCompute{glm::vec3(-1.5, -1.5, -2.5), GUIScene::s_sdfResolution, 3}
     , m_sdfCPU{GUIScene::s_sdfResolution, glm::vec3(-2, -2, -4), 4, 2}
     , m_slice(glm::vec3(0, 0, -1), 2)
     , m_icpCompute{}
@@ -56,7 +56,10 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& viewToW
 void SDFScene::draw(ofCamera& camera)
 {
 	camera.begin();
-	m_sdfCompute.drawOutline();
+	if (GUIScene::s_drawHelpers)
+	{
+		m_sdfCompute.drawOutline();
+	}
 	if (GUIScene::s_sdfDrawRaytrace)
 	{
 		m_sdfCompute.drawRaymarch(camera);

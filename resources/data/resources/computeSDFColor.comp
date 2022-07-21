@@ -69,14 +69,14 @@ sdfOutput worldToDistance(vec3 worldPos)
 	vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
 	float dotProduct =dot(normalize(_cameraOrigin - pclPos), normalize(pclNor));// (dot(normalize(_cameraOrigin - pclPos), normalize(pclNor))+1)*.5; //dot(dist, pclNor); 
 
-	if(abs(len) < _truncationDistance)
+	if(len < _truncationDistance)
 	{
 		outputData.sdfValue = sign(dot(dist, pclNor))*len;
 		outputData.color = texture(color_input, vec2(ndc.x, ndc.y)).rgb; //imageLoad(color_input, ivec2(x_proj, y_proj)).rgb;
 		// step(0.05,dotProduct); //clamp( dotProduct * 10, 0, 1);
 	}
 
-	outputData.weight = dotProduct;
+	outputData.weight = clamp(dotProduct, 0, 1);
 	// We are not close enough, but our pixel is legit - weight = 1
 	return outputData;
 }

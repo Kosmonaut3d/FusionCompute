@@ -13,8 +13,8 @@ uniform mat4 viewprojection;
 
 uniform float _truncationDistance;
 
-#define MAX_STEPS 20
-#define MAX_DIST 4
+#define MAX_STEPS 50
+#define MAX_DIST 8
 #define SURFACE_DIST .01
 
 layout(binding=0) uniform sampler3D volume_tex;
@@ -38,8 +38,8 @@ vec3 GetNormal(vec3 p)
 
 float getDistanceSDFVolume(vec3 p)
 {
-    const vec3 b = vec3(2, 2, 2);
-    vec3 q = abs(p-vec3(0, 0, -2)) - b;
+    const vec3 b = vec3(3, 3, 3);
+    vec3 q = abs(p-vec3(0, 0, -1.5)) - b;
     return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
 }
 
@@ -58,30 +58,66 @@ float GetDistSDF(vec3 p)
 
     if(relPos.x < 0 || relPos.y < 0 || relPos.z < 0 || relPos.x > 1 || relPos.y > 1|| relPos.z > 1)
     {
-        return 10;
+        return .1;
     }
     
     // Replace by uniform
     return texture(volume_tex, relPos).r;
 }
 
+vec2 RayMarchSDF_KiFu(vec3 ro, vec3 rd) 
+{
+    float dO = 0;
+    int i = 0;
+    float ds_old = 0;
+    float step_size = 0.005;
+    float step_it = step_size;
+    for(i = 0; i<MAX_STEPS;i++)
+    {
+        vec3 p = ro + rd * dO;
+        float ds = GetDistSDF(p); // ds is Distance Scene
+        
+        if(ds < 0)
+        {
+            dO = dO - step_size * ds_old / (ds - ds_old);
+            return vec2(dO, i * 1.0 / MAX_STEPS );
+        }
+
+        if(ds >= _truncationDistance)
+        {
+            step_it = _truncationDistance;
+        }
+        else
+        {
+            step_it = step_size;
+        }
+
+        ds_old = ds;
+        
+        dO += step_it;
+        if(dO > (MAX_DIST) || (ds) < SURFACE_DIST) break;
+    }
+
+    return vec2(dO, i * 1.0 / MAX_STEPS );
+}
+
 vec2 RayMarchSDF(vec3 ro, vec3 rd) 
 {
     float dO = 0;
     int i = 0;
+    float ds_old = 0;
     for(i = 0; i<MAX_STEPS;i++)
     {
         vec3 p = ro + rd * dO;
         float ds = GetDistSDF(p); // ds is Distance Scene
 
-        /*
-        if(ds < -SURFACE_DIST)
+        if(ds < 0)
         {
-            dO = dO - ds_old * ds_old / (ds - ds_old);
+            dO = dO + (ds_old - ds)*.5f;
             return vec2(dO, i * 1.0 / MAX_STEPS );
         }
         ds_old = ds;
-        */
+        
 
         dO += ds;
         if(dO > (MAX_DIST) || (ds) < SURFACE_DIST) break;
@@ -102,7 +138,7 @@ void main()
     
 
     float dInit = 0.001;
-    vec2 d = RayMarchSDF(ro+rd*dInit, rd);
+    vec2 d = RayMarchSDF_KiFu(ro+rd*dInit, rd);
     
     if(d.x < MAX_DIST)
     {

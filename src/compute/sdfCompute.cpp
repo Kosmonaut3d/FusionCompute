@@ -269,7 +269,9 @@ void SDFCompute::drawRaymarch(ofCamera& camera)
 
 	ofPushStyle();
 
-	const ofShader* currentShader = GUIScene::s_sdfComputeColor ? &m_raymarchSDFColorShader : &m_raymarchSDFShader;
+	bool drawColor = GUIScene::s_sdfComputeColor && !GUIScene::s_sdfDrawNormals;
+
+	const ofShader* currentShader = drawColor ? &m_raymarchSDFColorShader : &m_raymarchSDFShader;
 
 	currentShader->begin();
 	// glPolygonMode(GL_BACK, GL_LINE);
@@ -278,10 +280,14 @@ void SDFCompute::drawRaymarch(ofCamera& camera)
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_3D, m_texID);
 
-	if (GUIScene::s_sdfComputeColor)
+	if (drawColor)
 	{
 		glActiveTexture(GL_TEXTURE0 + 1);
 		glBindTexture(GL_TEXTURE_3D, m_colorTexID);
+	}
+	else
+	{
+		currentShader->setUniform1i("_drawNormals", GUIScene::s_sdfDrawNormals ? 1 : 0);
 	}
 
 	// Make the truncation distance dependent on the minimum distance between 2 tiles

@@ -11,6 +11,7 @@ bool   GUIScene::s_drawDepthBackground    = false;
 bool      GUIScene::s_measureTime     = true;
 GLuint64  GUIScene::s_measureGPUTime2 = 0;
 bool      GUIScene::s_resetView       = false;
+bool      GUIScene::s_drawHelpers     = false;
 glm::vec3 GUIScene::s_testPointPos    = glm::vec3(-1, 0, -2);
 
 bool     GUIScene::s_bilateralBlurCompute             = true;
@@ -41,22 +42,23 @@ float    GUIScene::s_sdfWeightTruncation          = 200.f;
 float    GUIScene::s_sdfTruncation                = .1f;
 bool     GUIScene::s_sdfExpand                    = false;
 GLuint64 GUIScene::s_sdfExpandMeasuredComputeTime = 0;
+bool     GUIScene::s_sdfDrawNormals               = true;
 
 // ICP
-bool     GUIScene::s_ICP_applyTransformation           = false;
-bool     GUIScene::s_ICP_CPU_compute                   = false;
-bool     GUIScene::s_ICP_CPU_sum                       = false;
-bool     GUIScene::s_ICP_GPU_compute                   = true;
-GLuint64 GUIScene::s_ICP_GPU_correspondenceMeasureTime = 0;
-GLuint64 GUIScene::s_ICP_GPU_reductionMeasureTime      = 0;
-GLuint64 GUIScene::s_ICP_CPU_solveSystemMeasureTime    = 0;
-bool     GUIScene::s_ICP_GPU_drawDebug                 = false;
-float    GUIScene::s_ICP_epsilonDist                   = .05;
-float    GUIScene::s_ICP_epsilonNor                    = .98;
-int      GUIScene::s_ICP_GPU_iterations                = 5;
-bool     GUIScene::s_ICP_GPU_SDF                       = true;
-GLuint   GUIScene::s_ICP_GPU_correspondenceCount       = 0;
-double   GUIScene::s_ICP_GPU_error                     = 0;
+bool     GUIScene::s_ICP_applyTransformation        = false;
+bool     GUIScene::s_ICP_CPU_compute                = false;
+bool     GUIScene::s_ICP_CPU_sum                    = false;
+bool     GUIScene::s_ICP_GPU_compute                = true;
+GLuint64 GUIScene::s_ICP_correspondenceMeasureTime  = 0;
+GLuint64 GUIScene::s_ICP_GPU_reductionMeasureTime   = 0;
+GLuint64 GUIScene::s_ICP_CPU_solveSystemMeasureTime = 0;
+bool     GUIScene::s_ICP_GPU_drawDebug              = false;
+float    GUIScene::s_ICP_epsilonDist                = .05;
+float    GUIScene::s_ICP_epsilonNor                 = .98;
+int      GUIScene::s_ICP_iterations                 = 5;
+bool     GUIScene::s_ICP_GPU_SDF                    = true;
+GLuint   GUIScene::s_ICP_GPU_correspondenceCount    = 0;
+double   GUIScene::s_ICP_GPU_error                  = 0;
 //---------------------------------------------------
 GUIScene::GUIScene()
     : m_gui()
@@ -105,12 +107,27 @@ void GUIScene::draw(ofEasyCam& camera)
 		}
 
 		// Rolling average
+		static double avg_pclComputeTime = 0;
+		avg_pclComputeTime               = avg_pclComputeTime * .99 + s_PCL_GPU_measuredComputeTime * .01;
+
+		static double avg_bilateral = 0;
+		avg_bilateral               = avg_bilateral * .99 + s_bilateralBlur_measureComputeTime * .01;
+
 		static double avg_sdfMeasuredComputeTime = 0;
 		avg_sdfMeasuredComputeTime               = avg_sdfMeasuredComputeTime * .99 + s_sdfMeasuredComputeTime * .01;
 
 		static double avg_ICP_GPU_correspondenceMeasureTime = 0;
 		avg_ICP_GPU_correspondenceMeasureTime =
-		    s_ICP_GPU_correspondenceMeasureTime * .99 + s_ICP_GPU_correspondenceMeasureTime * .01;
+		    avg_ICP_GPU_correspondenceMeasureTime * .99 + s_ICP_correspondenceMeasureTime * .01;
+
+		static double avg_reduction = 0;
+		avg_reduction               = avg_reduction * .99 + s_ICP_GPU_reductionMeasureTime * .01;
+
+		static double avg_solve = 0;
+		avg_solve               = avg_solve * .99 + s_ICP_CPU_solveSystemMeasureTime * .01;
+
+		static double avg_correspondence_count = 0;
+		avg_correspondence_count               = avg_correspondence_count * .99 + s_ICP_GPU_correspondenceCount * .01;
 
 		ImGui::Text("Application average %.3f (%.1f FPS), %d vertices", msAvg,
 		            ofGetFrameRate(), // ImGui::GetIO().Framerate,
@@ -125,19 +142,20 @@ void GUIScene::draw(ofEasyCam& camera)
 		{
 			if (ImGui::BeginTabItem("Performance"))
 			{
-				const double totalTime = s_PCL_GPU_measuredComputeTime + s_bilateralBlur_measureComputeTime +
-				                         avg_sdfMeasuredComputeTime + avg_ICP_GPU_correspondenceMeasureTime +
-				                         s_ICP_GPU_reductionMeasureTime + s_ICP_CPU_solveSystemMeasureTime * 1000.0 +
-				                         s_sdfExpandMeasuredComputeTime;
+				const double totalTime = avg_pclComputeTime + avg_bilateral + avg_sdfMeasuredComputeTime +
+				                         avg_ICP_GPU_correspondenceMeasureTime + avg_reduction +
+				                         avg_solve /* +
+				                         s_sdfExpandMeasuredComputeTime*/
+				    ;
 				const ImVec2 barSize(200.0f, 0.0f);
 
-				ImGui::ProgressBar(s_bilateralBlur_measureComputeTime / totalTime, barSize);
+				ImGui::ProgressBar(avg_bilateral / totalTime, barSize);
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-				ImGui::Text("Bilateral Blur %f", s_bilateralBlur_measureComputeTime / 1000000.0);
+				ImGui::Text("Bilateral Blur %f", avg_bilateral / 1000000.0);
 
-				ImGui::ProgressBar(s_PCL_GPU_measuredComputeTime / totalTime, barSize);
+				ImGui::ProgressBar(avg_pclComputeTime / totalTime, barSize);
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-				ImGui::Text("Point Cloud Computation %f", s_PCL_GPU_measuredComputeTime / 1000000.0);
+				ImGui::Text("Point Cloud Computation %f", avg_pclComputeTime / 1000000.0);
 
 				ImGui::ProgressBar(avg_sdfMeasuredComputeTime / totalTime, barSize);
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -151,13 +169,17 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 				ImGui::Text("ICP correspondences %f", avg_ICP_GPU_correspondenceMeasureTime / 1000000.0);
 
-				ImGui::ProgressBar(s_ICP_GPU_reductionMeasureTime / totalTime, barSize);
+				ImGui::ProgressBar(avg_reduction / totalTime, barSize);
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-				ImGui::Text("ICP reduction %f", s_ICP_GPU_reductionMeasureTime / 1000000.0);
+				ImGui::Text("ICP reduction %f", avg_reduction / 1000000.0);
 
-				ImGui::ProgressBar(s_ICP_CPU_solveSystemMeasureTime * 1000.0 / totalTime, barSize);
+				ImGui::ProgressBar(avg_solve / totalTime, barSize);
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-				ImGui::Text("ICP solve linear %f", s_ICP_CPU_solveSystemMeasureTime / 1000.0);
+				ImGui::Text("ICP solve linear %f", avg_solve / 1000000.0);
+
+				ImGui::ProgressBar(totalTime / totalTime, barSize);
+				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
+				ImGui::Text("Total %f", totalTime / 1000000.0);
 
 				ImGui::EndTabItem();
 			}
@@ -181,6 +203,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				// ImGui::Text("Expansion time %f", s_sdfExpandMeasuredComputeTime / 1000000.0);
 
 				ImGui::Checkbox("Draw Raytrace", &s_sdfDrawRaytrace);
+				ImGui::Checkbox("Draw Normals", &s_sdfDrawNormals);
 				ImGui::Text("Draw time %f", s_measureGPUTime2 / 1000000.0);
 				ImGui::Checkbox("Draw Slice", &s_sdfDrawSlice);
 				ImGui::SliderFloat("SDF Slice X", &s_sdfSliceX, -2.0f, 2.0f);
@@ -196,17 +219,17 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Compute ICP", &s_ICP_GPU_compute);
 
 				ImGui::Text("ICP correspondence time %f", avg_ICP_GPU_correspondenceMeasureTime / 1000000.0);
-				ImGui::Text("ICP reduce time %f", s_ICP_GPU_reductionMeasureTime / 1000000.0);
+				ImGui::Text("ICP reduce time %f", avg_reduction / 1000000.0);
 
 				if (s_ICP_GPU_compute)
 				{
-					ImGui::Text("correspondences %u", s_ICP_GPU_correspondenceCount);
+					ImGui::Text("correspondences %u", static_cast<unsigned int>(avg_correspondence_count));
 					ImGui::Text("error %f", s_ICP_GPU_error);
 				}
 
 				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);
 				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
-				ImGui::SliderInt("iterations", &s_ICP_GPU_iterations, 1, 20);
+				ImGui::SliderInt("iterations", &s_ICP_iterations, 1, 20);
 				ImGui::Checkbox("Point to Mesh", &s_ICP_GPU_SDF);
 
 				ImGui::Checkbox("Draw ICP", &s_ICP_GPU_drawDebug);
@@ -227,6 +250,7 @@ void GUIScene::draw(ofEasyCam& camera)
 			if (ImGui::BeginTabItem("Point Cloud"))
 			{
 				s_sceneSelection = SceneSelection::PointCloud;
+				ImGui::Text("Point Cloud Computation %f", avg_pclComputeTime / 1000000.0);
 
 				const ImVec4 blurCol = (ImVec4)ImColor(170.5, 170.5f, 0.5f);
 				ImGui::PushStyleColor(ImGuiCol_CheckMark, blurCol);
@@ -265,9 +289,9 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::PopStyleColor(1);
 
 				ImGui::EndTabItem();
-			}
-			if (ImGui::BeginTabItem("ICP"))
-			{
+				/*}
+				if (ImGui::BeginTabItem("ICP"))
+				{*/
 				s_sceneSelection = SceneSelection::PointCloud;
 				ImGui::Checkbox("Compute ICP CPU", &s_ICP_CPU_compute);
 				ImGui::Checkbox("Sum ICP CPU", &s_ICP_CPU_sum);
@@ -278,6 +302,7 @@ void GUIScene::draw(ofEasyCam& camera)
 
 				ImGui::SliderFloat("max dist", &s_ICP_epsilonDist, 0, 1);
 				ImGui::SliderFloat("max nor", &s_ICP_epsilonNor, 0, 1);
+				ImGui::Text("correspondences %u", static_cast<unsigned int>(avg_correspondence_count));
 
 				ImGui::Checkbox("Apply ICP transformation", &s_ICP_applyTransformation);
 				ImGui::EndTabItem();
@@ -288,7 +313,7 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Compute Bilateral Blur", &s_bilateralBlurCompute);
 				ImGui::Checkbox("Draw Bilateral Blur", &s_bilateralBlurDraw);
 				ImGui::Separator();
-				ImGui::Text("Blur time %f", s_bilateralBlur_measureComputeTime / 1000000.0);
+				ImGui::Text("Blur time %f", avg_bilateral / 1000000.0);
 				ImGui::EndTabItem();
 			}
 			ImGui::EndTabBar();
@@ -296,6 +321,7 @@ void GUIScene::draw(ofEasyCam& camera)
 		ImGui::Dummy(ImVec2(0.0f, 20.0f));
 		ImGui::Separator();
 
+		ImGui::Checkbox("Draw Helpers", &s_drawHelpers);
 		ImGui::ColorEdit3("Background Color", (float*)&s_backgroundColor);
 		ImGui::Checkbox("Draw Kinect Depth", &s_drawDepthBackground);
 		ImGui::Checkbox("Quick Debug Check", &s_quickDebug);

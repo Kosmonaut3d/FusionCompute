@@ -28,29 +28,30 @@ uniform mat3x3 viewToWorldItRot;
 uniform mat4x4 viewToWorldIt; // View To World
 uniform mat3x3 viewToWorldOldRot; // View To World previous
 uniform mat4x4 viewToWorldOld; // View To World previous
-uniform mat4x4 viewProjectionIt; // old iteration view projection
+uniform mat4x4 viewProjectionOld; // view projection previous!!
 uniform float _epsilonDistance = 1;
 uniform float _epsilonNormal = .5;
 const float WIDTH2 = 320; //halfed
 const float HEIGHT2 = 240;
 
 void main() {
-	// base pixel colour for image
+	// current pixel
 	ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
 
-	vec3 vertexNewWorld = (viewToWorldIt * vec4(imageLoad(vertex_new, pixel_coords).xyz, 1)).xyz;
-	if(vertexNewWorld.z == 0)
+	// Transform the view-space vertices to world space
+	vec3 vertexWorldSource = (viewToWorldIt * vec4(imageLoad(vertex_new, pixel_coords).xyz, 1)).xyz;
+	if(vertexWorldSource.z == 0)
 	{
 		return;
 	}
 
-	vec4 vertexNewClip = viewProjectionIt * vec4(vertexNewWorld, 1);
-	if(vertexNewClip.w == 0)
+	vec4 vertexClipSource = viewProjectionOld * vec4(vertexWorldSource, 1);
+	if(vertexClipSource.w == 0)
 	{
 		return;
 	}
 
-	vec3 vertexNdc = vertexNewClip.xyz / vertexNewClip.w;
+	vec3 vertexNdc = vertexClipSource.xyz / vertexClipSource.w;
 	if(clamp(vertexNdc, -1.f, 1.f) != vertexNdc)
 	{
 		return;
@@ -59,14 +60,14 @@ void main() {
 	// Note: Flip y (OPENGL)
 	ivec2 pixel_coord_projected = ivec2(round((vertexNdc.x + 1.0f) * WIDTH2), round((-vertexNdc.y+1.0f) * HEIGHT2));
 
-	vec3 vertexOldWorld = (viewToWorldOld * vec4(imageLoad(vertex_old, pixel_coord_projected).xyz, 1)).xyz;
+	vec3 vertexWorldReference = (viewToWorldOld * vec4(imageLoad(vertex_old, pixel_coord_projected).xyz, 1)).xyz;
 
-	if(vertexOldWorld.z == 0)
+	if(vertexWorldReference.z == 0)
 	{
 		return;
 	}
 
-	vec3 diff = vertexOldWorld-vertexNewWorld;
+	vec3 diff = vertexWorldReference-vertexWorldSource;
 	
 	if (length(diff) > _epsilonDistance)
 	{
@@ -74,11 +75,11 @@ void main() {
 	}
 
 	// Old normals
-	vec3 normalOldWorld = normalize(viewToWorldOldRot * imageLoad(normals_old, pixel_coord_projected).xyz);
-	vec3 newNormalWorld = normalize(viewToWorldItRot * imageLoad(normals_new, pixel_coords).xyz);
+	vec3 normalWorldReference = normalize(viewToWorldOldRot * imageLoad(normals_old, pixel_coord_projected).xyz);
+	vec3 normalWorldSource = normalize(viewToWorldItRot * imageLoad(normals_new, pixel_coords).xyz);
 
 	// TODO CHECK EPSILONS
-	if (dot(normalOldWorld, newNormalWorld) < _epsilonNormal)
+	if (dot(normalWorldReference, normalWorldSource) < _epsilonNormal)
 	{
 		return;
 	}
@@ -100,9 +101,9 @@ void main() {
 	uint currentCount = atomicCounterIncrement(correspondence_counter);
 
 	// output
-	vec3 s_i = vertexNewWorld;
-	vec3 d_i = vertexOldWorld;
-	vec3 n_i = normalOldWorld;
+	vec3 s_i = vertexWorldSource;
+	vec3 d_i = vertexWorldReference;
+	vec3 n_i = normalWorldReference;
 
 	o_struct outputData;
 	// TEST
@@ -113,5 +114,5 @@ void main() {
 	o_d[currentCount] = outputData;
     memoryBarrier();
 
-	imageStore(correspondence, pixel_coords, vec4(normalOldWorld, 1));
+	imageStore(correspondence, pixel_coords, vec4(normalWorldReference, 1));
 }

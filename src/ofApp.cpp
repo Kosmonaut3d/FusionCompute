@@ -160,12 +160,12 @@ void ofApp::update()
 		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
 		m_depthImage.update();
 
-		GUIScene::s_bilateralBlur_measureComputeTime  = 0;
-		GUIScene::s_PCL_GPU_measuredComputeTime       = 0;
-		GUIScene::s_sdfMeasuredComputeTime            = 0;
-		GUIScene::s_ICP_GPU_correspondenceMeasureTime = 0;
-		GUIScene::s_ICP_GPU_reductionMeasureTime      = 0;
-		GUIScene::s_ICP_CPU_solveSystemMeasureTime    = 0;
+		GUIScene::s_bilateralBlur_measureComputeTime = 0;
+		GUIScene::s_PCL_GPU_measuredComputeTime      = 0;
+		GUIScene::s_sdfMeasuredComputeTime           = 0;
+		GUIScene::s_ICP_correspondenceMeasureTime    = 0;
+		GUIScene::s_ICP_GPU_reductionMeasureTime     = 0;
+		GUIScene::s_ICP_CPU_solveSystemMeasureTime   = 0;
 	}
 
 	switch (GUIScene::s_sceneSelection)
@@ -260,9 +260,12 @@ void ofApp::draw()
 		case GUIScene::SceneSelection::PointCloud: {
 			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
 
-			m_camera.begin();
-			drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
-			m_camera.end();
+			if (GUIScene::s_drawHelpers)
+			{
+				m_camera.begin();
+				drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+				m_camera.end();
+			}
 			break;
 		}
 		case GUIScene::SceneSelection::SDF: {
@@ -270,9 +273,12 @@ void ofApp::draw()
 
 			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
 
-			m_camera.begin();
-			drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
-			m_camera.end();
+			if (GUIScene::s_drawHelpers)
+			{
+				m_camera.begin();
+				drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+				m_camera.end();
+			}
 			break;
 		}
 		default: {

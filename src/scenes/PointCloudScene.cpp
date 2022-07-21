@@ -52,6 +52,9 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 
 		if (GUIScene::s_PCL_CPU_compute)
 		{
+
+			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
+
 			// Keep 2 PCL buffers
 			if (isFrame0)
 			{
@@ -62,6 +65,10 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 			{
 				m_pointCloudCPU_1.fillPointCloud(kinect, GUIScene::s_PCL_CPU_downscale, true, glm::mat4());
 			}
+			GUIScene::s_PCL_GPU_measuredComputeTime +=
+			    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin)
+			        .count() *
+			    1000.0;
 		}
 
 		if (GUIScene::s_ICP_CPU_compute)

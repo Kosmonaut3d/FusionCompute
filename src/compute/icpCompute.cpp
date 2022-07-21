@@ -74,7 +74,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 
 	double previousError = 100000000000000;
 
-	for (int i = 0; i < GUIScene::s_ICP_GPU_iterations; i++)
+	for (int i = 0; i < GUIScene::s_ICP_iterations; i++)
 	{
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
 
@@ -116,7 +116,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 			glBufferSubData(GL_ATOMIC_COUNTER_BUFFER, 0, sizeof(GLuint), &a);
 			glBindBufferBase(GL_ATOMIC_COUNTER_BUFFER, 0, m_atomicCounterID);
 
-			m_computeICPSDFShader.dispatchCompute(640, 480, 1);
+			m_computeICPShader.dispatchCompute(10, 30, 1);
 			m_computeICPSDFShader.end();
 		}
 		else
@@ -135,7 +135,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 			glEndQuery(GL_TIME_ELAPSED);
 			glGetQueryObjectui64v(query, GL_QUERY_RESULT, &elapsedCorrespondenceTime);
 
-			GUIScene::s_ICP_GPU_correspondenceMeasureTime += elapsedCorrespondenceTime;
+			GUIScene::s_ICP_correspondenceMeasureTime += elapsedCorrespondenceTime;
 		}
 
 		// Early break off
@@ -193,12 +193,13 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 		if (!calculateICP(viewToWorld_iter, &previousError, numworkgroups))
 		{
 			// Stop this for loop
-			i = GUIScene::s_ICP_GPU_iterations;
+			i = GUIScene::s_ICP_iterations;
 		}
 		// Feed the matrix
 
 		GUIScene::s_ICP_CPU_solveSystemMeasureTime +=
-		    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count();
+		    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count() *
+		    1000;
 	}
 	GUIScene::s_ICP_GPU_error = previousError;
 
@@ -216,8 +217,8 @@ void ICPCompute::computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::ma
 	m_computeICPShader.begin();
 
 	m_computeICPShader.setUniformMatrix4f("viewToWorldIt", viewToWorld_iter);
-	glm::mat4x4 viewProjection_iter = (projection * glm::inverse(glm::mat4x4(viewToWorld_old)));
-	m_computeICPShader.setUniformMatrix4f("viewProjectionIt", viewProjection_iter);
+	glm::mat4x4 viewProjectionOld = (projection * glm::inverse(glm::mat4x4(viewToWorld_old)));
+	m_computeICPShader.setUniformMatrix4f("viewProjectionOld", viewProjectionOld);
 
 	m_computeICPShader.setUniformMatrix4f("viewToWorldOld", viewToWorld_old); // TODO, in first step this is correct
 	m_computeICPShader.setUniformMatrix3f("viewToWorldItRot", viewToWorldRot_iter);
