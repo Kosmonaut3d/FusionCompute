@@ -45,6 +45,7 @@ void PointCloudComp::setUpOutputTexture()
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, tex_w, tex_h, 0, GL_RGBA, GL_FLOAT, NULL);
 		glBindImageTexture(2, *texNormalId, 0, GL_FALSE, 0, GL_READ_WRITE, GL_RGBA32F);
 	}
+}
 
 	//----------------------------------------------------------------------------------------------------------
 	void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)

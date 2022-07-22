@@ -17,12 +17,12 @@ SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
     , m_origin{origin}
     , m_scale{scale}
 {
-	if (!m_rayMarchSDFShader.load("shaders/vertShader.vert", "shaders/rayMarchSDF.frag"))
+    if (!m_rayMarchSDFShader.load("shaders/vertShader.vert", "shaders/raymarchSDF.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}
 
-	if (!m_rayMarchSDFColorShader.load("shaders/vertShader.vert", "shaders/rayMarchSDFColor.frag"))
+    if (!m_rayMarchSDFColorShader.load("shaders/vertShader.vert", "shaders/raymarchSDFColor.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}
@@ -32,9 +32,6 @@ SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
 
 	m_computeSDFColorShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/computeSDFColor.comp");
 	m_computeSDFColorShader.linkProgram();
-
-	m_expandSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/expandSDF.comp");
-	m_expandSDFShader.linkProgram();
 
 	m_modelMat    = glm::mat4x4();
 	m_modelMat    = glm::scale(glm::translate(m_modelMat, origin), glm::vec3(scale));
