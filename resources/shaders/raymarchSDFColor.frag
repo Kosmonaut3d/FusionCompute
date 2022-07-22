@@ -1,5 +1,7 @@
-
-// fragment shader
+// raymarchSDFColor
+//
+// This fragment shader tries to march through an SDF 
+// It will display any color information found when a surface is hit.
 
 #version 460 core
 
@@ -45,13 +47,6 @@ float getDistanceSDFVolume(vec3 p)
 
 float GetDistSDF(vec3 p)
 {
-    /*
-    float dist = getDistanceSDFVolume(p);
-    if(dist > 0)
-    {
-        discard;
-    }*/
-
     // IDEA: Transform the p first to sdfBase and trace from there
     // Transform world position to SDF Base
     vec3 relPos = (sdfBaseTransform * vec4(p, 1)).xyz; 
@@ -65,6 +60,7 @@ float GetDistSDF(vec3 p)
     return texture(volume_tex, relPos).r;
 }
 
+// Fixed step raytracing
 vec2 RayMarchSDF_KiFu(vec3 ro, vec3 rd) 
 {
     float dO = 0;
@@ -117,27 +113,38 @@ vec2 RayMarchSDF(vec3 ro, vec3 rd)
     return vec2(dO, i * 1.0 / MAX_STEPS );
 }
 
+// The main function
 void main()
 {
-    vec3 ro = cameraWorld; // works for backface, too
+    // Origin of the ray is the camera origin
+    vec3 ro = cameraWorld;
+
+    // World is the vertex position of the box that this SDF is drawn in.
     vec3 rd = normalize(world - cameraWorld);
     
+    //  Is the camera outside the box? Start raytracing at box position instead, skip empty space
     if(getDistanceSDFVolume(cameraWorld) > 0)
     {
         ro = world;
     }
-    
-
+   
+    // Initial step > 0
     float dInit = 0.001;
+
+    // Step through the SDF.
+    // d.x = distance, d.y = iteration count, normalized
     vec2 d = RayMarchSDF(ro+rd*dInit, rd);
     
+    // Something was hit
     if(d.x < MAX_DIST)
     {
         // Hit point
         vec3 pos = ro + rd * d.x;
     
+        // Transform the hit position into SDF space and retrieve color
         vec3 relPos = (sdfBaseTransform * vec4(pos, 1)).xyz; 
 
+        // Store color
         outputColor = texture(color_tex, relPos);
     }
     else

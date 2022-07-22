@@ -67,7 +67,7 @@ sdfOutput worldToDistance(vec3 worldPos)
 	float len = length(dist);
 
 	vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
-	float dotProduct =dot(normalize(_cameraOrigin - pclPos), normalize(pclNor));// (dot(normalize(_cameraOrigin - pclPos), normalize(pclNor))+1)*.5; //dot(dist, pclNor); 
+	float dotProduct =dot(normalize(_cameraOrigin - pclPos), normalize(pclNor));
 
 	if(len < _truncationDistance)
 	{
@@ -98,25 +98,17 @@ void main() {
 
 		imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
 		
-		// LERP COLOR
-		
+		// Lerp color
 		/*
 		vec3 previousColor = imageLoad(color_output, pixel_coords).rgb;
 		vec3 colorValue = (previousColor * previousData.y + newData.color * newData.weight) / updatedWeight;
 		imageStore(color_output, pixel_coords, vec4(colorValue , 1));
 		*/
 
-		// Are we closer than before?
+		// Check for closest value
 		if(newData.sdfValue < previousData.x && newData.weight > 0.1)
 		{
 			imageStore(color_output, pixel_coords, vec4(newData.color , 1));
 		}
 	}
-	/*else
-	{
-		imageStore(model_output, pixel_coords, vec4(previousData, 0,0));
-
-		vec2 previousData = imageLoad(model_output, pixel_coords).rg;
-		imageStore(color_output, pixel_coords, vec4(previousData.y / _maxWeight, 0, 0 , 1));
-	}*/
 }

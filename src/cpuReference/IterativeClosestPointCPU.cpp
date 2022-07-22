@@ -33,8 +33,6 @@ void IterativeClostestPointCPU::compute(const std::vector<glm::vec3>& newVertice
 
 	// Copy
 
-	// https://gist.github.com/podgorskiy/04a3cb36a27159e296599183215a71b0
-
 	///\brief T_g_k-1
 	glm::mat4x4 viewToWorld_prev = glm::inverse(worldToViewOld);
 

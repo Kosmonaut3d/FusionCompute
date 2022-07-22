@@ -17,23 +17,23 @@ SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
     , m_origin{origin}
     , m_scale{scale}
 {
-	if (!m_raymarchSDFShader.load("resources/vertShader.vert", "resources/raymarchSDF.frag"))
+	if (!m_raymarchSDFShader.load("shaders/vertShader.vert", "shaders/raymarchSDF.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}
 
-	if (!m_raymarchSDFColorShader.load("resources/vertShader.vert", "resources/raymarchSDFColor.frag"))
+	if (!m_raymarchSDFColorShader.load("shaders/vertShader.vert", "shaders/raymarchSDFColor.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}
 
-	m_computeSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeSDF.comp");
+	m_computeSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/computeSDF.comp");
 	m_computeSDFShader.linkProgram();
 
-	m_computeSDFColorShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeSDFColor.comp");
+	m_computeSDFColorShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/computeSDFColor.comp");
 	m_computeSDFColorShader.linkProgram();
 
-	m_expandSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/expandSDF.comp");
+	m_expandSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/expandSDF.comp");
 	m_expandSDFShader.linkProgram();
 
 	m_modelMat    = glm::mat4x4();

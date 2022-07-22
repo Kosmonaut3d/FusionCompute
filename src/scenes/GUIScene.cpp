@@ -143,10 +143,7 @@ void GUIScene::draw(ofEasyCam& camera)
 			if (ImGui::BeginTabItem("Performance"))
 			{
 				const double totalTime = avg_pclComputeTime + avg_bilateral + avg_sdfMeasuredComputeTime +
-				                         avg_ICP_GPU_correspondenceMeasureTime + avg_reduction +
-				                         avg_solve /* +
-				                         s_sdfExpandMeasuredComputeTime*/
-				    ;
+				                         avg_ICP_GPU_correspondenceMeasureTime + avg_reduction + avg_solve;
 				const ImVec2 barSize(200.0f, 0.0f);
 
 				ImGui::ProgressBar(avg_bilateral / totalTime, barSize);
@@ -160,10 +157,6 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::ProgressBar(avg_sdfMeasuredComputeTime / totalTime, barSize);
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
 				ImGui::Text("SDF Generation %f", avg_sdfMeasuredComputeTime / 1000000.0);
-
-				// ImGui::ProgressBar(s_sdfExpandMeasuredComputeTime / totalTime, barSize);
-				// ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
-				// ImGui::Text("SDF Expansion %f", s_sdfExpandMeasuredComputeTime / 1000000.0);
 
 				ImGui::ProgressBar(avg_ICP_GPU_correspondenceMeasureTime / totalTime, barSize);
 				ImGui::SameLine(0.0f, ImGui::GetStyle().ItemInnerSpacing.x);
@@ -183,7 +176,7 @@ void GUIScene::draw(ofEasyCam& camera)
 
 				ImGui::EndTabItem();
 			}
-			if (ImGui::BeginTabItem("SDF"))
+			if (ImGui::BeginTabItem("SDF + ICP"))
 			{
 				s_sceneSelection = SceneSelection::SDF;
 
@@ -198,9 +191,6 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Checkbox("Compute SDF", &s_sdfCompute);
 				ImGui::Checkbox("Compute SDF Color", &s_sdfComputeColor);
 				ImGui::Text("Compute time %f", s_sdfMeasuredComputeTime / 1000000.0);
-
-				// ImGui::Checkbox("Expand SDF", &s_sdfExpand);
-				// ImGui::Text("Expansion time %f", s_sdfExpandMeasuredComputeTime / 1000000.0);
 
 				ImGui::Checkbox("Draw Raytrace", &s_sdfDrawRaytrace);
 				ImGui::Checkbox("Draw Normals", &s_sdfDrawNormals);
@@ -240,14 +230,9 @@ void GUIScene::draw(ofEasyCam& camera)
 					s_resetView = true;
 				}
 
-				/* ImGui::SliderFloat("Point X", &s_testPointPos.x, -2.0f, 2.0f);
-				ImGui::SliderFloat("Point y", &s_testPointPos.y, -2.0f, 2.0f);
-				ImGui::SliderFloat("Point Z", &s_testPointPos.z, -4.0f, 0.0f);
-				*/
-
 				ImGui::EndTabItem();
 			}
-			if (ImGui::BeginTabItem("Point Cloud"))
+			if (ImGui::BeginTabItem("Point Cloud + ICP"))
 			{
 				s_sceneSelection = SceneSelection::PointCloud;
 				ImGui::Text("Point Cloud Computation %f", avg_pclComputeTime / 1000000.0);
@@ -289,9 +274,6 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::PopStyleColor(1);
 
 				ImGui::EndTabItem();
-				/*}
-				if (ImGui::BeginTabItem("ICP"))
-				{*/
 				s_sceneSelection = SceneSelection::PointCloud;
 				ImGui::Checkbox("Compute ICP CPU", &s_ICP_CPU_compute);
 				ImGui::Checkbox("Sum ICP CPU", &s_ICP_CPU_sum);
@@ -305,7 +287,6 @@ void GUIScene::draw(ofEasyCam& camera)
 				ImGui::Text("correspondences %u", static_cast<unsigned int>(avg_correspondence_count));
 
 				ImGui::Checkbox("Apply ICP transformation", &s_ICP_applyTransformation);
-				ImGui::EndTabItem();
 			}
 			if (ImGui::BeginTabItem("Blur"))
 			{

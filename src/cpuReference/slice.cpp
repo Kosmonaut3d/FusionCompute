@@ -12,7 +12,7 @@ Slice::Slice(ofVec3f position, float size)
 	m_mesh.setScale(1);
 	m_mesh.setOrientation(glm::vec3(0, 90, 0));
 
-	if (!m_sliceShader.load("resources/vertShader.vert", "resources/sliceFragShader.frag"))
+	if (!m_sliceShader.load("shaders/vertShader.vert", "shaders/sliceFragShader.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}

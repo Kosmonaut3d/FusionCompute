@@ -1,4 +1,4 @@
-// vertex shader
+// simple vertex shader
 
 #version 460 core
 

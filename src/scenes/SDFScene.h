@@ -2,7 +2,6 @@
 
 #include "GUIScene.h"
 #include "PointCloudScene.h"
-#include "SceneImpl.h"
 #include "compute/icpCompute.h"
 #include "compute/sdfCompute.h"
 #include "cpuReference/sdf.h"
@@ -10,7 +9,7 @@
 #include "ofMain.h"
 #include "ofxKinect.h"
 
-class SDFScene //: public SceneImpl
+class SDFScene
 {
   public:
 	SDFScene();

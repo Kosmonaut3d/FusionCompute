@@ -1,7 +1,6 @@
 #pragma once
 
 #include "GUIScene.h"
-#include "SceneImpl.h"
 #include "compute/BilateralBlurCompute.h"
 #include "compute/PointCloudCompute.h"
 #include "compute/PointCloudVis.h"

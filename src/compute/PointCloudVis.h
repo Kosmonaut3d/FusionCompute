@@ -4,13 +4,11 @@
 
 class PointCloudVis
 {
-public: 
+  public:
 	PointCloudVis();
 
-    void draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, const glm::mat4x4& mvpMat);
+	void draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bool drawNormals, const glm::mat4x4& mvpMat);
 
-
-private:
+  private:
 	ofShader m_shader;
 };
-

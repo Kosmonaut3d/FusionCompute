@@ -1,6 +1,5 @@
 #pragma once
 
-#include "SceneImpl.h"
 #include "ofMain.h"
 #include "ofxImGui.h"
 

@@ -6,32 +6,10 @@ PointCloudComp::PointCloudComp()
     : m_planeDist(120)
     , m_pixelSize(.104f)
 {
-	int result;
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &result);
-
-	ofLogNotice() << "max computer work groups(x): " << result;
-
-	int work_grp_cnt[3];
-
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &work_grp_cnt[0]);
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 1, &work_grp_cnt[1]);
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 2, &work_grp_cnt[2]);
-
-	printf("max global (total) work group counts x:%i y:%i z:%i\n", work_grp_cnt[0], work_grp_cnt[1], work_grp_cnt[2]);
-
-	int work_grp_size[3];
-
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 0, &work_grp_size[0]);
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 1, &work_grp_size[1]);
-	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_SIZE, 2, &work_grp_size[2]);
-
-	printf("max local (in one shader) work group sizes x:%i y:%i z:%i\n", work_grp_size[0], work_grp_size[1],
-	       work_grp_size[2]);
-
-	m_computeModelShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeModelPCL.comp");
+	m_computeModelShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/computeModelPCL.comp");
 	m_computeModelShader.linkProgram();
 
-	m_computeNormalShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeNormalPCL.comp");
+	m_computeNormalShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/computeNormalPCL.comp");
 	m_computeNormalShader.linkProgram();
 
 	setUpOutputTexture();

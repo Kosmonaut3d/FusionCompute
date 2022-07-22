@@ -9,6 +9,9 @@
 #include "scenes/PreprocessDepthScene.h"
 #include "scenes/SDFScene.h"
 
+/// <summary>
+/// The application base class, runs update and draw loop
+/// </summary>
 class ofApp : public ofBaseApp
 {
 

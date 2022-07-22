@@ -311,9 +311,6 @@
     <ClInclude Include="src\scenes\GUIScene.h">
       <Filter>src\scenes</Filter>
     </ClInclude>
-    <ClInclude Include="src\scenes\SceneImpl.h">
-      <Filter>src\scenes</Filter>
-    </ClInclude>
     <ClInclude Include="src\cpuReference\PointCloudCPU.h">
       <Filter>src\cpuReference</Filter>
     </ClInclude>

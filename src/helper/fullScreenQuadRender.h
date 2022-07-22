@@ -2,16 +2,19 @@
 
 #include "ofMain.h"
 
+/// <summary>
+/// Draws a fullscreen image cheaply
+/// </summary>
 class FullScreenQuadRender
 {
-public:
+  public:
 	FullScreenQuadRender();
 	void draw(ofTexture tex);
 	void draw(unsigned int texID, GLenum texTarget);
 
 	static FullScreenQuadRender& get();
 
-private:
-	ofShader m_shader;
+  private:
+	ofShader     m_shader;
 	unsigned int testID;
 };

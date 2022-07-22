@@ -1,12 +1,11 @@
 #pragma once
 
 #include "GUIScene.h"
-#include "SceneImpl.h"
+#include "compute/BilateralBlurCompute.h"
 #include "ofMain.h"
 #include "ofxKinect.h"
-#include "compute/BilateralBlurCompute.h"
 
-class PreprocessDepthScene //: public SceneImpl
+class PreprocessDepthScene
 {
   public:
 	PreprocessDepthScene();

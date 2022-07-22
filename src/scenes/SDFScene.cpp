@@ -2,7 +2,9 @@
 
 #include "helper/fullScreenQuadRender.h"
 
-//---------------------------------------------------
+/// <summary>
+/// Scene that renders the SDF and can set up the SDF ICP algorithm
+/// </summary>
 SDFScene::SDFScene()
     : m_sdfCompute{glm::vec3(-2, -2, -3), GUIScene::s_sdfResolution, 4}
     , m_sdfCPU{GUIScene::s_sdfResolution, glm::vec3(-2, -2, -4), 4, 2}
@@ -12,7 +14,9 @@ SDFScene::SDFScene()
 {
 }
 
-//----------------------------------------------------------------------------------------------------------
+/// <summary>
+/// Setup our texture pointer at the Kinect RGB stream
+/// </summary
 void SDFScene::setup(ofxKinect& kinect)
 {
 	m_kinectColorTexPtr = &kinect.getTexture();
@@ -29,26 +33,26 @@ void SDFScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& viewToW
 		return;
 	}
 
+	// Compute ICP
 	if (GUIScene::s_ICP_GPU_compute)
 	{
 		glm::mat4x4 viewToWorldIt =
 		    m_icpCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew, m_pointsCloudWorldTexOld,
 		                         m_pointsCloudNormalTexOld, viewToWorld, projection, m_sdfCompute);
 
+		// Apply the calculated transformation to the camera
 		if (GUIScene::s_ICP_applyTransformation)
 		{
 			worldToView = glm::inverse(viewToWorldIt);
 			viewToWorld = viewToWorldIt;
 		}
 	}
+
+	// Calculate the new SDF information
 	if (GUIScene::s_sdfCompute)
 	{
 		m_sdfCompute.compute(m_pointsCloudWorldTexNew, m_pointsCloudNormalTexNew,
 		                     m_kinectColorTexPtr->getTextureData().textureID, viewToWorld, projection * worldToView);
-	}
-	if (GUIScene::s_sdfExpand)
-	{
-		m_sdfCompute.computeExpandSDF();
 	}
 }
 
@@ -71,6 +75,7 @@ void SDFScene::draw(ofCamera& camera)
 
 	camera.end();
 
+	// Draw the correspondence frame from the ICP computation
 	if (GUIScene::s_ICP_GPU_drawDebug)
 	{
 		FullScreenQuadRender::get().draw(m_icpCompute.getTexID(), GL_TEXTURE_2D);

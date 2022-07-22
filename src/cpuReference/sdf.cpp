@@ -13,7 +13,7 @@ SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float
 	m_world    = ofMatrix4x4::newScaleMatrix(scale, scale, scale) * ofMatrix4x4::newTranslationMatrix(origin);
 	m_worldInv = m_world.getInverse();
 
-	if (!m_raymarchShader.load("resources/vertShader.vert", "resources/raymarchSDF.frag"))
+	if (!m_raymarchShader.load("shaders/vertShader.vert", "shaders/raymarchSDF.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}
@@ -24,7 +24,6 @@ SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float
 		ifstream fin(ofToDataPath("test.bin").c_str(), ios::binary);
 		fin.read(reinterpret_cast<char*>(m_distanceField.data()), m_distanceField.size() * sizeof(float));
 		fin.close();
-
 		create3dTexture(m_resolution, 10.0f);
 	}
 }
@@ -257,6 +256,7 @@ void SignedDistanceField::setResolution(int resolution)
 	resetData();
 }
 
+// Returns inverted ModelWorldProjection
 ofMatrix4x4& SignedDistanceField::getInvWorld()
 {
 	return m_worldInv;

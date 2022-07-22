@@ -270,7 +270,6 @@
     <ClInclude Include="src\scenes\GUIScene.h" />
     <ClInclude Include="src\scenes\PointCloudScene.h" />
     <ClInclude Include="src\scenes\PreprocessDepthScene.h" />
-    <ClInclude Include="src\scenes\SceneImpl.h" />
     <ClInclude Include="src\scenes\SDFScene.h" />
   </ItemGroup>
   <ItemGroup>

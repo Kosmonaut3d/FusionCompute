@@ -3,7 +3,7 @@
 PointCloudVis::PointCloudVis()
     : m_shader{}
 {
-	if (!m_shader.load("resources/pointCloud.vert", "resources/pointCloud.frag"))
+	if (!m_shader.load("shaders/pointCloud.vert", "shaders/pointCloud.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}
@@ -15,8 +15,6 @@ void PointCloudVis::draw(unsigned int pointCloudTexId, unsigned int rgbTexId, bo
 	m_shader.begin();
 
 	m_shader.setUniformMatrix4f("modelViewProjectionMatrix", mvpMat);
-
-	// m_shader.setUniform1f("mixFactor", factor);
 
 	glUniform1i(m_shader.getUniformLocation("worldTex"), 0);
 	glUniform1i(m_shader.getUniformLocation("colorTex"), 1);

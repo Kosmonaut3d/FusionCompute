@@ -1,5 +1,7 @@
-
-// fragment shader
+// raymarchSDFColor
+//
+// This fragment shader tries to march through an SDF 
+// It will display either the normal or a mesh shading, depending on _drawNormals.
 
 #version 460 core
 

@@ -6,7 +6,7 @@ BilateralBlurCompute::BilateralBlurCompute()
     : m_computeBlurShader{}
     , m_texID{}
 {
-	m_computeBlurShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeBilateralBlur.comp");
+	m_computeBlurShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/computeBilateralBlur.comp");
 	m_computeBlurShader.linkProgram();
 
 	// dimensions of the image

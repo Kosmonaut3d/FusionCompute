@@ -2,6 +2,8 @@
 
 #include <../deps/Eigen/Dense>
 
+// From
+// https://gist.github.com/podgorskiy/04a3cb36a27159e296599183215a71b0
 template <typename T, int m, int n>
 inline Eigen::Matrix<T, m, n> GLM2E(const glm::mat<m, n, T, glm::precision::highp>& glm)
 {

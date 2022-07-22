@@ -2,6 +2,9 @@
 #include "helper/dataStorageHelper.h"
 #include "helper/fullScreenQuadRender.h"
 
+/// <summary>
+/// The main application that runs the update and draw loops
+/// </summary>
 ofApp::ofApp()
     : ofBaseApp()
     , m_guiScene()
@@ -14,11 +17,12 @@ ofApp::ofApp()
     , m_kinectProjection{}
     , m_kinectViewToWorld_Init{}
     , m_isFrame0{false}
-// m_sdf(128, glm::vec3(-10, -10, -20), 20, 2),
 {
+	// Set up the Kinect Virtual Camera parameters
 	constexpr float fovy       = glm::radians(45.25); // Got this value by testing
 	glm::mat4x4     projection = glm::perspective(fovy, 4.0f / 3.0f, 0.1f, 40.0f);
 
+	// Camera origin = 0 at the beginning
 	glm::vec3   kinectOrigin = glm::vec3(0, 0, 0);
 	auto        ori          = ofVec3f(kinectOrigin);
 	auto        tar          = ofVec3f(kinectOrigin + glm::vec3(0, 0, -1));
@@ -30,10 +34,13 @@ ofApp::ofApp()
 	m_kinectProjection  = projection;
 	m_kinectViewToWorld = view.getInverse();
 
+	// Initial orientation, for visualization
 	m_kinectViewToWorld_Init = m_kinectViewToWorld;
 }
 
-//--------------------------------------------------------------
+/// <summary>
+/// Initial setup functionality
+/// </summary>
 void ofApp::setup()
 {
 	// Unlimited framerate
@@ -83,6 +90,137 @@ void ofApp::setup()
 void ofApp::exit()
 {
 	m_kinect.close();
+}
+
+/// <summary>
+/// This function is called every frame before draw(). All non-visual computations go in here.
+/// </summary>
+void ofApp::update()
+{
+	// Reset timers
+	if (GUIScene::s_resetView)
+	{
+		m_kinectViewToWorld   = m_kinectViewToWorld_Init;
+		m_kinectWorldToView   = glm::inverse(m_kinectViewToWorld);
+		GUIScene::s_resetView = false;
+	}
+
+	// Trigger the kinect to update the video stream
+	m_kinect.update();
+
+	// Check if the kinect has new data (can be cancelled by GUI)
+	const bool updateKinect = m_kinect.isFrameNew() && GUIScene::s_updateKinectData;
+
+	// Update new data
+	if (updateKinect)
+	{
+		GUIScene::s_isKinectDeliveringData = true;
+
+		// For ping pong shaders
+		m_isFrame0 = !m_isFrame0;
+
+		// Update the depth map texture with values from the kinect stream
+		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
+		m_depthImage.update();
+
+		// Reset timers
+		GUIScene::s_bilateralBlur_measureComputeTime = 0;
+		GUIScene::s_PCL_GPU_measuredComputeTime      = 0;
+		GUIScene::s_sdfMeasuredComputeTime           = 0;
+		GUIScene::s_ICP_correspondenceMeasureTime    = 0;
+		GUIScene::s_ICP_GPU_reductionMeasureTime     = 0;
+		GUIScene::s_ICP_CPU_solveSystemMeasureTime   = 0;
+	}
+
+	// scene selection based on GUI
+	switch (GUIScene::s_sceneSelection)
+	{
+		case GUIScene::SceneSelection::Blur: {
+			m_blurScene.update(updateKinect, m_kinect);
+			break;
+		}
+		case GUIScene::SceneSelection::PointCloud: {
+			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
+			                         m_kinectProjection, m_isFrame0);
+			break;
+		}
+		case GUIScene::SceneSelection::SDF: {
+			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
+			                         m_kinectProjection, m_isFrame0);
+
+			auto PCLWorldNew  = m_pointCloudScene.getPCLWorld(m_isFrame0);
+			auto PCLWorldOld  = m_pointCloudScene.getPCLWorld(!m_isFrame0);
+			auto PCLNormalNew = m_pointCloudScene.getPCLNormal(m_isFrame0);
+			auto PCLNormalOld = m_pointCloudScene.getPCLNormal(!m_isFrame0);
+
+			m_sdfScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection,
+			                  PCLWorldNew, PCLNormalNew, PCLWorldOld, PCLNormalOld);
+			break;
+		}
+		default: {
+
+			break;
+		}
+	}
+	m_guiScene.update();
+}
+
+/// <summary>
+/// This function implements all visual computations
+/// </summary>
+void ofApp::draw()
+{
+	// No depth testing
+	ofDisableDepthTest();
+
+	// Update background color
+	ofBackground(GUIScene::s_backgroundColor);
+
+	// Draw Kinect Depth as background optionally
+	if (GUIScene::s_drawDepthBackground)
+	{
+		ofSetColor(ofColor::white * 0.2);
+		FullScreenQuadRender::get().draw(m_depthImage.getTexture());
+	}
+
+	switch (GUIScene::s_sceneSelection)
+	{
+		case GUIScene::SceneSelection::Blur: {
+			m_blurScene.draw();
+			break;
+		}
+		case GUIScene::SceneSelection::PointCloud: {
+			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
+
+			if (GUIScene::s_drawHelpers)
+			{
+				m_camera.begin();
+				drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+				m_camera.end();
+			}
+			break;
+		}
+		case GUIScene::SceneSelection::SDF: {
+			m_sdfScene.draw(m_camera);
+
+			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
+
+			if (GUIScene::s_drawHelpers)
+			{
+				m_camera.begin();
+				drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
+				m_camera.end();
+			}
+			break;
+		}
+		default: {
+
+			break;
+		}
+	}
+
+	// Draw GUI
+	m_guiScene.draw(m_camera);
 }
 
 //--------------------------------------------------------------
@@ -136,137 +274,22 @@ void ofApp::drawFullScreenImage(ofImage& image)
 	image.draw(0, 0, width, height);
 }
 
-//--------------------------------------------------------------
-void ofApp::update()
-{
-	// Reset timers
-	if (GUIScene::s_resetView)
-	{
-		m_kinectViewToWorld   = m_kinectViewToWorld_Init;
-		m_kinectWorldToView   = glm::inverse(m_kinectViewToWorld);
-		GUIScene::s_resetView = false;
-	}
-
-	m_kinect.update();
-
-	const bool updateKinect = m_kinect.isFrameNew() && GUIScene::s_updateKinectData;
-
-	// Update new data
-	if (updateKinect)
-	{
-		GUIScene::s_isKinectDeliveringData = true;
-		m_isFrame0                         = !m_isFrame0;
-
-		// TODO maybe use the kinect internal one instead, or make this a reference
-		m_depthImage.setFromPixels(m_kinect.getDepthPixels());
-		m_depthImage.update();
-
-		GUIScene::s_bilateralBlur_measureComputeTime = 0;
-		GUIScene::s_PCL_GPU_measuredComputeTime      = 0;
-		GUIScene::s_sdfMeasuredComputeTime           = 0;
-		GUIScene::s_ICP_correspondenceMeasureTime    = 0;
-		GUIScene::s_ICP_GPU_reductionMeasureTime     = 0;
-		GUIScene::s_ICP_CPU_solveSystemMeasureTime   = 0;
-	}
-
-	// scene selection based on GUI
-	switch (GUIScene::s_sceneSelection)
-	{
-		case GUIScene::SceneSelection::Blur: {
-			m_blurScene.update(updateKinect, m_kinect);
-			break;
-		}
-		case GUIScene::SceneSelection::PointCloud: {
-			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
-			                         m_kinectProjection, m_isFrame0);
-			break;
-		}
-		case GUIScene::SceneSelection::SDF: {
-			m_pointCloudScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView,
-			                         m_kinectProjection, m_isFrame0);
-
-			auto PCLWorldNew  = m_pointCloudScene.getPCLWorld(m_isFrame0);
-			auto PCLWorldOld  = m_pointCloudScene.getPCLWorld(!m_isFrame0);
-			auto PCLNormalNew = m_pointCloudScene.getPCLNormal(m_isFrame0);
-			auto PCLNormalOld = m_pointCloudScene.getPCLNormal(!m_isFrame0);
-
-			m_sdfScene.update(updateKinect, m_kinect, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection,
-			                  PCLWorldNew, PCLNormalNew, PCLWorldOld, PCLNormalOld);
-			break;
-		}
-		default: {
-
-			break;
-		}
-	}
-	m_guiScene.update();
-}
-
-//--------------------------------------------------------------
-void ofApp::draw()
-{
-	ofDisableDepthTest();
-	ofBackground(GUIScene::s_backgroundColor);
-
-	// Draw Kinect Depth as background
-	if (GUIScene::s_drawDepthBackground)
-	{
-		ofSetColor(ofColor::white * 0.2);
-		FullScreenQuadRender::get().draw(m_depthImage.getTexture());
-	}
-
-	switch (GUIScene::s_sceneSelection)
-	{
-		case GUIScene::SceneSelection::Blur: {
-			m_blurScene.draw();
-			break;
-		}
-		case GUIScene::SceneSelection::PointCloud: {
-			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
-
-			if (GUIScene::s_drawHelpers)
-			{
-				m_camera.begin();
-				drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
-				m_camera.end();
-			}
-			break;
-		}
-		case GUIScene::SceneSelection::SDF: {
-			m_sdfScene.draw(m_camera);
-
-			m_pointCloudScene.draw(m_camera, m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection, m_isFrame0);
-
-			// if (GUIScene::s_drawHelpers)
-			{
-				m_camera.begin();
-				drawCameraOrientation(m_kinectViewToWorld, m_kinectWorldToView, m_kinectProjection);
-				m_camera.end();
-			}
-			break;
-		}
-		default: {
-
-			break;
-		}
-	}
-
-	// Draw GUI
-	m_guiScene.draw(m_camera);
-}
-
-//----------------------------------------------------------------------------------------------------------
+/// <summary>
+/// Will draw the Kinect Camera frustum
+/// </summary>
 void ofApp::drawCameraOrientation(glm::mat4x4& viewToWorld, glm::mat4x4& worldToView, glm::mat4x4& projection)
 {
 	ofPushMatrix();
-	auto      viewTransform     = m_kinectViewToWorld_Init;
-	auto      viewTransformCurr = viewToWorld;
+	auto      viewTransform        = m_kinectViewToWorld_Init;
+	auto      viewTransformCurrent = viewToWorld;
 	glm::vec4 zero(0, 0, 0, 1);
 	glm::vec4 target(0, 0, -1, 1);
 	ofSetColor(255, 0, 0);
+
+	// Transforming vector zero with the Kinect view transformation matrix will result in the kamera origin.
 	ofDrawArrow(viewTransform * zero, viewTransform * target, 0.02);
 	ofSetColor(0, 255, 0);
-	ofDrawArrow(viewTransformCurr * zero, viewTransformCurr * target, 0.03);
+	ofDrawArrow(viewTransformCurrent * zero, viewTransformCurrent * target, 0.03);
 
 	glm::mat4 clipSpaceToWorld = glm::inverse(projection * worldToView);
 
@@ -275,11 +298,10 @@ void ofApp::drawCameraOrientation(glm::mat4x4& viewToWorld, glm::mat4x4& worldTo
 	ofMultMatrix(clipSpaceToWorld);
 
 	// Anything we draw now is transformed from Clip Space back to World Space
-
 	ofPushStyle();
 	ofNoFill();
-	ofDrawBox(0, 0, 0, 2.f, 2.f,
-	          2.f); // In Clip Space, the frustum is standardised to be a box of dimensions -1,1 in each axis
+	// In Clip Space, the frustum is standardised to be a box of dimensions -1,1 in each axis
+	ofDrawBox(0, 0, 0, 2.f, 2.f, 2.f);
 	ofPopStyle();
 	ofPopMatrix();
 }

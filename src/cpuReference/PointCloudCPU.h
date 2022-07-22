@@ -2,27 +2,30 @@
 #include <ofMain.h>
 #include <ofxKinect.h>
 
+/// <summary>
+///
+/// </summary>
 class PointCloudCPU
 {
-public: 
+  public:
 	PointCloudCPU();
 
-	void fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals, glm::mat4x4 viewToWorld, bool worldSpace = false);
+	void fillPointCloud(ofxKinect& kinect, int downsample, bool compNormals, glm::mat4x4 viewToWorld,
+	                    bool worldSpace = false);
 
 	void draw(bool drawNormals, glm::mat4x4 viewToWorld);
 
 	std::vector<glm::vec3>& getPoints();
 	std::vector<glm::vec3>& getNormals();
-	int getSize();
-	ofMesh& getMesh();
+	int                     getSize();
+	ofMesh&                 getMesh();
 
-private:
+  private:
 	std::vector<glm::vec3> m_points;
 	std::vector<glm::vec3> m_normals;
-	int m_size;
+	int                    m_size;
 
 	ofMesh m_meshPoints;
 	ofMesh m_meshNormals;
-	bool m_generated;
+	bool   m_generated;
 };
-

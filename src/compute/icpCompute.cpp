@@ -12,13 +12,13 @@ ICPCompute::ICPCompute()
     , m_ssboOutID{}
     , m_ssboCorrespondencesID{}
 {
-	m_computeICPShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeICP.comp");
+	m_computeICPShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/computeICP.comp");
 	m_computeICPShader.linkProgram();
 
-	m_computeICPSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/computeICPSDF.comp");
+	m_computeICPSDFShader.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/computeICPSDF.comp");
 	m_computeICPSDFShader.linkProgram();
 
-	m_computeICPReduction.setupShaderFromFile(GL_COMPUTE_SHADER, "resources/ICPReduction.comp");
+	m_computeICPReduction.setupShaderFromFile(GL_COMPUTE_SHADER, "shaders/ICPReduction.comp");
 	m_computeICPReduction.linkProgram();
 
 	setupTexture();
