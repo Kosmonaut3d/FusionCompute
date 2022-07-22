@@ -1,4 +1,4 @@
-// raymarchSDFColor
+// rayMarchSDFColor
 //
 // This fragment shader tries to march through an SDF 
 // It will display any color information found when a surface is hit.
@@ -19,99 +19,79 @@ uniform float _truncationDistance;
 #define MAX_DIST 8
 #define SURFACE_DIST .01
 
-layout(binding=0) uniform sampler3D volume_tex;
-layout(binding=1) uniform sampler3D color_tex;
+layout(binding=0) uniform sampler3D signedDistanceVolumeTexture;
+layout(binding=1) uniform sampler3D colorVolumeTexture;
 
 // Header
-float GetDistSDF(vec3 p);
-vec2 RayMarchSDF(vec3 ro, vec3 rd);
+float getSignedDistance(vec3 p);
+vec2 rayMarchSDF(vec3 ro, vec3 rd);
 
+// Calculates the normal numerically.
+// Equivalent to the gradient at that point
 vec3 GetNormal(vec3 p)
 { 
-    float d = GetDistSDF(p); // Distance
+    float d = getSignedDistance(p); // middle sample
     vec2 e = vec2(.01,0); // Epsilon
     vec3 n = d - vec3(
-    GetDistSDF(p-e.xyy),  
-    GetDistSDF(p-e.yxy),
-    GetDistSDF(p-e.yyx));
-   
+    getSignedDistance(p-e.xyy),  
+    getSignedDistance(p-e.yxy),
+    getSignedDistance(p-e.yyx));
     return normalize(n);
 }
 
+// The exact distance to the actual SDF volume
+// https://iquilezles.org/articles/distfunctions/
 float getDistanceSDFVolume(vec3 p)
 {
     const vec3 b = vec3(2, 2, 2);
-    vec3 q = abs(p-vec3(0, 0, -1.)) - b;
+    vec3 q = abs(p-vec3(0, 0, -2)) - b;
     return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
 }
 
-float GetDistSDF(vec3 p)
+
+// Returns the signed distance, if still inside the volume, or MAX_DIST
+float getSignedDistance(vec3 p)
 {
-    // IDEA: Transform the p first to sdfBase and trace from there
-    // Transform world position to SDF Base
+    // Transform world position to SDF Base transformation
     vec3 relPos = (sdfBaseTransform * vec4(p, 1)).xyz; 
 
+    // SDF base coordinates are such that values <0 or >1 are outside the field
     if(relPos.x < 0 || relPos.y < 0 || relPos.z < 0 || relPos.x > 1 || relPos.y > 1|| relPos.z > 1)
     {
-        return 1;
+        // If outside -> do not trace further
+        return MAX_DIST;
     }
     
-    // Replace by uniform
-    return texture(volume_tex, relPos).r;
+    // Trilinearly interpolated SD value
+    return texture(signedDistanceVolumeTexture, relPos).r;
 }
 
-// Fixed step raytracing
-vec2 RayMarchSDF_KiFu(vec3 ro, vec3 rd) 
+// step / march from r0 in the direction of rd.
+// returns: vec2, x = distance, y = iterations/MAX_STEPS
+vec2 rayMarchSDF(vec3 ro, vec3 rd) 
 {
-    float dO = 0;
-    int i = 0;
-    float ds_old = 0;
-    float step_size = 0.005;
-    float step_it = step_size;
-    for(i = 0; i<MAX_STEPS;i++)
-    {
-        vec3 p = ro + rd * dO;
-        float ds = GetDistSDF(p); // ds is Distance Scene
-        
-        if(ds < 0)
-        {
-            dO = dO - step_size * ds_old / (ds - ds_old);
-            return vec2(dO, i * 1.0 / MAX_STEPS );
-        }
-
-        if(ds >= _truncationDistance)
-        {
-            step_it = _truncationDistance;
-        }
-        else
-        {
-            step_it = step_size;
-        }
-
-        ds_old = ds;
-        
-        dO += step_it;
-        if(dO > (MAX_DIST) || (ds) < SURFACE_DIST) break;
-    }
-
-    return vec2(dO, i * 1.0 / MAX_STEPS );
-}
-
-vec2 RayMarchSDF(vec3 ro, vec3 rd) 
-{
+    // d0 = distance marched so far.
     float dO = 0;
     int i = 0;
     for(i = 0; i<MAX_STEPS;i++)
     {
+        // Advance the step
         vec3 p = ro + rd * dO;
-        float ds = GetDistSDF(p); // ds is Distance Scene
 
+        // get new TSD value
+        float ds = getSignedDistance(p); 
+
+        // Advance by ds
         dO += ds;
-        if(dO > (MAX_DIST) || (ds) < SURFACE_DIST) break;
+        
+        // Check if we are either exceeding maximum distance or have hit something
+        if(dO > (MAX_DIST) || abs(ds) < SURFACE_DIST) break;
     }
-
+    
+    // Cast to double by multiplication with 1.0
     return vec2(dO, i * 1.0 / MAX_STEPS );
 }
+
 
 // The main function
 void main()
@@ -133,7 +113,7 @@ void main()
 
     // Step through the SDF.
     // d.x = distance, d.y = iteration count, normalized
-    vec2 d = RayMarchSDF(ro+rd*dInit, rd);
+    vec2 d = rayMarchSDF(ro+rd*dInit, rd);
     
     // Something was hit
     if(d.x < MAX_DIST)
@@ -144,12 +124,11 @@ void main()
         // Transform the hit position into SDF space and retrieve color
         vec3 relPos = (sdfBaseTransform * vec4(pos, 1)).xyz; 
 
-        // Store color
-        outputColor = texture(color_tex, relPos);
+        // Read color
+        outputColor = texture(colorVolumeTexture, relPos);
     }
     else
     { 
-        //outputColor = vec4( d.y, 0, 0 , 1.0);
         discard;
     }
 }

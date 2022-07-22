@@ -45,12 +45,13 @@ void ICPCompute::setupTexture()
 	glBufferData(GL_ATOMIC_COUNTER_BUFFER, sizeof(GLuint), NULL, GL_DYNAMIC_READ);
 	glBindBuffer(GL_ATOMIC_COUNTER_BUFFER, 0);
 
-	// Set up ssbo
+	// Set up ssbo - shader buffer objects. These store the 6x6 Linear system and are used for tree reduction.
 	glGenBuffers(1, &m_ssboOutID);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboOutID);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, 1200 * sizeof(glm::vec4) * (12 + 2), nullptr, GL_DYNAMIC_READ);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0); // unbind
 
+	// Output of the tree reduction on the GPU
 	glGenBuffers(1, &m_ssboCorrespondencesID);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, m_ssboCorrespondencesID);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, size * sizeof(ssbo_correspondence_data), nullptr, GL_DYNAMIC_COPY);
@@ -72,12 +73,15 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 	constexpr glm::vec4 empty{0, 0, 0, 0};
 	glClearTexImage(m_correspondenceVisualizationTexID, 0, GL_RGBA, GL_FLOAT, &empty);
 
+	// Set up a high reference error
 	double previousError = 100000000000000;
 
+	// Iterate
 	for (int i = 0; i < GUIScene::s_ICP_iterations; i++)
 	{
 		glm::mat3x3 viewToWorldRot_iter = glm::mat3x3(viewToWorld_iter);
 
+		// Start timer for performance measurements
 		GLuint   query;
 		GLuint64 elapsedCorrespondenceTime = 0;
 		if (GUIScene::s_measureTime)
@@ -86,6 +90,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 			glBeginQuery(GL_TIME_ELAPSED, query);
 		}
 
+		// Call the correspondence compute shader
 		if (GUIScene::s_ICP_GPU_SDF)
 		{
 			// Camera
@@ -138,7 +143,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 			GUIScene::s_ICP_correspondenceMeasureTime += elapsedCorrespondenceTime;
 		}
 
-		// Early break off
+		// Early break off when found correspondences decrease
 		/*
 		if (correspondencesFound < GUIScene::s_ICP_GPU_correspondenceCount)
 		{
@@ -147,15 +152,12 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 
 		GUIScene::s_ICP_GPU_correspondenceCount = correspondencesFound;
 
-		// glMemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-
 		if (correspondencesFound <= 0)
 		{
 			break;
 		}
 
-		//////////////////////////////////////////
-		// REDUCTION
+		// Set up another timer
 		GLuint   query2;
 		GLuint64 elapsedReductionTime = 0;
 
@@ -190,13 +192,13 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 
 		std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-		if (!calculateICP(viewToWorld_iter, &previousError, numworkgroups))
+		if (!calculatePoseEstimation(viewToWorld_iter, &previousError, numworkgroups))
 		{
 			// Stop this for loop
 			i = GUIScene::s_ICP_iterations;
 		}
-		// Feed the matrix
 
+		// Feed the matrix
 		GUIScene::s_ICP_CPU_solveSystemMeasureTime +=
 		    std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::steady_clock::now() - begin).count() *
 		    1000;
@@ -206,6 +208,7 @@ glm::mat4x4 ICPCompute::compute(unsigned int newVertexWorldTex, unsigned int new
 	return glm::mat4x4(viewToWorld_iter);
 }
 
+//----------------------------------------------------------------------------------------------------------
 void ICPCompute::computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::mat4x4& projection,
                                      glm::mat4x4& viewToWorld_old, glm::mat3x3& viewToWorldRot_iter,
                                      glm::mat3x3& viewToWorldRot_old, unsigned int oldVertexWorldTex,
@@ -250,18 +253,21 @@ void ICPCompute::computePointToPoint(glm::highp_dmat4& viewToWorld_iter, glm::ma
 	m_computeICPShader.end();
 }
 
+//----------------------------------------------------------------------------------------------------------
 unsigned int ICPCompute::getTexID()
 {
 	return m_correspondenceVisualizationTexID;
 }
 
+//----------------------------------------------------------------------------------------------------------
 void ICPCompute::feedVec3ToMatrix(Eigen::Matrix<double, 6, 6>& mat, const glm::vec4& v)
 {
 	mat << v.x, v.y, v.z;
 }
 
-bool ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewToWorld_iter, double* previousError,
-                              int numworkgroups)
+//----------------------------------------------------------------------------------------------------------
+bool ICPCompute::calculatePoseEstimation(glm::mat<4, 4, double, glm::precision::highp>& viewToWorld_iter,
+                                         double* previousError, int numworkgroups)
 {
 	Eigen::Matrix<double, 6, 1> b_ = Eigen::Matrix<double, 6, 1>::Zero();
 	Eigen::Matrix<double, 6, 6> A_ = Eigen::Matrix<double, 6, 6>::Zero();
@@ -287,13 +293,13 @@ bool ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 
 		b_ += b_i;
 
-		// Error
 		error += obj.out_a00.y;
 	}
 
+	// Abort early if error does not improve
 	if (error > *previousError)
 	{
-		// return false;
+		return false;
 	}
 
 	*previousError = error;
@@ -327,6 +333,7 @@ bool ICPCompute::calculateICP(glm::mat<4, 4, double, glm::precision::highp>& vie
 	return true;
 }
 
+//----------------------------------------------------------------------------------------------------------
 void ICPCompute::feedOutputToMatrix(Eigen::Matrix<double, 6, 6>& A_i, ICPCompute::ssbo_out_data& obj)
 {
 	// obj.out_a00.y has the energy sum hidden inside!

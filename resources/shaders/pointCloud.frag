@@ -1,3 +1,6 @@
+// pointCloud.frag
+// This frag shader will render a texture from the texcoords supplied by a vertex shader
+
 #version 460 core
 
 out vec4 outputColor;

@@ -5,8 +5,8 @@
 SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
     : m_computeSDFShader{}
     , m_computeSDFColorShader{}
-    , m_raymarchSDFShader{}
-    , m_raymarchSDFColorShader{}
+    , m_rayMarchSDFShader{}
+    , m_rayMarchSDFColorShader{}
     , m_expandSDFShader{}
     , m_modelMat{}
     , m_modelMatInv{}
@@ -17,12 +17,12 @@ SDFCompute::SDFCompute(glm::vec3 origin, int resolution, float scale)
     , m_origin{origin}
     , m_scale{scale}
 {
-	if (!m_raymarchSDFShader.load("shaders/vertShader.vert", "shaders/raymarchSDF.frag"))
+	if (!m_rayMarchSDFShader.load("shaders/vertShader.vert", "shaders/rayMarchSDF.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}
 
-	if (!m_raymarchSDFColorShader.load("shaders/vertShader.vert", "shaders/raymarchSDFColor.frag"))
+	if (!m_rayMarchSDFColorShader.load("shaders/vertShader.vert", "shaders/rayMarchSDFColor.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}
@@ -271,7 +271,7 @@ void SDFCompute::drawRaymarch(ofCamera& camera)
 
 	bool drawColor = GUIScene::s_sdfComputeColor && !GUIScene::s_sdfDrawNormals;
 
-	const ofShader* currentShader = drawColor ? &m_raymarchSDFColorShader : &m_raymarchSDFShader;
+	const ofShader* currentShader = drawColor ? &m_rayMarchSDFColorShader : &m_rayMarchSDFShader;
 
 	currentShader->begin();
 	// glPolygonMode(GL_BACK, GL_LINE);

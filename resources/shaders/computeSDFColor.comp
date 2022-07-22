@@ -1,3 +1,8 @@
+// computeSDFColor.comp
+// computes the projective SDF as well as color value for a given SDF sample
+// along with a weight.
+// This new sample is then fused into the existing system
+
 #version 460 core
 
 layout(local_size_x =4, local_size_y = 8, local_size_z = 8) in;
@@ -28,47 +33,55 @@ struct sdfOutput
 	float weight;
 };
 
+// calculates projective signed distance and weight.
 sdfOutput worldToDistance(vec3 worldPos)
 {  
 	sdfOutput outputData = {vec3(0,0,0), _truncationDistance, 0};
-	// NOTE: transform from world to camera -> project
-	vec4 clipSpacePos = _pclWorldToClip * vec4(worldPos, 1);
 
+	// NOTE: transform from world to camera -> project onto frame.
+	vec4 clipSpacePos = _pclWorldToClip * vec4(worldPos, 1);
 	if (clipSpacePos.w == 0 || clipSpacePos.z == 0)
 	{
 		return outputData;
 	}
 
+	// clip space
 	vec3 ndc = vec3(clipSpacePos) / clipSpacePos.w;
 	if (abs(ndc.x) >= 1 || abs(ndc.y) >= 1)
 	{
 		return outputData;
 	}
 
-	// OPENGL
+	// OPENGL mapping
 	ndc.y      = -ndc.y;
-	
 	ndc.x = (ndc.x+1)*.5f;
 	ndc.y = (ndc.y+1)*.5f;
 
+	// calculate screen positions x,y
 	int x_proj = int(round(ndc.x * W2));
 	int y_proj = int(round(ndc.y * H2));
 		
-	// STILL VIEWSPACE
+	// read the view space vertex value at x_proj, y_proj.
 	vec3 pclPos = imageLoad(pcl_input, ivec2(x_proj, y_proj)).xyz;
 
+	// Check that the vertex is valid
 	if(pclPos.z >= 0)
 	{
 		return outputData;
 	}
 
+	// transform to world space
 	vec3 pclWorldPos = vec4(_viewToWorld * vec4(pclPos, 1)).xyz;
+
+	// distance, not yet signed
 	vec3 dist = worldPos - pclWorldPos;
 	float len = length(dist);
 
 	vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
+	// Calculate the sign
 	float dotProduct =dot(normalize(_cameraOrigin - pclPos), normalize(pclNor));
 
+	// Smaller than trunction value -> good.
 	if(len < _truncationDistance)
 	{
 		outputData.sdfValue = sign(dot(dist, pclNor))*len;
@@ -77,38 +90,44 @@ sdfOutput worldToDistance(vec3 worldPos)
 	}
 
 	outputData.weight = clamp(dotProduct, 0, 1);
-	// We are not close enough, but our pixel is legit - weight = 1
 	return outputData;
 }
 
+// entry point for the algorithm
 void main() {
-	// base pixel colour for image
-	ivec3 pixel_coords = ivec3(gl_GlobalInvocationID.xyz);
+	// position within the SDF volume
+	ivec3 sample_coords = ivec3(gl_GlobalInvocationID.xyz);
 
-	vec3 worldVoxelPosition = (_modelMatrix * vec4((pixel_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
+	// Calculate the world position of this sample
+	vec3 worldVoxelPosition = (_modelMatrix * vec4((sample_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
 
+	// Calculate projected signed distance and associated weight
 	sdfOutput newData = worldToDistance(worldVoxelPosition);
 	
+	// Only fuse valid samples
 	if(newData.weight > 0)
 	{
-		vec2 previousData = imageLoad(model_output, pixel_coords).rg;
+		// Calculate the updated model value at that point, update weight, too.
+		vec2 previousData = imageLoad(model_output, sample_coords).rg;
 		float updatedWeight = newData.weight + previousData.y;
 		float accValue = (previousData.x * previousData.y + newData.sdfValue * newData.weight) / updatedWeight;
+
+		// truncate weight.
 		float accWeight = min(updatedWeight, _maxWeight);
 
-		imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
+		imageStore(model_output, sample_coords, vec4(accValue, accWeight, 0,0));
 		
 		// Lerp color
 		/*
-		vec3 previousColor = imageLoad(color_output, pixel_coords).rgb;
+		vec3 previousColor = imageLoad(color_output, sample_coords).rgb;
 		vec3 colorValue = (previousColor * previousData.y + newData.color * newData.weight) / updatedWeight;
-		imageStore(color_output, pixel_coords, vec4(colorValue , 1));
+		imageStore(color_output, sample_coords, vec4(colorValue , 1));
 		*/
 
-		// Check for closest value
+		// Check for closest value, if so then store new RGB color value
 		if(newData.sdfValue < previousData.x && newData.weight > 0.1)
 		{
-			imageStore(color_output, pixel_coords, vec4(newData.color , 1));
+			imageStore(color_output, sample_coords, vec4(newData.color , 1));
 		}
 	}
 }

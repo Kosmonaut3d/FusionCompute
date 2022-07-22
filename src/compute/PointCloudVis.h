@@ -2,6 +2,9 @@
 #include <ofMain.h>
 #include <ofxKinect.h>
 
+/// <summary>
+///	This class deploys shaders that render point cloud data efficiently.
+/// </summary>
 class PointCloudVis
 {
   public:

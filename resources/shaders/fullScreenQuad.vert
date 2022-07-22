@@ -1,3 +1,6 @@
+// fullscreenQuad.vert
+// This vert shader will transform 3 vertices so that the whole screen is covered.
+
 #version 460 core
 
 out vec2 texcoords; // texcoords are in the normalized [0,1] range for the viewport-filling quad part of the triangle

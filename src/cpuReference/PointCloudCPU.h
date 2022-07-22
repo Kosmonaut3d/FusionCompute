@@ -3,7 +3,7 @@
 #include <ofxKinect.h>
 
 /// <summary>
-///
+///	This class calculates the point cloud from a given depth map. CPU implementation.
 /// </summary>
 class PointCloudCPU
 {

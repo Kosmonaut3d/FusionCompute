@@ -5,6 +5,10 @@
 #include <../deps/Eigen/Dense>
 #include <ofMain.h>
 
+/// <summary>
+///	This class sets up and dispatches compute shaders that calculate the ICP algorithm, both frame-to-frame or
+/// frame-to-model
+/// </summary>
 class ICPCompute
 {
   public:
@@ -18,8 +22,8 @@ class ICPCompute
 	                         unsigned int oldVertexWorldTex, unsigned int newVertexWorldTex,
 	                         unsigned int oldNormalWorldTex, unsigned int newNormalWorldTex);
 	unsigned int getTexID();
-	bool         calculateICP(glm::mat<4, 4, double, glm::precision::highp>& viewWorldIt, double* previousError,
-	                          int numworkgroups);
+	bool calculatePoseEstimation(glm::mat<4, 4, double, glm::precision::highp>& viewWorldIt, double* previousError,
+	                             int numworkgroups);
 
   private:
 	struct ssbo_correspondence_data

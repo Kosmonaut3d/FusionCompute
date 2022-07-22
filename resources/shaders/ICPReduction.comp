@@ -1,7 +1,11 @@
+// ICPReduction.comp
+// This shader reduces/sums the 6x6 linear systems created by computeICP.comp
+
 #version 460 core
 
 layout(local_size_x = 128) in;
 
+// Input datat structure
 struct in_struct
 {
 	vec3 in_a0;
@@ -9,6 +13,9 @@ struct in_struct
 	float in_b;
 };
 
+// Output data structure. Notice 2 vec3s are equivalent to a vec6.
+// Consequently we store 12 vec3's in order to represent the mat6x6 (A^T*A)
+// Plus a vec6 for the other side of the equation (b)
 struct out_struct
 {
 	vec3 out_a00;
@@ -38,25 +45,23 @@ layout(std430, binding = 1) writeonly coherent buffer odata
 	out_struct g_odata[];
 };
 
+// Shared memory allocation
 shared out_struct sdata[gl_WorkGroupSize.x];
 
 void main() {
-
 	uint tid = gl_LocalInvocationID.x;
 	uint i = gl_WorkGroupID.x*(gl_WorkGroupSize.x*2) + tid;
 
-	//sdata[tid] = 2;
-	//sdata[tid] = g_idata[i] + g_idata[i+blockDim.x];
-
+	// Read data
 	vec3 i_a0 = g_idata[i].in_a0;
 	vec3 i_a1 = g_idata[i].in_a1;
 	float i_b = g_idata[i].in_b;
-
+	
 	vec3 j_a0 = g_idata[i + gl_WorkGroupSize.x].in_a0;
 	vec3 j_a1 = g_idata[i + gl_WorkGroupSize.x].in_a1;
 	float j_b = g_idata[i + gl_WorkGroupSize.x].in_b;
 
-
+	// Create A^T*A and add it for 2 data points.
 	sdata[tid].out_a00 = i_a0* i_a0.x + j_a0* j_a0.x; 
 	sdata[tid].out_a01 = i_a1* i_a0.x + j_a1* j_a0.x;
 	sdata[tid].out_a10 = i_a0* i_a0.y + j_a0* j_a0.y;
@@ -80,11 +85,9 @@ void main() {
 	// obj.out_a00.y, = obj.out_a10.x
 	sdata[tid].out_a00.y = error;
 
-	// TESTING
-	//sdata[tid].out_a00 = vec3(2,2,2);
-
 	barrier();
 
+	// Tree reduction
     for (uint s=gl_WorkGroupSize.x/2; s>0; s>>=1)
 	{
 		if (tid < s) 
@@ -111,32 +114,9 @@ void main() {
 		}
 	}
 
+	// ThreadID = 0? Store the reduced value to an output buffer
 	if (tid == 0) 
 	{
-		g_odata[gl_WorkGroupID.x] = sdata[0]; //sdata[0];// sdata[0];
+		g_odata[gl_WorkGroupID.x] = sdata[0];
 	}
-
-	/*
-	// Fill in
-	val[id] = 1; //id+1;
-
-	memoryBarrier();
-
-	// Initial step, used for trees that are not power of 2
-	if (id < iterations && (id + iterations) < datasize) 
-	{
-		val[id] += val[id + iterations];
-	}
-
-	memoryBarrier();
-
-	for (unsigned int s=iterations/2; s>0; s>>=1)
-	{
-		if (id < s) 
-		{
-			val[id] += val[id + s];
-		}
-		memoryBarrier();
-	}
-	*/
 }

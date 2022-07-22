@@ -9,6 +9,9 @@
 #include "ofMain.h"
 #include "ofxKinect.h"
 
+/// <summary>
+/// This scene can process and visualize everything related to point cloud computation
+/// </summary>
 class PointCloudScene //: public SceneImpl
 {
   public:

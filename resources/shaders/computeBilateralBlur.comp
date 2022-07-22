@@ -1,3 +1,6 @@
+// computeBilateralBlur.comp
+// This shader computes bilateral blur for a given depth map.
+
 #version 460 core
 
 layout(local_size_x = 32, local_size_y = 16) in;
@@ -46,19 +49,25 @@ float g_s(float diff)
 }
 
 void main() {
-  // base pixel colour for image
+  // pixel coordinates
   ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
+
+  // Middle point = reference value
   float referenceValue = imageLoad(rawDepthImage, pixel_coords).r / 2048.0f;
 
+  // Check if reference value is valid and blur is set to true
   if(blur && referenceValue > 0)
   {
       float result = referenceValue * gaussWeightBox[2][2];
       float weightSum = gaussWeightBox[2][2];
 
+      // Gaussian blur, multiplied with spatial distance function
+      // 5x5 samples - -2 ... +2
       for(int y = -2; y <=2; y++)
       {
           for(int x = -2; x <=2; x++)
           {
+                // Ignore middle value, that is the reference
                 if(x == 0 && y == 0)
                 {
                     continue;

@@ -1,3 +1,8 @@
+// computeSDFColor.comp
+// computes the projective SDF value for a given SDF sample
+// along with a weight.
+// This new sample is then fused into the existing system
+
 #version 460 core
 
 layout(local_size_x =4, local_size_y = 8, local_size_z = 8) in;
@@ -17,43 +22,54 @@ uniform float _maxWeight = 20;
 const float W2 = 320;
 const float H2 = 240;
 
+// calculates projective signed distance and weight.
 vec2 worldToDistance(vec3 worldPos)
 {  
+
+	vec2 outputValueWeight = vec2(_truncationDistance, 0);
+
 	// NOTE: transform from world to camera -> project
 	vec4 clipSpacePos = _pclWorldToClip * vec4(worldPos, 1);
-
-	vec2 outputValueWeight = vec2(_truncationDistance, 0.000000001);
-
 	if (clipSpacePos.w == 0 || clipSpacePos.z == 0)
 	{
 		return outputValueWeight;
 	}
 
+	// clip space
 	vec3 ndc = vec3(clipSpacePos) / clipSpacePos.w;
 	if (abs(ndc.x) >= 1 || abs(ndc.y) >= 1)
 	{
 		return outputValueWeight;
 	}
 
-	// OPENGL
+	// OPENGL mapping
 	ndc.y      = -ndc.y;
-	int x_proj = int( round((ndc.x + 1) * W2));
-	int y_proj = int(round((ndc.y + 1) * H2));
+	ndc.x = (ndc.x+1)*.5f;
+	ndc.y = (ndc.y+1)*.5f;
+
+	// calculate screen positions x,y
+	int x_proj = int(round(ndc.x * W2));
+	int y_proj = int(round(ndc.y * H2));
 		
-	// STILL VIEWSPACE
+	// read the view space vertex value at x_proj, y_proj.
 	vec3 pclPos = imageLoad(pcl_input, ivec2(x_proj, y_proj)).xyz;
 
+	// Check that the vertex is valid
 	if(pclPos.z >= 0)
 	{
 		return outputValueWeight;
 	}
 
+	// transform to world space
 	vec3 pclWorldPos = vec4(_viewToWorld * vec4(pclPos, 1)).xyz;
+
+	// distance, not yet signed
 	vec3 dist = worldPos - pclWorldPos;
 	float len = length(dist);
 
 	vec3 pclNor = _viewToWorldRot * imageLoad(pcl_normal_input, ivec2(x_proj, y_proj)).xyz;
-	float dotProduct = dot(dist, pclNor); // dot(normalize(dist), normalize(pclNor));
+	// Calculate the sign
+	float dotProduct =dot(dist, pclNor);
 
 	if(len < _truncationDistance)
 	{
@@ -70,20 +86,25 @@ vec2 worldToDistance(vec3 worldPos)
 }
 
 void main() {
-	// base pixel colour for image
-	ivec3 pixel_coords = ivec3(gl_GlobalInvocationID.xyz);
+	// position within the SDF volume
+	ivec3 sample_coords = ivec3(gl_GlobalInvocationID.xyz);
 
-	vec3 worldVoxelPosition = (_modelMatrix * vec4((pixel_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
+	// Calculate the world position of this sample
+	vec3 worldVoxelPosition = (_modelMatrix * vec4((sample_coords + vec3(0.5, 0.5, 0.5))*_stepSize, 1)).xyz;
 
+	// Calculate projected signed distance and associated weight
 	vec2 valueWeigth = worldToDistance(worldVoxelPosition);
 
+	// Only fuse valid data
 	if(valueWeigth.y > 0)
 	{
-		vec2 previousData = imageLoad(model_output, pixel_coords).rg;
-
+		// Calculate the updated model value at that point, update weight, too.
+		vec2 previousData = imageLoad(model_output, sample_coords).rg;
 		float accValue = (previousData.y * previousData.x + valueWeigth.x * valueWeigth.y) / (valueWeigth.y + previousData.y);
+
+		// truncate weight.
 		float accWeight = min(valueWeigth.y + previousData.y, _maxWeight);
 
-		imageStore(model_output, pixel_coords, vec4(accValue, accWeight, 0,0));
+		imageStore(model_output, sample_coords, vec4(accValue, accWeight, 0,0));
 	}
 }

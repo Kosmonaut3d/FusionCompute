@@ -1,3 +1,6 @@
+// computeModelPCL.comp
+// This shader computes the vertex map from a depth map
+
 #version 460 core
 
 layout(local_size_x = 32, local_size_y = 16) in;
@@ -15,23 +18,22 @@ const float HEIGHT = 240;
 
 vec3 kinectDepthToWorld(ivec2 pixel_coords)
 {
+	// Convert to meters
 	float wz = imageLoad(rawDepthImage, pixel_coords).r * 2.048; // to 
-	float factor = _zeroPixelSizeDouble * wz * _zeroPlaneDistInv;//2 * _zeroPixelSize * wz / _zeroPlaneDist;
+	float factor = _zeroPixelSizeDouble * wz * _zeroPlaneDistInv;
+
+	// Project pixel into space
 	float wx = (pixel_coords.x - WIDTH) * factor;
 	float wy = (pixel_coords.y - HEIGHT) * factor;
 
-	// NOTE: Y AND Z ARE SWAPPED
+	// NOTE: Y AND Z ARE SWAPPED, 
+	// Kinect delivers the image in a DirectX format, we need to OpenGLify
 	return vec3(wx, -wy, -wz);
 }
 
 void main() {
-  // base pixel colour for image
+  // pixel coordinates
   ivec2 pixel_coords = ivec2(gl_GlobalInvocationID.xy);
   vec4 pixel = vec4(kinectDepthToWorld(pixel_coords), 1.0);
-  
   imageStore(model_output, pixel_coords, pixel);
-
-  // NOTE: Nvidia could use derivatives for normal maps;
-
-  // Problem: openGL reads textures from bottom
 }

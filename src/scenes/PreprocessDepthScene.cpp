@@ -7,7 +7,6 @@ PreprocessDepthScene::PreprocessDepthScene()
     : m_bilateralBlurComp{}
     , m_texDepthRaw{}
 {
-	
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -23,10 +22,8 @@ void PreprocessDepthScene::update(bool kinectUpdate, ofxKinect& kinect)
 	if (kinectUpdate)
 	{
 		m_texDepthRaw.loadData(kinect.getRawDepthPixels());
+		m_bilateralBlurComp.compute(m_texDepthRaw, GUIScene::s_bilateralBlurCompute);
 	}
-
-	// Just for this scene we do it every frame :)
-	m_bilateralBlurComp.compute(m_texDepthRaw, GUIScene::s_bilateralBlurCompute);
 }
 
 //----------------------------------------------------------------------------------------------------------
@@ -37,4 +34,3 @@ void PreprocessDepthScene::draw()
 		FullScreenQuadRender::get().draw(m_bilateralBlurComp.getTextureID(), GL_TEXTURE_2D);
 	}
 }
-

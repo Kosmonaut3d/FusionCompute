@@ -13,7 +13,7 @@ SignedDistanceField::SignedDistanceField(int resolution, glm::vec3 origin, float
 	m_world    = ofMatrix4x4::newScaleMatrix(scale, scale, scale) * ofMatrix4x4::newTranslationMatrix(origin);
 	m_worldInv = m_world.getInverse();
 
-	if (!m_raymarchShader.load("shaders/vertShader.vert", "shaders/raymarchSDF.frag"))
+	if (!m_raymarchShader.load("shaders/vertShader.vert", "shaders/rayMarchSDF.frag"))
 	{
 		throw std::exception(); //"could not load shaders");
 	}

@@ -1,3 +1,7 @@
+// computeICP
+//
+// This shader computes the ICP correspondences for 2 frames of vertex and normal point clouds.
+
 #version 460 core
 
 layout(local_size_x = 64, local_size_y = 16) in;
@@ -45,61 +49,53 @@ void main() {
 		return;
 	}
 
+	// Project onto the old frame
 	vec4 vertexClipSource = viewProjectionOld * vec4(vertexWorldSource, 1);
 	if(vertexClipSource.w == 0)
 	{
 		return;
 	}
 
+	// Calculate homogenous coordinates
 	vec3 vertexNdc = vertexClipSource.xyz / vertexClipSource.w;
 	if(clamp(vertexNdc, -1.f, 1.f) != vertexNdc)
 	{
 		return;
 	}
 
-	// Note: Flip y (OPENGL)
+	// Calculate screen space projected coordinates
 	ivec2 pixel_coord_projected = ivec2(round((vertexNdc.x + 1.0f) * WIDTH2), round((-vertexNdc.y+1.0f) * HEIGHT2));
 
+	// Read reference value at these pixels
 	vec3 vertexWorldReference = (viewToWorldOld * vec4(imageLoad(vertex_old, pixel_coord_projected).xyz, 1)).xyz;
 
+	// Check if reference is valid
 	if(vertexWorldReference.z == 0)
 	{
 		return;
 	}
 
+	// Check for maximum distance
 	vec3 diff = vertexWorldReference-vertexWorldSource;
-	
 	if (length(diff) > _epsilonDistance)
 	{
 		return;
 	}
 
-	// Old normals
+	// Read normals
 	vec3 normalWorldReference = normalize(viewToWorldOldRot * imageLoad(normals_old, pixel_coord_projected).xyz);
 	vec3 normalWorldSource = normalize(viewToWorldItRot * imageLoad(normals_new, pixel_coords).xyz);
 
-	// TODO CHECK EPSILONS
+	// Check for minimum alignment
 	if (dot(normalWorldReference, normalWorldSource) < _epsilonNormal)
 	{
 		return;
 	}
-	// Code from icp cpu
-	//correspondences.emplace_back(newVertexWorld, referenceVertexWorld, referenceNormalWorld);
-	//Eigen::Vector3d s_i            = GLM2E(std::get<0>(correspondence)).cast<double>();
-	//Eigen::Vector3d d_i            = GLM2E(std::get<1>(correspondence)).cast<double>();
-	//Eigen::Vector3d n_i            = GLM2E(std::get<2>(correspondence)).cast<double>();
-	//
-	//Eigen::Matrix<double, 6, 1> A_i;
-	//A_i << s_i.cross(n_i), n_i;
-	//A_ += A_i * A_i.transpose();
-	//
-	//b_ += A_i * (n_i.dot(d_i) - n_i.dot(s_i));
-	//
-	////
-	//A__ += A_i;
 	
+	// Increment counter
 	uint currentCount = atomicCounterIncrement(correspondence_counter);
 
+	// Prepare data for the 6x6 linear system
 	// output
 	vec3 s_i = vertexWorldSource;
 	vec3 d_i = vertexWorldReference;

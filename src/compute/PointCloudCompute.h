@@ -2,6 +2,9 @@
 
 #include "ofMain.h"
 
+/// <summary>
+///	This class sets up and dispatches compute shaders that calculate the point cloud generated from a depth map
+/// </summary>
 class PointCloudComp
 {
   public:

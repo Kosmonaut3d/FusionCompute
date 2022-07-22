@@ -55,7 +55,8 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 
 			std::chrono::steady_clock::time_point begin = std::chrono::steady_clock::now();
 
-			// Keep 2 PCL buffers
+			// Fill a different buffer every frame.
+			// This is needed so frame-2-frame ICP can always compare 2 point clouds.
 			if (isFrame0)
 			{
 				m_pointCloudCPU_0.fillPointCloud(kinect, GUIScene::s_PCL_CPU_downscale, true,
@@ -73,10 +74,10 @@ void PointCloudScene::update(bool kinectUpdate, ofxKinect& kinect, glm::mat4x4& 
 
 		if (GUIScene::s_ICP_CPU_compute)
 		{
-			// GUIScene::s_computeICPCPU = false;
-
 			auto& ptrNew = isFrame0 ? m_pointCloudCPU_0 : m_pointCloudCPU_1;
 			auto& ptrOld = isFrame0 ? m_pointCloudCPU_1 : m_pointCloudCPU_0;
+
+			// Compare the 2 different point clouds, the old and the new one swap every frame.
 
 			glm::mat4x4 output;
 			m_icpCPU.compute(ptrNew.getPoints(), ptrNew.getNormals(), ptrOld.getPoints(), ptrOld.getNormals(),

@@ -12,7 +12,7 @@ BilateralBlurCompute::BilateralBlurCompute()
 	// dimensions of the image
 	const int tex_w = 640, tex_h = 480;
 
-	// Model
+	// Set up output texture
 	glGenTextures(1, &m_texID);
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, m_texID);

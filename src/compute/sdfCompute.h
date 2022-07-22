@@ -2,6 +2,9 @@
 
 #include "ofMain.h"
 
+/// <summary>
+///	This class sets up and dispatches compute shaders that calculate the projective TSDF integration and fusion.
+/// </summary>
 class SDFCompute
 {
   public:
@@ -21,8 +24,8 @@ class SDFCompute
   private:
 	ofShader m_computeSDFShader;
 	ofShader m_computeSDFColorShader;
-	ofShader m_raymarchSDFShader;
-	ofShader m_raymarchSDFColorShader;
+	ofShader m_rayMarchSDFShader;
+	ofShader m_rayMarchSDFColorShader;
 
 	ofShader m_expandSDFShader;
 

@@ -5,6 +5,9 @@
 #include "ofMain.h"
 #include "ofxKinect.h"
 
+/// <summary>
+/// This scene can render the depth map and apply bilateral blur to it.
+/// </summary>
 class PreprocessDepthScene
 {
   public:

@@ -3,6 +3,9 @@
 #include "ofMain.h"
 #include "ofxImGui.h"
 
+/// <summary>
+/// This scene hosts the GUI as well as the static variables that control the setup of the program.
+/// </summary>
 class GUIScene //: public SceneImpl
 {
   public:

@@ -1,6 +1,9 @@
 #pragma once
 #include <ofMain.h>
 
+/// <summary>
+///	This class calculates the Frame-to-Frame ICP, on the CPU.
+/// </summary>
 class IterativeClostestPointCPU
 {
   public:

@@ -9,6 +9,9 @@
 #include "ofMain.h"
 #include "ofxKinect.h"
 
+/// <summary>
+/// This scene renders SDF raytracing and allows for SDF ICP computations.
+/// </summary>
 class SDFScene
 {
   public:
