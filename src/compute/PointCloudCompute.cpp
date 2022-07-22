@@ -47,60 +47,60 @@ void PointCloudComp::setUpOutputTexture()
 	}
 }
 
-	//----------------------------------------------------------------------------------------------------------
-	void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)
+//----------------------------------------------------------------------------------------------------------
+void PointCloudComp::compute(unsigned int depthTexID, bool isFrame0)
+{
+	unsigned int texModelId  = isFrame0 ? m_texModelID_0 : m_texModelID_1;
+	unsigned int texNormalId = isFrame0 ? m_texNormalID_0 : m_texNormalID_1;
+
+	GLuint query;
+	if (GUIScene::s_measureTime)
 	{
-		unsigned int texModelId  = isFrame0 ? m_texModelID_0 : m_texModelID_1;
-		unsigned int texNormalId = isFrame0 ? m_texNormalID_0 : m_texNormalID_1;
-
-		GLuint query;
-		if (GUIScene::s_measureTime)
-		{
-			glGenQueries(1, &query);
-			glBeginQuery(GL_TIME_ELAPSED, query);
-		}
-
-		m_computeModelShader.begin();
-
-		m_computeModelShader.setUniform1f("_zeroPlaneDistInv", 1.0 / m_planeDist);
-		m_computeModelShader.setUniform1f("_zeroPixelSizeDouble", 2. * m_pixelSize);
-		glBindImageTexture(0, depthTexID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
-		glBindImageTexture(1, texModelId, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-		// Resolution 640*480 / Threadsize 32, 16 =
-		m_computeModelShader.dispatchCompute(20, 30, 1);
-		m_computeModelShader.end();
-
-		// Normals
-		m_computeNormalShader.begin();
-		glBindImageTexture(1, texModelId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
-		glBindImageTexture(2, texNormalId, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
-
-		m_computeModelShader.dispatchCompute(20, 30, 1);
-		m_computeNormalShader.end();
-
-		if (GUIScene::s_measureTime)
-		{
-			glEndQuery(GL_TIME_ELAPSED);
-			glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_PCL_GPU_measuredComputeTime);
-		}
+		glGenQueries(1, &query);
+		glBeginQuery(GL_TIME_ELAPSED, query);
 	}
 
-	//----------------------------------------------------------------------------------------------------------
-	unsigned int PointCloudComp::getModelTextureID(bool isFrame0)
-	{
-		return isFrame0 ? m_texModelID_0 : m_texModelID_1;
-	}
+	m_computeModelShader.begin();
 
-	//----------------------------------------------------------------------------------------------------------
-	unsigned int PointCloudComp::getNormalTextureID(bool isFrame0)
-	{
-		return isFrame0 ? m_texNormalID_0 : m_texNormalID_1;
-	}
+	m_computeModelShader.setUniform1f("_zeroPlaneDistInv", 1.0 / m_planeDist);
+	m_computeModelShader.setUniform1f("_zeroPixelSizeDouble", 2. * m_pixelSize);
+	glBindImageTexture(0, depthTexID, 0, GL_FALSE, 0, GL_READ_ONLY, GL_R32F);
+	glBindImageTexture(1, texModelId, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
 
-	//----------------------------------------------------------------------------------------------------------
-	void PointCloudComp::registerKinectData(float planeDist, float pixelSize)
+	// Resolution 640*480 / Threadsize 32, 16 =
+	m_computeModelShader.dispatchCompute(20, 30, 1);
+	m_computeModelShader.end();
+
+	// Normals
+	m_computeNormalShader.begin();
+	glBindImageTexture(1, texModelId, 0, GL_FALSE, 0, GL_READ_ONLY, GL_RGBA32F);
+	glBindImageTexture(2, texNormalId, 0, GL_FALSE, 0, GL_WRITE_ONLY, GL_RGBA32F);
+
+	m_computeModelShader.dispatchCompute(20, 30, 1);
+	m_computeNormalShader.end();
+
+	if (GUIScene::s_measureTime)
 	{
-		m_planeDist = planeDist;
-		m_pixelSize = pixelSize;
+		glEndQuery(GL_TIME_ELAPSED);
+		glGetQueryObjectui64v(query, GL_QUERY_RESULT, &GUIScene::s_PCL_GPU_measuredComputeTime);
 	}
+}
+
+//----------------------------------------------------------------------------------------------------------
+unsigned int PointCloudComp::getModelTextureID(bool isFrame0)
+{
+	return isFrame0 ? m_texModelID_0 : m_texModelID_1;
+}
+
+//----------------------------------------------------------------------------------------------------------
+unsigned int PointCloudComp::getNormalTextureID(bool isFrame0)
+{
+	return isFrame0 ? m_texNormalID_0 : m_texNormalID_1;
+}
+
+//----------------------------------------------------------------------------------------------------------
+void PointCloudComp::registerKinectData(float planeDist, float pixelSize)
+{
+	m_planeDist = planeDist;
+	m_pixelSize = pixelSize;
+}
