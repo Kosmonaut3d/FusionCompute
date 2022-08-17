@@ -44,3 +44,7 @@ The usual setup is to add the project to
 > openframeworks/apps/myApps/
 
 For this path configuration there are provided solution files for Windows (Visual Studio 2019) or Linux (QTCreator).
+
+### Binaries
+
+You can find Windows binaries linked in the github release. 
